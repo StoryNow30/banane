@@ -1,6 +1,6 @@
 {
  "vues": 2772,
- "defauts": 516,
+ "defauts": 0,
  "vueFilParScene": {
   "repos": "instrument",
   "cours": "fil (bouton)",
@@ -29,16 +29,9 @@
   "clair-fil-glacier-320-capture": [],
   "clair-fil-glacier-320-constellation": [],
   "clair-fil-glacier-320-cours": [],
-  "clair-fil-glacier-320-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-glacier-320-cours-details": [],
   "clair-fil-glacier-320-erreur": [],
-  "clair-fil-glacier-320-file-arret": [
-   "TRONQUE sg-phrase « Correction interrompue au cut  »",
-   "COUPE EN HAUTEUR sg-phrase « Correction interrompue au cut  »"
-  ],
+  "clair-fil-glacier-320-file-arret": [],
   "clair-fil-glacier-320-file-fin": [],
   "clair-fil-glacier-320-file7": [],
   "clair-fil-glacier-320-fin": [],
@@ -57,11 +50,7 @@
   "clair-fil-glacier-360-capture": [],
   "clair-fil-glacier-360-constellation": [],
   "clair-fil-glacier-360-cours": [],
-  "clair-fil-glacier-360-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-glacier-360-cours-details": [],
   "clair-fil-glacier-360-erreur": [],
   "clair-fil-glacier-360-file-arret": [],
   "clair-fil-glacier-360-file-fin": [],
@@ -82,11 +71,7 @@
   "clair-fil-glacier-400-capture": [],
   "clair-fil-glacier-400-constellation": [],
   "clair-fil-glacier-400-cours": [],
-  "clair-fil-glacier-400-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-glacier-400-cours-details": [],
   "clair-fil-glacier-400-erreur": [],
   "clair-fil-glacier-400-file-arret": [],
   "clair-fil-glacier-400-file-fin": [],
@@ -107,11 +92,7 @@
   "clair-fil-glacier-440-capture": [],
   "clair-fil-glacier-440-constellation": [],
   "clair-fil-glacier-440-cours": [],
-  "clair-fil-glacier-440-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-glacier-440-cours-details": [],
   "clair-fil-glacier-440-erreur": [],
   "clair-fil-glacier-440-file-arret": [],
   "clair-fil-glacier-440-file-fin": [],
@@ -132,11 +113,7 @@
   "clair-fil-glacier-480-capture": [],
   "clair-fil-glacier-480-constellation": [],
   "clair-fil-glacier-480-cours": [],
-  "clair-fil-glacier-480-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-glacier-480-cours-details": [],
   "clair-fil-glacier-480-erreur": [],
   "clair-fil-glacier-480-file-arret": [],
   "clair-fil-glacier-480-file-fin": [],
@@ -157,11 +134,7 @@
   "clair-fil-glacier-520-capture": [],
   "clair-fil-glacier-520-constellation": [],
   "clair-fil-glacier-520-cours": [],
-  "clair-fil-glacier-520-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-glacier-520-cours-details": [],
   "clair-fil-glacier-520-erreur": [],
   "clair-fil-glacier-520-file-arret": [],
   "clair-fil-glacier-520-file-fin": [],
@@ -182,11 +155,7 @@
   "clair-fil-glacier-560-capture": [],
   "clair-fil-glacier-560-constellation": [],
   "clair-fil-glacier-560-cours": [],
-  "clair-fil-glacier-560-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-glacier-560-cours-details": [],
   "clair-fil-glacier-560-erreur": [],
   "clair-fil-glacier-560-file-arret": [],
   "clair-fil-glacier-560-file-fin": [],
@@ -207,11 +176,7 @@
   "clair-fil-glacier-600-capture": [],
   "clair-fil-glacier-600-constellation": [],
   "clair-fil-glacier-600-cours": [],
-  "clair-fil-glacier-600-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-glacier-600-cours-details": [],
   "clair-fil-glacier-600-erreur": [],
   "clair-fil-glacier-600-file-arret": [],
   "clair-fil-glacier-600-file-fin": [],
@@ -232,11 +197,7 @@
   "clair-fil-glacier-640-capture": [],
   "clair-fil-glacier-640-constellation": [],
   "clair-fil-glacier-640-cours": [],
-  "clair-fil-glacier-640-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-glacier-640-cours-details": [],
   "clair-fil-glacier-640-erreur": [],
   "clair-fil-glacier-640-file-arret": [],
   "clair-fil-glacier-640-file-fin": [],
@@ -257,11 +218,7 @@
   "clair-fil-glacier-680-capture": [],
   "clair-fil-glacier-680-constellation": [],
   "clair-fil-glacier-680-cours": [],
-  "clair-fil-glacier-680-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-glacier-680-cours-details": [],
   "clair-fil-glacier-680-erreur": [],
   "clair-fil-glacier-680-file-arret": [],
   "clair-fil-glacier-680-file-fin": [],
@@ -282,11 +239,7 @@
   "clair-fil-glacier-720-capture": [],
   "clair-fil-glacier-720-constellation": [],
   "clair-fil-glacier-720-cours": [],
-  "clair-fil-glacier-720-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-glacier-720-cours-details": [],
   "clair-fil-glacier-720-erreur": [],
   "clair-fil-glacier-720-file-arret": [],
   "clair-fil-glacier-720-file-fin": [],
@@ -307,16 +260,9 @@
   "clair-fil-sarcelle-320-capture": [],
   "clair-fil-sarcelle-320-constellation": [],
   "clair-fil-sarcelle-320-cours": [],
-  "clair-fil-sarcelle-320-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-sarcelle-320-cours-details": [],
   "clair-fil-sarcelle-320-erreur": [],
-  "clair-fil-sarcelle-320-file-arret": [
-   "TRONQUE sg-phrase « Correction interrompue au cut  »",
-   "COUPE EN HAUTEUR sg-phrase « Correction interrompue au cut  »"
-  ],
+  "clair-fil-sarcelle-320-file-arret": [],
   "clair-fil-sarcelle-320-file-fin": [],
   "clair-fil-sarcelle-320-file7": [],
   "clair-fil-sarcelle-320-fin": [],
@@ -335,11 +281,7 @@
   "clair-fil-sarcelle-360-capture": [],
   "clair-fil-sarcelle-360-constellation": [],
   "clair-fil-sarcelle-360-cours": [],
-  "clair-fil-sarcelle-360-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-sarcelle-360-cours-details": [],
   "clair-fil-sarcelle-360-erreur": [],
   "clair-fil-sarcelle-360-file-arret": [],
   "clair-fil-sarcelle-360-file-fin": [],
@@ -360,11 +302,7 @@
   "clair-fil-sarcelle-400-capture": [],
   "clair-fil-sarcelle-400-constellation": [],
   "clair-fil-sarcelle-400-cours": [],
-  "clair-fil-sarcelle-400-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-sarcelle-400-cours-details": [],
   "clair-fil-sarcelle-400-erreur": [],
   "clair-fil-sarcelle-400-file-arret": [],
   "clair-fil-sarcelle-400-file-fin": [],
@@ -385,11 +323,7 @@
   "clair-fil-sarcelle-440-capture": [],
   "clair-fil-sarcelle-440-constellation": [],
   "clair-fil-sarcelle-440-cours": [],
-  "clair-fil-sarcelle-440-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-sarcelle-440-cours-details": [],
   "clair-fil-sarcelle-440-erreur": [],
   "clair-fil-sarcelle-440-file-arret": [],
   "clair-fil-sarcelle-440-file-fin": [],
@@ -410,11 +344,7 @@
   "clair-fil-sarcelle-480-capture": [],
   "clair-fil-sarcelle-480-constellation": [],
   "clair-fil-sarcelle-480-cours": [],
-  "clair-fil-sarcelle-480-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-sarcelle-480-cours-details": [],
   "clair-fil-sarcelle-480-erreur": [],
   "clair-fil-sarcelle-480-file-arret": [],
   "clair-fil-sarcelle-480-file-fin": [],
@@ -435,11 +365,7 @@
   "clair-fil-sarcelle-520-capture": [],
   "clair-fil-sarcelle-520-constellation": [],
   "clair-fil-sarcelle-520-cours": [],
-  "clair-fil-sarcelle-520-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-sarcelle-520-cours-details": [],
   "clair-fil-sarcelle-520-erreur": [],
   "clair-fil-sarcelle-520-file-arret": [],
   "clair-fil-sarcelle-520-file-fin": [],
@@ -460,11 +386,7 @@
   "clair-fil-sarcelle-560-capture": [],
   "clair-fil-sarcelle-560-constellation": [],
   "clair-fil-sarcelle-560-cours": [],
-  "clair-fil-sarcelle-560-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-sarcelle-560-cours-details": [],
   "clair-fil-sarcelle-560-erreur": [],
   "clair-fil-sarcelle-560-file-arret": [],
   "clair-fil-sarcelle-560-file-fin": [],
@@ -485,11 +407,7 @@
   "clair-fil-sarcelle-600-capture": [],
   "clair-fil-sarcelle-600-constellation": [],
   "clair-fil-sarcelle-600-cours": [],
-  "clair-fil-sarcelle-600-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-sarcelle-600-cours-details": [],
   "clair-fil-sarcelle-600-erreur": [],
   "clair-fil-sarcelle-600-file-arret": [],
   "clair-fil-sarcelle-600-file-fin": [],
@@ -510,11 +428,7 @@
   "clair-fil-sarcelle-640-capture": [],
   "clair-fil-sarcelle-640-constellation": [],
   "clair-fil-sarcelle-640-cours": [],
-  "clair-fil-sarcelle-640-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-sarcelle-640-cours-details": [],
   "clair-fil-sarcelle-640-erreur": [],
   "clair-fil-sarcelle-640-file-arret": [],
   "clair-fil-sarcelle-640-file-fin": [],
@@ -535,11 +449,7 @@
   "clair-fil-sarcelle-680-capture": [],
   "clair-fil-sarcelle-680-constellation": [],
   "clair-fil-sarcelle-680-cours": [],
-  "clair-fil-sarcelle-680-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-sarcelle-680-cours-details": [],
   "clair-fil-sarcelle-680-erreur": [],
   "clair-fil-sarcelle-680-file-arret": [],
   "clair-fil-sarcelle-680-file-fin": [],
@@ -560,11 +470,7 @@
   "clair-fil-sarcelle-720-capture": [],
   "clair-fil-sarcelle-720-constellation": [],
   "clair-fil-sarcelle-720-cours": [],
-  "clair-fil-sarcelle-720-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-sarcelle-720-cours-details": [],
   "clair-fil-sarcelle-720-erreur": [],
   "clair-fil-sarcelle-720-file-arret": [],
   "clair-fil-sarcelle-720-file-fin": [],
@@ -585,16 +491,9 @@
   "clair-fil-signal-320-capture": [],
   "clair-fil-signal-320-constellation": [],
   "clair-fil-signal-320-cours": [],
-  "clair-fil-signal-320-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-signal-320-cours-details": [],
   "clair-fil-signal-320-erreur": [],
-  "clair-fil-signal-320-file-arret": [
-   "TRONQUE sg-phrase « Correction interrompue au cut  »",
-   "COUPE EN HAUTEUR sg-phrase « Correction interrompue au cut  »"
-  ],
+  "clair-fil-signal-320-file-arret": [],
   "clair-fil-signal-320-file-fin": [],
   "clair-fil-signal-320-file7": [],
   "clair-fil-signal-320-fin": [],
@@ -613,11 +512,7 @@
   "clair-fil-signal-360-capture": [],
   "clair-fil-signal-360-constellation": [],
   "clair-fil-signal-360-cours": [],
-  "clair-fil-signal-360-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-signal-360-cours-details": [],
   "clair-fil-signal-360-erreur": [],
   "clair-fil-signal-360-file-arret": [],
   "clair-fil-signal-360-file-fin": [],
@@ -638,11 +533,7 @@
   "clair-fil-signal-400-capture": [],
   "clair-fil-signal-400-constellation": [],
   "clair-fil-signal-400-cours": [],
-  "clair-fil-signal-400-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-signal-400-cours-details": [],
   "clair-fil-signal-400-erreur": [],
   "clair-fil-signal-400-file-arret": [],
   "clair-fil-signal-400-file-fin": [],
@@ -663,11 +554,7 @@
   "clair-fil-signal-440-capture": [],
   "clair-fil-signal-440-constellation": [],
   "clair-fil-signal-440-cours": [],
-  "clair-fil-signal-440-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-signal-440-cours-details": [],
   "clair-fil-signal-440-erreur": [],
   "clair-fil-signal-440-file-arret": [],
   "clair-fil-signal-440-file-fin": [],
@@ -688,11 +575,7 @@
   "clair-fil-signal-480-capture": [],
   "clair-fil-signal-480-constellation": [],
   "clair-fil-signal-480-cours": [],
-  "clair-fil-signal-480-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-signal-480-cours-details": [],
   "clair-fil-signal-480-erreur": [],
   "clair-fil-signal-480-file-arret": [],
   "clair-fil-signal-480-file-fin": [],
@@ -713,11 +596,7 @@
   "clair-fil-signal-520-capture": [],
   "clair-fil-signal-520-constellation": [],
   "clair-fil-signal-520-cours": [],
-  "clair-fil-signal-520-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-signal-520-cours-details": [],
   "clair-fil-signal-520-erreur": [],
   "clair-fil-signal-520-file-arret": [],
   "clair-fil-signal-520-file-fin": [],
@@ -738,11 +617,7 @@
   "clair-fil-signal-560-capture": [],
   "clair-fil-signal-560-constellation": [],
   "clair-fil-signal-560-cours": [],
-  "clair-fil-signal-560-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-signal-560-cours-details": [],
   "clair-fil-signal-560-erreur": [],
   "clair-fil-signal-560-file-arret": [],
   "clair-fil-signal-560-file-fin": [],
@@ -763,11 +638,7 @@
   "clair-fil-signal-600-capture": [],
   "clair-fil-signal-600-constellation": [],
   "clair-fil-signal-600-cours": [],
-  "clair-fil-signal-600-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-signal-600-cours-details": [],
   "clair-fil-signal-600-erreur": [],
   "clair-fil-signal-600-file-arret": [],
   "clair-fil-signal-600-file-fin": [],
@@ -788,11 +659,7 @@
   "clair-fil-signal-640-capture": [],
   "clair-fil-signal-640-constellation": [],
   "clair-fil-signal-640-cours": [],
-  "clair-fil-signal-640-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-signal-640-cours-details": [],
   "clair-fil-signal-640-erreur": [],
   "clair-fil-signal-640-file-arret": [],
   "clair-fil-signal-640-file-fin": [],
@@ -813,11 +680,7 @@
   "clair-fil-signal-680-capture": [],
   "clair-fil-signal-680-constellation": [],
   "clair-fil-signal-680-cours": [],
-  "clair-fil-signal-680-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-signal-680-cours-details": [],
   "clair-fil-signal-680-erreur": [],
   "clair-fil-signal-680-file-arret": [],
   "clair-fil-signal-680-file-fin": [],
@@ -838,11 +701,7 @@
   "clair-fil-signal-720-capture": [],
   "clair-fil-signal-720-constellation": [],
   "clair-fil-signal-720-cours": [],
-  "clair-fil-signal-720-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-fil-signal-720-cours-details": [],
   "clair-fil-signal-720-erreur": [],
   "clair-fil-signal-720-file-arret": [],
   "clair-fil-signal-720-file-fin": [],
@@ -863,16 +722,9 @@
   "clair-instrument-glacier-320-capture": [],
   "clair-instrument-glacier-320-constellation": [],
   "clair-instrument-glacier-320-cours": [],
-  "clair-instrument-glacier-320-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-glacier-320-cours-details": [],
   "clair-instrument-glacier-320-erreur": [],
-  "clair-instrument-glacier-320-file-arret": [
-   "TRONQUE sg-phrase « Correction interrompue au cut  »",
-   "COUPE EN HAUTEUR sg-phrase « Correction interrompue au cut  »"
-  ],
+  "clair-instrument-glacier-320-file-arret": [],
   "clair-instrument-glacier-320-file-fin": [],
   "clair-instrument-glacier-320-file7": [],
   "clair-instrument-glacier-320-fin": [],
@@ -882,9 +734,7 @@
   "clair-instrument-glacier-320-pause": [],
   "clair-instrument-glacier-320-rattrapage": [],
   "clair-instrument-glacier-320-reglages": [],
-  "clair-instrument-glacier-320-rel-bornes": [
-   "ZONE A DEFILER de 14 px"
-  ],
+  "clair-instrument-glacier-320-rel-bornes": [],
   "clair-instrument-glacier-320-relecture": [],
   "clair-instrument-glacier-320-repos": [],
   "clair-instrument-glacier-320-stats": [],
@@ -893,11 +743,7 @@
   "clair-instrument-glacier-360-capture": [],
   "clair-instrument-glacier-360-constellation": [],
   "clair-instrument-glacier-360-cours": [],
-  "clair-instrument-glacier-360-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-glacier-360-cours-details": [],
   "clair-instrument-glacier-360-erreur": [],
   "clair-instrument-glacier-360-file-arret": [],
   "clair-instrument-glacier-360-file-fin": [],
@@ -909,9 +755,7 @@
   "clair-instrument-glacier-360-pause": [],
   "clair-instrument-glacier-360-rattrapage": [],
   "clair-instrument-glacier-360-reglages": [],
-  "clair-instrument-glacier-360-rel-bornes": [
-   "ZONE A DEFILER de 5 px"
-  ],
+  "clair-instrument-glacier-360-rel-bornes": [],
   "clair-instrument-glacier-360-relecture": [],
   "clair-instrument-glacier-360-repos": [],
   "clair-instrument-glacier-360-stats": [],
@@ -920,11 +764,7 @@
   "clair-instrument-glacier-400-capture": [],
   "clair-instrument-glacier-400-constellation": [],
   "clair-instrument-glacier-400-cours": [],
-  "clair-instrument-glacier-400-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-glacier-400-cours-details": [],
   "clair-instrument-glacier-400-erreur": [],
   "clair-instrument-glacier-400-file-arret": [],
   "clair-instrument-glacier-400-file-fin": [],
@@ -945,11 +785,7 @@
   "clair-instrument-glacier-440-capture": [],
   "clair-instrument-glacier-440-constellation": [],
   "clair-instrument-glacier-440-cours": [],
-  "clair-instrument-glacier-440-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-glacier-440-cours-details": [],
   "clair-instrument-glacier-440-erreur": [],
   "clair-instrument-glacier-440-file-arret": [],
   "clair-instrument-glacier-440-file-fin": [],
@@ -970,12 +806,7 @@
   "clair-instrument-glacier-480-capture": [],
   "clair-instrument-glacier-480-constellation": [],
   "clair-instrument-glacier-480-cours": [],
-  "clair-instrument-glacier-480-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-glacier-480-cours-details": [],
   "clair-instrument-glacier-480-erreur": [],
   "clair-instrument-glacier-480-file-arret": [],
   "clair-instrument-glacier-480-file-fin": [],
@@ -987,9 +818,7 @@
   "clair-instrument-glacier-480-pause": [],
   "clair-instrument-glacier-480-rattrapage": [],
   "clair-instrument-glacier-480-reglages": [],
-  "clair-instrument-glacier-480-rel-bornes": [
-   "ZONE A DEFILER de 18 px"
-  ],
+  "clair-instrument-glacier-480-rel-bornes": [],
   "clair-instrument-glacier-480-relecture": [],
   "clair-instrument-glacier-480-repos": [],
   "clair-instrument-glacier-480-stats": [],
@@ -998,12 +827,7 @@
   "clair-instrument-glacier-520-capture": [],
   "clair-instrument-glacier-520-constellation": [],
   "clair-instrument-glacier-520-cours": [],
-  "clair-instrument-glacier-520-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-glacier-520-cours-details": [],
   "clair-instrument-glacier-520-erreur": [],
   "clair-instrument-glacier-520-file-arret": [],
   "clair-instrument-glacier-520-file-fin": [],
@@ -1015,9 +839,7 @@
   "clair-instrument-glacier-520-pause": [],
   "clair-instrument-glacier-520-rattrapage": [],
   "clair-instrument-glacier-520-reglages": [],
-  "clair-instrument-glacier-520-rel-bornes": [
-   "ZONE A DEFILER de 11 px"
-  ],
+  "clair-instrument-glacier-520-rel-bornes": [],
   "clair-instrument-glacier-520-relecture": [],
   "clair-instrument-glacier-520-repos": [],
   "clair-instrument-glacier-520-stats": [],
@@ -1026,12 +848,7 @@
   "clair-instrument-glacier-560-capture": [],
   "clair-instrument-glacier-560-constellation": [],
   "clair-instrument-glacier-560-cours": [],
-  "clair-instrument-glacier-560-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-glacier-560-cours-details": [],
   "clair-instrument-glacier-560-erreur": [],
   "clair-instrument-glacier-560-file-arret": [],
   "clair-instrument-glacier-560-file-fin": [],
@@ -1043,9 +860,7 @@
   "clair-instrument-glacier-560-pause": [],
   "clair-instrument-glacier-560-rattrapage": [],
   "clair-instrument-glacier-560-reglages": [],
-  "clair-instrument-glacier-560-rel-bornes": [
-   "ZONE A DEFILER de 11 px"
-  ],
+  "clair-instrument-glacier-560-rel-bornes": [],
   "clair-instrument-glacier-560-relecture": [],
   "clair-instrument-glacier-560-repos": [],
   "clair-instrument-glacier-560-stats": [],
@@ -1054,12 +869,7 @@
   "clair-instrument-glacier-600-capture": [],
   "clair-instrument-glacier-600-constellation": [],
   "clair-instrument-glacier-600-cours": [],
-  "clair-instrument-glacier-600-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-glacier-600-cours-details": [],
   "clair-instrument-glacier-600-erreur": [],
   "clair-instrument-glacier-600-file-arret": [],
   "clair-instrument-glacier-600-file-fin": [],
@@ -1071,9 +881,7 @@
   "clair-instrument-glacier-600-pause": [],
   "clair-instrument-glacier-600-rattrapage": [],
   "clair-instrument-glacier-600-reglages": [],
-  "clair-instrument-glacier-600-rel-bornes": [
-   "ZONE A DEFILER de 11 px"
-  ],
+  "clair-instrument-glacier-600-rel-bornes": [],
   "clair-instrument-glacier-600-relecture": [],
   "clair-instrument-glacier-600-repos": [],
   "clair-instrument-glacier-600-stats": [],
@@ -1082,12 +890,7 @@
   "clair-instrument-glacier-640-capture": [],
   "clair-instrument-glacier-640-constellation": [],
   "clair-instrument-glacier-640-cours": [],
-  "clair-instrument-glacier-640-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-glacier-640-cours-details": [],
   "clair-instrument-glacier-640-erreur": [],
   "clair-instrument-glacier-640-file-arret": [],
   "clair-instrument-glacier-640-file-fin": [],
@@ -1099,9 +902,7 @@
   "clair-instrument-glacier-640-pause": [],
   "clair-instrument-glacier-640-rattrapage": [],
   "clair-instrument-glacier-640-reglages": [],
-  "clair-instrument-glacier-640-rel-bornes": [
-   "ZONE A DEFILER de 3 px"
-  ],
+  "clair-instrument-glacier-640-rel-bornes": [],
   "clair-instrument-glacier-640-relecture": [],
   "clair-instrument-glacier-640-repos": [],
   "clair-instrument-glacier-640-stats": [],
@@ -1110,12 +911,7 @@
   "clair-instrument-glacier-680-capture": [],
   "clair-instrument-glacier-680-constellation": [],
   "clair-instrument-glacier-680-cours": [],
-  "clair-instrument-glacier-680-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-glacier-680-cours-details": [],
   "clair-instrument-glacier-680-erreur": [],
   "clair-instrument-glacier-680-file-arret": [],
   "clair-instrument-glacier-680-file-fin": [],
@@ -1127,9 +923,7 @@
   "clair-instrument-glacier-680-pause": [],
   "clair-instrument-glacier-680-rattrapage": [],
   "clair-instrument-glacier-680-reglages": [],
-  "clair-instrument-glacier-680-rel-bornes": [
-   "ZONE A DEFILER de 3 px"
-  ],
+  "clair-instrument-glacier-680-rel-bornes": [],
   "clair-instrument-glacier-680-relecture": [],
   "clair-instrument-glacier-680-repos": [],
   "clair-instrument-glacier-680-stats": [],
@@ -1138,12 +932,7 @@
   "clair-instrument-glacier-720-capture": [],
   "clair-instrument-glacier-720-constellation": [],
   "clair-instrument-glacier-720-cours": [],
-  "clair-instrument-glacier-720-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-glacier-720-cours-details": [],
   "clair-instrument-glacier-720-erreur": [],
   "clair-instrument-glacier-720-file-arret": [],
   "clair-instrument-glacier-720-file-fin": [],
@@ -1155,9 +944,7 @@
   "clair-instrument-glacier-720-pause": [],
   "clair-instrument-glacier-720-rattrapage": [],
   "clair-instrument-glacier-720-reglages": [],
-  "clair-instrument-glacier-720-rel-bornes": [
-   "ZONE A DEFILER de 3 px"
-  ],
+  "clair-instrument-glacier-720-rel-bornes": [],
   "clair-instrument-glacier-720-relecture": [],
   "clair-instrument-glacier-720-repos": [],
   "clair-instrument-glacier-720-stats": [],
@@ -1166,16 +953,9 @@
   "clair-instrument-sarcelle-320-capture": [],
   "clair-instrument-sarcelle-320-constellation": [],
   "clair-instrument-sarcelle-320-cours": [],
-  "clair-instrument-sarcelle-320-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-sarcelle-320-cours-details": [],
   "clair-instrument-sarcelle-320-erreur": [],
-  "clair-instrument-sarcelle-320-file-arret": [
-   "TRONQUE sg-phrase « Correction interrompue au cut  »",
-   "COUPE EN HAUTEUR sg-phrase « Correction interrompue au cut  »"
-  ],
+  "clair-instrument-sarcelle-320-file-arret": [],
   "clair-instrument-sarcelle-320-file-fin": [],
   "clair-instrument-sarcelle-320-file7": [],
   "clair-instrument-sarcelle-320-fin": [],
@@ -1185,9 +965,7 @@
   "clair-instrument-sarcelle-320-pause": [],
   "clair-instrument-sarcelle-320-rattrapage": [],
   "clair-instrument-sarcelle-320-reglages": [],
-  "clair-instrument-sarcelle-320-rel-bornes": [
-   "ZONE A DEFILER de 14 px"
-  ],
+  "clair-instrument-sarcelle-320-rel-bornes": [],
   "clair-instrument-sarcelle-320-relecture": [],
   "clair-instrument-sarcelle-320-repos": [],
   "clair-instrument-sarcelle-320-stats": [],
@@ -1196,11 +974,7 @@
   "clair-instrument-sarcelle-360-capture": [],
   "clair-instrument-sarcelle-360-constellation": [],
   "clair-instrument-sarcelle-360-cours": [],
-  "clair-instrument-sarcelle-360-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-sarcelle-360-cours-details": [],
   "clair-instrument-sarcelle-360-erreur": [],
   "clair-instrument-sarcelle-360-file-arret": [],
   "clair-instrument-sarcelle-360-file-fin": [],
@@ -1212,9 +986,7 @@
   "clair-instrument-sarcelle-360-pause": [],
   "clair-instrument-sarcelle-360-rattrapage": [],
   "clair-instrument-sarcelle-360-reglages": [],
-  "clair-instrument-sarcelle-360-rel-bornes": [
-   "ZONE A DEFILER de 5 px"
-  ],
+  "clair-instrument-sarcelle-360-rel-bornes": [],
   "clair-instrument-sarcelle-360-relecture": [],
   "clair-instrument-sarcelle-360-repos": [],
   "clair-instrument-sarcelle-360-stats": [],
@@ -1223,11 +995,7 @@
   "clair-instrument-sarcelle-400-capture": [],
   "clair-instrument-sarcelle-400-constellation": [],
   "clair-instrument-sarcelle-400-cours": [],
-  "clair-instrument-sarcelle-400-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-sarcelle-400-cours-details": [],
   "clair-instrument-sarcelle-400-erreur": [],
   "clair-instrument-sarcelle-400-file-arret": [],
   "clair-instrument-sarcelle-400-file-fin": [],
@@ -1248,11 +1016,7 @@
   "clair-instrument-sarcelle-440-capture": [],
   "clair-instrument-sarcelle-440-constellation": [],
   "clair-instrument-sarcelle-440-cours": [],
-  "clair-instrument-sarcelle-440-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-sarcelle-440-cours-details": [],
   "clair-instrument-sarcelle-440-erreur": [],
   "clair-instrument-sarcelle-440-file-arret": [],
   "clair-instrument-sarcelle-440-file-fin": [],
@@ -1273,12 +1037,7 @@
   "clair-instrument-sarcelle-480-capture": [],
   "clair-instrument-sarcelle-480-constellation": [],
   "clair-instrument-sarcelle-480-cours": [],
-  "clair-instrument-sarcelle-480-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-sarcelle-480-cours-details": [],
   "clair-instrument-sarcelle-480-erreur": [],
   "clair-instrument-sarcelle-480-file-arret": [],
   "clair-instrument-sarcelle-480-file-fin": [],
@@ -1290,9 +1049,7 @@
   "clair-instrument-sarcelle-480-pause": [],
   "clair-instrument-sarcelle-480-rattrapage": [],
   "clair-instrument-sarcelle-480-reglages": [],
-  "clair-instrument-sarcelle-480-rel-bornes": [
-   "ZONE A DEFILER de 18 px"
-  ],
+  "clair-instrument-sarcelle-480-rel-bornes": [],
   "clair-instrument-sarcelle-480-relecture": [],
   "clair-instrument-sarcelle-480-repos": [],
   "clair-instrument-sarcelle-480-stats": [],
@@ -1301,12 +1058,7 @@
   "clair-instrument-sarcelle-520-capture": [],
   "clair-instrument-sarcelle-520-constellation": [],
   "clair-instrument-sarcelle-520-cours": [],
-  "clair-instrument-sarcelle-520-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-sarcelle-520-cours-details": [],
   "clair-instrument-sarcelle-520-erreur": [],
   "clair-instrument-sarcelle-520-file-arret": [],
   "clair-instrument-sarcelle-520-file-fin": [],
@@ -1318,9 +1070,7 @@
   "clair-instrument-sarcelle-520-pause": [],
   "clair-instrument-sarcelle-520-rattrapage": [],
   "clair-instrument-sarcelle-520-reglages": [],
-  "clair-instrument-sarcelle-520-rel-bornes": [
-   "ZONE A DEFILER de 11 px"
-  ],
+  "clair-instrument-sarcelle-520-rel-bornes": [],
   "clair-instrument-sarcelle-520-relecture": [],
   "clair-instrument-sarcelle-520-repos": [],
   "clair-instrument-sarcelle-520-stats": [],
@@ -1329,12 +1079,7 @@
   "clair-instrument-sarcelle-560-capture": [],
   "clair-instrument-sarcelle-560-constellation": [],
   "clair-instrument-sarcelle-560-cours": [],
-  "clair-instrument-sarcelle-560-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-sarcelle-560-cours-details": [],
   "clair-instrument-sarcelle-560-erreur": [],
   "clair-instrument-sarcelle-560-file-arret": [],
   "clair-instrument-sarcelle-560-file-fin": [],
@@ -1346,9 +1091,7 @@
   "clair-instrument-sarcelle-560-pause": [],
   "clair-instrument-sarcelle-560-rattrapage": [],
   "clair-instrument-sarcelle-560-reglages": [],
-  "clair-instrument-sarcelle-560-rel-bornes": [
-   "ZONE A DEFILER de 11 px"
-  ],
+  "clair-instrument-sarcelle-560-rel-bornes": [],
   "clair-instrument-sarcelle-560-relecture": [],
   "clair-instrument-sarcelle-560-repos": [],
   "clair-instrument-sarcelle-560-stats": [],
@@ -1357,12 +1100,7 @@
   "clair-instrument-sarcelle-600-capture": [],
   "clair-instrument-sarcelle-600-constellation": [],
   "clair-instrument-sarcelle-600-cours": [],
-  "clair-instrument-sarcelle-600-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-sarcelle-600-cours-details": [],
   "clair-instrument-sarcelle-600-erreur": [],
   "clair-instrument-sarcelle-600-file-arret": [],
   "clair-instrument-sarcelle-600-file-fin": [],
@@ -1374,9 +1112,7 @@
   "clair-instrument-sarcelle-600-pause": [],
   "clair-instrument-sarcelle-600-rattrapage": [],
   "clair-instrument-sarcelle-600-reglages": [],
-  "clair-instrument-sarcelle-600-rel-bornes": [
-   "ZONE A DEFILER de 11 px"
-  ],
+  "clair-instrument-sarcelle-600-rel-bornes": [],
   "clair-instrument-sarcelle-600-relecture": [],
   "clair-instrument-sarcelle-600-repos": [],
   "clair-instrument-sarcelle-600-stats": [],
@@ -1385,12 +1121,7 @@
   "clair-instrument-sarcelle-640-capture": [],
   "clair-instrument-sarcelle-640-constellation": [],
   "clair-instrument-sarcelle-640-cours": [],
-  "clair-instrument-sarcelle-640-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-sarcelle-640-cours-details": [],
   "clair-instrument-sarcelle-640-erreur": [],
   "clair-instrument-sarcelle-640-file-arret": [],
   "clair-instrument-sarcelle-640-file-fin": [],
@@ -1402,9 +1133,7 @@
   "clair-instrument-sarcelle-640-pause": [],
   "clair-instrument-sarcelle-640-rattrapage": [],
   "clair-instrument-sarcelle-640-reglages": [],
-  "clair-instrument-sarcelle-640-rel-bornes": [
-   "ZONE A DEFILER de 3 px"
-  ],
+  "clair-instrument-sarcelle-640-rel-bornes": [],
   "clair-instrument-sarcelle-640-relecture": [],
   "clair-instrument-sarcelle-640-repos": [],
   "clair-instrument-sarcelle-640-stats": [],
@@ -1413,12 +1142,7 @@
   "clair-instrument-sarcelle-680-capture": [],
   "clair-instrument-sarcelle-680-constellation": [],
   "clair-instrument-sarcelle-680-cours": [],
-  "clair-instrument-sarcelle-680-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-sarcelle-680-cours-details": [],
   "clair-instrument-sarcelle-680-erreur": [],
   "clair-instrument-sarcelle-680-file-arret": [],
   "clair-instrument-sarcelle-680-file-fin": [],
@@ -1430,9 +1154,7 @@
   "clair-instrument-sarcelle-680-pause": [],
   "clair-instrument-sarcelle-680-rattrapage": [],
   "clair-instrument-sarcelle-680-reglages": [],
-  "clair-instrument-sarcelle-680-rel-bornes": [
-   "ZONE A DEFILER de 3 px"
-  ],
+  "clair-instrument-sarcelle-680-rel-bornes": [],
   "clair-instrument-sarcelle-680-relecture": [],
   "clair-instrument-sarcelle-680-repos": [],
   "clair-instrument-sarcelle-680-stats": [],
@@ -1441,12 +1163,7 @@
   "clair-instrument-sarcelle-720-capture": [],
   "clair-instrument-sarcelle-720-constellation": [],
   "clair-instrument-sarcelle-720-cours": [],
-  "clair-instrument-sarcelle-720-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-sarcelle-720-cours-details": [],
   "clair-instrument-sarcelle-720-erreur": [],
   "clair-instrument-sarcelle-720-file-arret": [],
   "clair-instrument-sarcelle-720-file-fin": [],
@@ -1458,9 +1175,7 @@
   "clair-instrument-sarcelle-720-pause": [],
   "clair-instrument-sarcelle-720-rattrapage": [],
   "clair-instrument-sarcelle-720-reglages": [],
-  "clair-instrument-sarcelle-720-rel-bornes": [
-   "ZONE A DEFILER de 3 px"
-  ],
+  "clair-instrument-sarcelle-720-rel-bornes": [],
   "clair-instrument-sarcelle-720-relecture": [],
   "clair-instrument-sarcelle-720-repos": [],
   "clair-instrument-sarcelle-720-stats": [],
@@ -1469,16 +1184,9 @@
   "clair-instrument-signal-320-capture": [],
   "clair-instrument-signal-320-constellation": [],
   "clair-instrument-signal-320-cours": [],
-  "clair-instrument-signal-320-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-signal-320-cours-details": [],
   "clair-instrument-signal-320-erreur": [],
-  "clair-instrument-signal-320-file-arret": [
-   "TRONQUE sg-phrase « Correction interrompue au cut  »",
-   "COUPE EN HAUTEUR sg-phrase « Correction interrompue au cut  »"
-  ],
+  "clair-instrument-signal-320-file-arret": [],
   "clair-instrument-signal-320-file-fin": [],
   "clair-instrument-signal-320-file7": [],
   "clair-instrument-signal-320-fin": [],
@@ -1488,9 +1196,7 @@
   "clair-instrument-signal-320-pause": [],
   "clair-instrument-signal-320-rattrapage": [],
   "clair-instrument-signal-320-reglages": [],
-  "clair-instrument-signal-320-rel-bornes": [
-   "ZONE A DEFILER de 14 px"
-  ],
+  "clair-instrument-signal-320-rel-bornes": [],
   "clair-instrument-signal-320-relecture": [],
   "clair-instrument-signal-320-repos": [],
   "clair-instrument-signal-320-stats": [],
@@ -1499,11 +1205,7 @@
   "clair-instrument-signal-360-capture": [],
   "clair-instrument-signal-360-constellation": [],
   "clair-instrument-signal-360-cours": [],
-  "clair-instrument-signal-360-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-signal-360-cours-details": [],
   "clair-instrument-signal-360-erreur": [],
   "clair-instrument-signal-360-file-arret": [],
   "clair-instrument-signal-360-file-fin": [],
@@ -1515,9 +1217,7 @@
   "clair-instrument-signal-360-pause": [],
   "clair-instrument-signal-360-rattrapage": [],
   "clair-instrument-signal-360-reglages": [],
-  "clair-instrument-signal-360-rel-bornes": [
-   "ZONE A DEFILER de 5 px"
-  ],
+  "clair-instrument-signal-360-rel-bornes": [],
   "clair-instrument-signal-360-relecture": [],
   "clair-instrument-signal-360-repos": [],
   "clair-instrument-signal-360-stats": [],
@@ -1526,11 +1226,7 @@
   "clair-instrument-signal-400-capture": [],
   "clair-instrument-signal-400-constellation": [],
   "clair-instrument-signal-400-cours": [],
-  "clair-instrument-signal-400-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-signal-400-cours-details": [],
   "clair-instrument-signal-400-erreur": [],
   "clair-instrument-signal-400-file-arret": [],
   "clair-instrument-signal-400-file-fin": [],
@@ -1551,11 +1247,7 @@
   "clair-instrument-signal-440-capture": [],
   "clair-instrument-signal-440-constellation": [],
   "clair-instrument-signal-440-cours": [],
-  "clair-instrument-signal-440-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-signal-440-cours-details": [],
   "clair-instrument-signal-440-erreur": [],
   "clair-instrument-signal-440-file-arret": [],
   "clair-instrument-signal-440-file-fin": [],
@@ -1576,12 +1268,7 @@
   "clair-instrument-signal-480-capture": [],
   "clair-instrument-signal-480-constellation": [],
   "clair-instrument-signal-480-cours": [],
-  "clair-instrument-signal-480-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-signal-480-cours-details": [],
   "clair-instrument-signal-480-erreur": [],
   "clair-instrument-signal-480-file-arret": [],
   "clair-instrument-signal-480-file-fin": [],
@@ -1593,9 +1280,7 @@
   "clair-instrument-signal-480-pause": [],
   "clair-instrument-signal-480-rattrapage": [],
   "clair-instrument-signal-480-reglages": [],
-  "clair-instrument-signal-480-rel-bornes": [
-   "ZONE A DEFILER de 18 px"
-  ],
+  "clair-instrument-signal-480-rel-bornes": [],
   "clair-instrument-signal-480-relecture": [],
   "clair-instrument-signal-480-repos": [],
   "clair-instrument-signal-480-stats": [],
@@ -1604,12 +1289,7 @@
   "clair-instrument-signal-520-capture": [],
   "clair-instrument-signal-520-constellation": [],
   "clair-instrument-signal-520-cours": [],
-  "clair-instrument-signal-520-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-signal-520-cours-details": [],
   "clair-instrument-signal-520-erreur": [],
   "clair-instrument-signal-520-file-arret": [],
   "clair-instrument-signal-520-file-fin": [],
@@ -1621,9 +1301,7 @@
   "clair-instrument-signal-520-pause": [],
   "clair-instrument-signal-520-rattrapage": [],
   "clair-instrument-signal-520-reglages": [],
-  "clair-instrument-signal-520-rel-bornes": [
-   "ZONE A DEFILER de 11 px"
-  ],
+  "clair-instrument-signal-520-rel-bornes": [],
   "clair-instrument-signal-520-relecture": [],
   "clair-instrument-signal-520-repos": [],
   "clair-instrument-signal-520-stats": [],
@@ -1632,12 +1310,7 @@
   "clair-instrument-signal-560-capture": [],
   "clair-instrument-signal-560-constellation": [],
   "clair-instrument-signal-560-cours": [],
-  "clair-instrument-signal-560-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-signal-560-cours-details": [],
   "clair-instrument-signal-560-erreur": [],
   "clair-instrument-signal-560-file-arret": [],
   "clair-instrument-signal-560-file-fin": [],
@@ -1649,9 +1322,7 @@
   "clair-instrument-signal-560-pause": [],
   "clair-instrument-signal-560-rattrapage": [],
   "clair-instrument-signal-560-reglages": [],
-  "clair-instrument-signal-560-rel-bornes": [
-   "ZONE A DEFILER de 11 px"
-  ],
+  "clair-instrument-signal-560-rel-bornes": [],
   "clair-instrument-signal-560-relecture": [],
   "clair-instrument-signal-560-repos": [],
   "clair-instrument-signal-560-stats": [],
@@ -1660,12 +1331,7 @@
   "clair-instrument-signal-600-capture": [],
   "clair-instrument-signal-600-constellation": [],
   "clair-instrument-signal-600-cours": [],
-  "clair-instrument-signal-600-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-signal-600-cours-details": [],
   "clair-instrument-signal-600-erreur": [],
   "clair-instrument-signal-600-file-arret": [],
   "clair-instrument-signal-600-file-fin": [],
@@ -1677,9 +1343,7 @@
   "clair-instrument-signal-600-pause": [],
   "clair-instrument-signal-600-rattrapage": [],
   "clair-instrument-signal-600-reglages": [],
-  "clair-instrument-signal-600-rel-bornes": [
-   "ZONE A DEFILER de 11 px"
-  ],
+  "clair-instrument-signal-600-rel-bornes": [],
   "clair-instrument-signal-600-relecture": [],
   "clair-instrument-signal-600-repos": [],
   "clair-instrument-signal-600-stats": [],
@@ -1688,12 +1352,7 @@
   "clair-instrument-signal-640-capture": [],
   "clair-instrument-signal-640-constellation": [],
   "clair-instrument-signal-640-cours": [],
-  "clair-instrument-signal-640-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-signal-640-cours-details": [],
   "clair-instrument-signal-640-erreur": [],
   "clair-instrument-signal-640-file-arret": [],
   "clair-instrument-signal-640-file-fin": [],
@@ -1705,9 +1364,7 @@
   "clair-instrument-signal-640-pause": [],
   "clair-instrument-signal-640-rattrapage": [],
   "clair-instrument-signal-640-reglages": [],
-  "clair-instrument-signal-640-rel-bornes": [
-   "ZONE A DEFILER de 3 px"
-  ],
+  "clair-instrument-signal-640-rel-bornes": [],
   "clair-instrument-signal-640-relecture": [],
   "clair-instrument-signal-640-repos": [],
   "clair-instrument-signal-640-stats": [],
@@ -1716,12 +1373,7 @@
   "clair-instrument-signal-680-capture": [],
   "clair-instrument-signal-680-constellation": [],
   "clair-instrument-signal-680-cours": [],
-  "clair-instrument-signal-680-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-signal-680-cours-details": [],
   "clair-instrument-signal-680-erreur": [],
   "clair-instrument-signal-680-file-arret": [],
   "clair-instrument-signal-680-file-fin": [],
@@ -1733,9 +1385,7 @@
   "clair-instrument-signal-680-pause": [],
   "clair-instrument-signal-680-rattrapage": [],
   "clair-instrument-signal-680-reglages": [],
-  "clair-instrument-signal-680-rel-bornes": [
-   "ZONE A DEFILER de 3 px"
-  ],
+  "clair-instrument-signal-680-rel-bornes": [],
   "clair-instrument-signal-680-relecture": [],
   "clair-instrument-signal-680-repos": [],
   "clair-instrument-signal-680-stats": [],
@@ -1744,12 +1394,7 @@
   "clair-instrument-signal-720-capture": [],
   "clair-instrument-signal-720-constellation": [],
   "clair-instrument-signal-720-cours": [],
-  "clair-instrument-signal-720-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "clair-instrument-signal-720-cours-details": [],
   "clair-instrument-signal-720-erreur": [],
   "clair-instrument-signal-720-file-arret": [],
   "clair-instrument-signal-720-file-fin": [],
@@ -1761,9 +1406,7 @@
   "clair-instrument-signal-720-pause": [],
   "clair-instrument-signal-720-rattrapage": [],
   "clair-instrument-signal-720-reglages": [],
-  "clair-instrument-signal-720-rel-bornes": [
-   "ZONE A DEFILER de 3 px"
-  ],
+  "clair-instrument-signal-720-rel-bornes": [],
   "clair-instrument-signal-720-relecture": [],
   "clair-instrument-signal-720-repos": [],
   "clair-instrument-signal-720-stats": [],
@@ -1772,16 +1415,9 @@
   "sombre-fil-glacier-320-capture": [],
   "sombre-fil-glacier-320-constellation": [],
   "sombre-fil-glacier-320-cours": [],
-  "sombre-fil-glacier-320-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-glacier-320-cours-details": [],
   "sombre-fil-glacier-320-erreur": [],
-  "sombre-fil-glacier-320-file-arret": [
-   "TRONQUE sg-phrase « Correction interrompue au cut  »",
-   "COUPE EN HAUTEUR sg-phrase « Correction interrompue au cut  »"
-  ],
+  "sombre-fil-glacier-320-file-arret": [],
   "sombre-fil-glacier-320-file-fin": [],
   "sombre-fil-glacier-320-file7": [],
   "sombre-fil-glacier-320-fin": [],
@@ -1800,11 +1436,7 @@
   "sombre-fil-glacier-360-capture": [],
   "sombre-fil-glacier-360-constellation": [],
   "sombre-fil-glacier-360-cours": [],
-  "sombre-fil-glacier-360-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-glacier-360-cours-details": [],
   "sombre-fil-glacier-360-erreur": [],
   "sombre-fil-glacier-360-file-arret": [],
   "sombre-fil-glacier-360-file-fin": [],
@@ -1825,11 +1457,7 @@
   "sombre-fil-glacier-400-capture": [],
   "sombre-fil-glacier-400-constellation": [],
   "sombre-fil-glacier-400-cours": [],
-  "sombre-fil-glacier-400-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-glacier-400-cours-details": [],
   "sombre-fil-glacier-400-erreur": [],
   "sombre-fil-glacier-400-file-arret": [],
   "sombre-fil-glacier-400-file-fin": [],
@@ -1850,11 +1478,7 @@
   "sombre-fil-glacier-440-capture": [],
   "sombre-fil-glacier-440-constellation": [],
   "sombre-fil-glacier-440-cours": [],
-  "sombre-fil-glacier-440-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-glacier-440-cours-details": [],
   "sombre-fil-glacier-440-erreur": [],
   "sombre-fil-glacier-440-file-arret": [],
   "sombre-fil-glacier-440-file-fin": [],
@@ -1875,11 +1499,7 @@
   "sombre-fil-glacier-480-capture": [],
   "sombre-fil-glacier-480-constellation": [],
   "sombre-fil-glacier-480-cours": [],
-  "sombre-fil-glacier-480-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-glacier-480-cours-details": [],
   "sombre-fil-glacier-480-erreur": [],
   "sombre-fil-glacier-480-file-arret": [],
   "sombre-fil-glacier-480-file-fin": [],
@@ -1900,11 +1520,7 @@
   "sombre-fil-glacier-520-capture": [],
   "sombre-fil-glacier-520-constellation": [],
   "sombre-fil-glacier-520-cours": [],
-  "sombre-fil-glacier-520-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-glacier-520-cours-details": [],
   "sombre-fil-glacier-520-erreur": [],
   "sombre-fil-glacier-520-file-arret": [],
   "sombre-fil-glacier-520-file-fin": [],
@@ -1925,11 +1541,7 @@
   "sombre-fil-glacier-560-capture": [],
   "sombre-fil-glacier-560-constellation": [],
   "sombre-fil-glacier-560-cours": [],
-  "sombre-fil-glacier-560-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-glacier-560-cours-details": [],
   "sombre-fil-glacier-560-erreur": [],
   "sombre-fil-glacier-560-file-arret": [],
   "sombre-fil-glacier-560-file-fin": [],
@@ -1950,11 +1562,7 @@
   "sombre-fil-glacier-600-capture": [],
   "sombre-fil-glacier-600-constellation": [],
   "sombre-fil-glacier-600-cours": [],
-  "sombre-fil-glacier-600-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-glacier-600-cours-details": [],
   "sombre-fil-glacier-600-erreur": [],
   "sombre-fil-glacier-600-file-arret": [],
   "sombre-fil-glacier-600-file-fin": [],
@@ -1975,11 +1583,7 @@
   "sombre-fil-glacier-640-capture": [],
   "sombre-fil-glacier-640-constellation": [],
   "sombre-fil-glacier-640-cours": [],
-  "sombre-fil-glacier-640-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-glacier-640-cours-details": [],
   "sombre-fil-glacier-640-erreur": [],
   "sombre-fil-glacier-640-file-arret": [],
   "sombre-fil-glacier-640-file-fin": [],
@@ -2000,11 +1604,7 @@
   "sombre-fil-glacier-680-capture": [],
   "sombre-fil-glacier-680-constellation": [],
   "sombre-fil-glacier-680-cours": [],
-  "sombre-fil-glacier-680-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-glacier-680-cours-details": [],
   "sombre-fil-glacier-680-erreur": [],
   "sombre-fil-glacier-680-file-arret": [],
   "sombre-fil-glacier-680-file-fin": [],
@@ -2025,11 +1625,7 @@
   "sombre-fil-glacier-720-capture": [],
   "sombre-fil-glacier-720-constellation": [],
   "sombre-fil-glacier-720-cours": [],
-  "sombre-fil-glacier-720-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-glacier-720-cours-details": [],
   "sombre-fil-glacier-720-erreur": [],
   "sombre-fil-glacier-720-file-arret": [],
   "sombre-fil-glacier-720-file-fin": [],
@@ -2050,16 +1646,9 @@
   "sombre-fil-sarcelle-320-capture": [],
   "sombre-fil-sarcelle-320-constellation": [],
   "sombre-fil-sarcelle-320-cours": [],
-  "sombre-fil-sarcelle-320-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-sarcelle-320-cours-details": [],
   "sombre-fil-sarcelle-320-erreur": [],
-  "sombre-fil-sarcelle-320-file-arret": [
-   "TRONQUE sg-phrase « Correction interrompue au cut  »",
-   "COUPE EN HAUTEUR sg-phrase « Correction interrompue au cut  »"
-  ],
+  "sombre-fil-sarcelle-320-file-arret": [],
   "sombre-fil-sarcelle-320-file-fin": [],
   "sombre-fil-sarcelle-320-file7": [],
   "sombre-fil-sarcelle-320-fin": [],
@@ -2078,11 +1667,7 @@
   "sombre-fil-sarcelle-360-capture": [],
   "sombre-fil-sarcelle-360-constellation": [],
   "sombre-fil-sarcelle-360-cours": [],
-  "sombre-fil-sarcelle-360-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-sarcelle-360-cours-details": [],
   "sombre-fil-sarcelle-360-erreur": [],
   "sombre-fil-sarcelle-360-file-arret": [],
   "sombre-fil-sarcelle-360-file-fin": [],
@@ -2103,11 +1688,7 @@
   "sombre-fil-sarcelle-400-capture": [],
   "sombre-fil-sarcelle-400-constellation": [],
   "sombre-fil-sarcelle-400-cours": [],
-  "sombre-fil-sarcelle-400-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-sarcelle-400-cours-details": [],
   "sombre-fil-sarcelle-400-erreur": [],
   "sombre-fil-sarcelle-400-file-arret": [],
   "sombre-fil-sarcelle-400-file-fin": [],
@@ -2128,11 +1709,7 @@
   "sombre-fil-sarcelle-440-capture": [],
   "sombre-fil-sarcelle-440-constellation": [],
   "sombre-fil-sarcelle-440-cours": [],
-  "sombre-fil-sarcelle-440-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-sarcelle-440-cours-details": [],
   "sombre-fil-sarcelle-440-erreur": [],
   "sombre-fil-sarcelle-440-file-arret": [],
   "sombre-fil-sarcelle-440-file-fin": [],
@@ -2153,11 +1730,7 @@
   "sombre-fil-sarcelle-480-capture": [],
   "sombre-fil-sarcelle-480-constellation": [],
   "sombre-fil-sarcelle-480-cours": [],
-  "sombre-fil-sarcelle-480-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-sarcelle-480-cours-details": [],
   "sombre-fil-sarcelle-480-erreur": [],
   "sombre-fil-sarcelle-480-file-arret": [],
   "sombre-fil-sarcelle-480-file-fin": [],
@@ -2178,11 +1751,7 @@
   "sombre-fil-sarcelle-520-capture": [],
   "sombre-fil-sarcelle-520-constellation": [],
   "sombre-fil-sarcelle-520-cours": [],
-  "sombre-fil-sarcelle-520-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-sarcelle-520-cours-details": [],
   "sombre-fil-sarcelle-520-erreur": [],
   "sombre-fil-sarcelle-520-file-arret": [],
   "sombre-fil-sarcelle-520-file-fin": [],
@@ -2203,11 +1772,7 @@
   "sombre-fil-sarcelle-560-capture": [],
   "sombre-fil-sarcelle-560-constellation": [],
   "sombre-fil-sarcelle-560-cours": [],
-  "sombre-fil-sarcelle-560-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-sarcelle-560-cours-details": [],
   "sombre-fil-sarcelle-560-erreur": [],
   "sombre-fil-sarcelle-560-file-arret": [],
   "sombre-fil-sarcelle-560-file-fin": [],
@@ -2228,11 +1793,7 @@
   "sombre-fil-sarcelle-600-capture": [],
   "sombre-fil-sarcelle-600-constellation": [],
   "sombre-fil-sarcelle-600-cours": [],
-  "sombre-fil-sarcelle-600-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-sarcelle-600-cours-details": [],
   "sombre-fil-sarcelle-600-erreur": [],
   "sombre-fil-sarcelle-600-file-arret": [],
   "sombre-fil-sarcelle-600-file-fin": [],
@@ -2253,11 +1814,7 @@
   "sombre-fil-sarcelle-640-capture": [],
   "sombre-fil-sarcelle-640-constellation": [],
   "sombre-fil-sarcelle-640-cours": [],
-  "sombre-fil-sarcelle-640-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-sarcelle-640-cours-details": [],
   "sombre-fil-sarcelle-640-erreur": [],
   "sombre-fil-sarcelle-640-file-arret": [],
   "sombre-fil-sarcelle-640-file-fin": [],
@@ -2278,11 +1835,7 @@
   "sombre-fil-sarcelle-680-capture": [],
   "sombre-fil-sarcelle-680-constellation": [],
   "sombre-fil-sarcelle-680-cours": [],
-  "sombre-fil-sarcelle-680-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-sarcelle-680-cours-details": [],
   "sombre-fil-sarcelle-680-erreur": [],
   "sombre-fil-sarcelle-680-file-arret": [],
   "sombre-fil-sarcelle-680-file-fin": [],
@@ -2303,11 +1856,7 @@
   "sombre-fil-sarcelle-720-capture": [],
   "sombre-fil-sarcelle-720-constellation": [],
   "sombre-fil-sarcelle-720-cours": [],
-  "sombre-fil-sarcelle-720-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-sarcelle-720-cours-details": [],
   "sombre-fil-sarcelle-720-erreur": [],
   "sombre-fil-sarcelle-720-file-arret": [],
   "sombre-fil-sarcelle-720-file-fin": [],
@@ -2328,16 +1877,9 @@
   "sombre-fil-signal-320-capture": [],
   "sombre-fil-signal-320-constellation": [],
   "sombre-fil-signal-320-cours": [],
-  "sombre-fil-signal-320-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-signal-320-cours-details": [],
   "sombre-fil-signal-320-erreur": [],
-  "sombre-fil-signal-320-file-arret": [
-   "TRONQUE sg-phrase « Correction interrompue au cut  »",
-   "COUPE EN HAUTEUR sg-phrase « Correction interrompue au cut  »"
-  ],
+  "sombre-fil-signal-320-file-arret": [],
   "sombre-fil-signal-320-file-fin": [],
   "sombre-fil-signal-320-file7": [],
   "sombre-fil-signal-320-fin": [],
@@ -2356,11 +1898,7 @@
   "sombre-fil-signal-360-capture": [],
   "sombre-fil-signal-360-constellation": [],
   "sombre-fil-signal-360-cours": [],
-  "sombre-fil-signal-360-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-signal-360-cours-details": [],
   "sombre-fil-signal-360-erreur": [],
   "sombre-fil-signal-360-file-arret": [],
   "sombre-fil-signal-360-file-fin": [],
@@ -2381,11 +1919,7 @@
   "sombre-fil-signal-400-capture": [],
   "sombre-fil-signal-400-constellation": [],
   "sombre-fil-signal-400-cours": [],
-  "sombre-fil-signal-400-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-signal-400-cours-details": [],
   "sombre-fil-signal-400-erreur": [],
   "sombre-fil-signal-400-file-arret": [],
   "sombre-fil-signal-400-file-fin": [],
@@ -2406,11 +1940,7 @@
   "sombre-fil-signal-440-capture": [],
   "sombre-fil-signal-440-constellation": [],
   "sombre-fil-signal-440-cours": [],
-  "sombre-fil-signal-440-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-signal-440-cours-details": [],
   "sombre-fil-signal-440-erreur": [],
   "sombre-fil-signal-440-file-arret": [],
   "sombre-fil-signal-440-file-fin": [],
@@ -2431,11 +1961,7 @@
   "sombre-fil-signal-480-capture": [],
   "sombre-fil-signal-480-constellation": [],
   "sombre-fil-signal-480-cours": [],
-  "sombre-fil-signal-480-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-signal-480-cours-details": [],
   "sombre-fil-signal-480-erreur": [],
   "sombre-fil-signal-480-file-arret": [],
   "sombre-fil-signal-480-file-fin": [],
@@ -2456,11 +1982,7 @@
   "sombre-fil-signal-520-capture": [],
   "sombre-fil-signal-520-constellation": [],
   "sombre-fil-signal-520-cours": [],
-  "sombre-fil-signal-520-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-signal-520-cours-details": [],
   "sombre-fil-signal-520-erreur": [],
   "sombre-fil-signal-520-file-arret": [],
   "sombre-fil-signal-520-file-fin": [],
@@ -2481,11 +2003,7 @@
   "sombre-fil-signal-560-capture": [],
   "sombre-fil-signal-560-constellation": [],
   "sombre-fil-signal-560-cours": [],
-  "sombre-fil-signal-560-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-signal-560-cours-details": [],
   "sombre-fil-signal-560-erreur": [],
   "sombre-fil-signal-560-file-arret": [],
   "sombre-fil-signal-560-file-fin": [],
@@ -2506,11 +2024,7 @@
   "sombre-fil-signal-600-capture": [],
   "sombre-fil-signal-600-constellation": [],
   "sombre-fil-signal-600-cours": [],
-  "sombre-fil-signal-600-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-signal-600-cours-details": [],
   "sombre-fil-signal-600-erreur": [],
   "sombre-fil-signal-600-file-arret": [],
   "sombre-fil-signal-600-file-fin": [],
@@ -2531,11 +2045,7 @@
   "sombre-fil-signal-640-capture": [],
   "sombre-fil-signal-640-constellation": [],
   "sombre-fil-signal-640-cours": [],
-  "sombre-fil-signal-640-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-signal-640-cours-details": [],
   "sombre-fil-signal-640-erreur": [],
   "sombre-fil-signal-640-file-arret": [],
   "sombre-fil-signal-640-file-fin": [],
@@ -2556,11 +2066,7 @@
   "sombre-fil-signal-680-capture": [],
   "sombre-fil-signal-680-constellation": [],
   "sombre-fil-signal-680-cours": [],
-  "sombre-fil-signal-680-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-signal-680-cours-details": [],
   "sombre-fil-signal-680-erreur": [],
   "sombre-fil-signal-680-file-arret": [],
   "sombre-fil-signal-680-file-fin": [],
@@ -2581,11 +2087,7 @@
   "sombre-fil-signal-720-capture": [],
   "sombre-fil-signal-720-constellation": [],
   "sombre-fil-signal-720-cours": [],
-  "sombre-fil-signal-720-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-fil-signal-720-cours-details": [],
   "sombre-fil-signal-720-erreur": [],
   "sombre-fil-signal-720-file-arret": [],
   "sombre-fil-signal-720-file-fin": [],
@@ -2606,16 +2108,9 @@
   "sombre-instrument-glacier-320-capture": [],
   "sombre-instrument-glacier-320-constellation": [],
   "sombre-instrument-glacier-320-cours": [],
-  "sombre-instrument-glacier-320-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-glacier-320-cours-details": [],
   "sombre-instrument-glacier-320-erreur": [],
-  "sombre-instrument-glacier-320-file-arret": [
-   "TRONQUE sg-phrase « Correction interrompue au cut  »",
-   "COUPE EN HAUTEUR sg-phrase « Correction interrompue au cut  »"
-  ],
+  "sombre-instrument-glacier-320-file-arret": [],
   "sombre-instrument-glacier-320-file-fin": [],
   "sombre-instrument-glacier-320-file7": [],
   "sombre-instrument-glacier-320-fin": [],
@@ -2625,9 +2120,7 @@
   "sombre-instrument-glacier-320-pause": [],
   "sombre-instrument-glacier-320-rattrapage": [],
   "sombre-instrument-glacier-320-reglages": [],
-  "sombre-instrument-glacier-320-rel-bornes": [
-   "ZONE A DEFILER de 14 px"
-  ],
+  "sombre-instrument-glacier-320-rel-bornes": [],
   "sombre-instrument-glacier-320-relecture": [],
   "sombre-instrument-glacier-320-repos": [],
   "sombre-instrument-glacier-320-stats": [],
@@ -2636,11 +2129,7 @@
   "sombre-instrument-glacier-360-capture": [],
   "sombre-instrument-glacier-360-constellation": [],
   "sombre-instrument-glacier-360-cours": [],
-  "sombre-instrument-glacier-360-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-glacier-360-cours-details": [],
   "sombre-instrument-glacier-360-erreur": [],
   "sombre-instrument-glacier-360-file-arret": [],
   "sombre-instrument-glacier-360-file-fin": [],
@@ -2652,9 +2141,7 @@
   "sombre-instrument-glacier-360-pause": [],
   "sombre-instrument-glacier-360-rattrapage": [],
   "sombre-instrument-glacier-360-reglages": [],
-  "sombre-instrument-glacier-360-rel-bornes": [
-   "ZONE A DEFILER de 5 px"
-  ],
+  "sombre-instrument-glacier-360-rel-bornes": [],
   "sombre-instrument-glacier-360-relecture": [],
   "sombre-instrument-glacier-360-repos": [],
   "sombre-instrument-glacier-360-stats": [],
@@ -2663,11 +2150,7 @@
   "sombre-instrument-glacier-400-capture": [],
   "sombre-instrument-glacier-400-constellation": [],
   "sombre-instrument-glacier-400-cours": [],
-  "sombre-instrument-glacier-400-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-glacier-400-cours-details": [],
   "sombre-instrument-glacier-400-erreur": [],
   "sombre-instrument-glacier-400-file-arret": [],
   "sombre-instrument-glacier-400-file-fin": [],
@@ -2688,11 +2171,7 @@
   "sombre-instrument-glacier-440-capture": [],
   "sombre-instrument-glacier-440-constellation": [],
   "sombre-instrument-glacier-440-cours": [],
-  "sombre-instrument-glacier-440-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-glacier-440-cours-details": [],
   "sombre-instrument-glacier-440-erreur": [],
   "sombre-instrument-glacier-440-file-arret": [],
   "sombre-instrument-glacier-440-file-fin": [],
@@ -2713,12 +2192,7 @@
   "sombre-instrument-glacier-480-capture": [],
   "sombre-instrument-glacier-480-constellation": [],
   "sombre-instrument-glacier-480-cours": [],
-  "sombre-instrument-glacier-480-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-glacier-480-cours-details": [],
   "sombre-instrument-glacier-480-erreur": [],
   "sombre-instrument-glacier-480-file-arret": [],
   "sombre-instrument-glacier-480-file-fin": [],
@@ -2730,9 +2204,7 @@
   "sombre-instrument-glacier-480-pause": [],
   "sombre-instrument-glacier-480-rattrapage": [],
   "sombre-instrument-glacier-480-reglages": [],
-  "sombre-instrument-glacier-480-rel-bornes": [
-   "ZONE A DEFILER de 18 px"
-  ],
+  "sombre-instrument-glacier-480-rel-bornes": [],
   "sombre-instrument-glacier-480-relecture": [],
   "sombre-instrument-glacier-480-repos": [],
   "sombre-instrument-glacier-480-stats": [],
@@ -2741,12 +2213,7 @@
   "sombre-instrument-glacier-520-capture": [],
   "sombre-instrument-glacier-520-constellation": [],
   "sombre-instrument-glacier-520-cours": [],
-  "sombre-instrument-glacier-520-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-glacier-520-cours-details": [],
   "sombre-instrument-glacier-520-erreur": [],
   "sombre-instrument-glacier-520-file-arret": [],
   "sombre-instrument-glacier-520-file-fin": [],
@@ -2758,9 +2225,7 @@
   "sombre-instrument-glacier-520-pause": [],
   "sombre-instrument-glacier-520-rattrapage": [],
   "sombre-instrument-glacier-520-reglages": [],
-  "sombre-instrument-glacier-520-rel-bornes": [
-   "ZONE A DEFILER de 11 px"
-  ],
+  "sombre-instrument-glacier-520-rel-bornes": [],
   "sombre-instrument-glacier-520-relecture": [],
   "sombre-instrument-glacier-520-repos": [],
   "sombre-instrument-glacier-520-stats": [],
@@ -2769,12 +2234,7 @@
   "sombre-instrument-glacier-560-capture": [],
   "sombre-instrument-glacier-560-constellation": [],
   "sombre-instrument-glacier-560-cours": [],
-  "sombre-instrument-glacier-560-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-glacier-560-cours-details": [],
   "sombre-instrument-glacier-560-erreur": [],
   "sombre-instrument-glacier-560-file-arret": [],
   "sombre-instrument-glacier-560-file-fin": [],
@@ -2786,9 +2246,7 @@
   "sombre-instrument-glacier-560-pause": [],
   "sombre-instrument-glacier-560-rattrapage": [],
   "sombre-instrument-glacier-560-reglages": [],
-  "sombre-instrument-glacier-560-rel-bornes": [
-   "ZONE A DEFILER de 11 px"
-  ],
+  "sombre-instrument-glacier-560-rel-bornes": [],
   "sombre-instrument-glacier-560-relecture": [],
   "sombre-instrument-glacier-560-repos": [],
   "sombre-instrument-glacier-560-stats": [],
@@ -2797,12 +2255,7 @@
   "sombre-instrument-glacier-600-capture": [],
   "sombre-instrument-glacier-600-constellation": [],
   "sombre-instrument-glacier-600-cours": [],
-  "sombre-instrument-glacier-600-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-glacier-600-cours-details": [],
   "sombre-instrument-glacier-600-erreur": [],
   "sombre-instrument-glacier-600-file-arret": [],
   "sombre-instrument-glacier-600-file-fin": [],
@@ -2814,9 +2267,7 @@
   "sombre-instrument-glacier-600-pause": [],
   "sombre-instrument-glacier-600-rattrapage": [],
   "sombre-instrument-glacier-600-reglages": [],
-  "sombre-instrument-glacier-600-rel-bornes": [
-   "ZONE A DEFILER de 11 px"
-  ],
+  "sombre-instrument-glacier-600-rel-bornes": [],
   "sombre-instrument-glacier-600-relecture": [],
   "sombre-instrument-glacier-600-repos": [],
   "sombre-instrument-glacier-600-stats": [],
@@ -2825,12 +2276,7 @@
   "sombre-instrument-glacier-640-capture": [],
   "sombre-instrument-glacier-640-constellation": [],
   "sombre-instrument-glacier-640-cours": [],
-  "sombre-instrument-glacier-640-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-glacier-640-cours-details": [],
   "sombre-instrument-glacier-640-erreur": [],
   "sombre-instrument-glacier-640-file-arret": [],
   "sombre-instrument-glacier-640-file-fin": [],
@@ -2842,9 +2288,7 @@
   "sombre-instrument-glacier-640-pause": [],
   "sombre-instrument-glacier-640-rattrapage": [],
   "sombre-instrument-glacier-640-reglages": [],
-  "sombre-instrument-glacier-640-rel-bornes": [
-   "ZONE A DEFILER de 3 px"
-  ],
+  "sombre-instrument-glacier-640-rel-bornes": [],
   "sombre-instrument-glacier-640-relecture": [],
   "sombre-instrument-glacier-640-repos": [],
   "sombre-instrument-glacier-640-stats": [],
@@ -2853,12 +2297,7 @@
   "sombre-instrument-glacier-680-capture": [],
   "sombre-instrument-glacier-680-constellation": [],
   "sombre-instrument-glacier-680-cours": [],
-  "sombre-instrument-glacier-680-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-glacier-680-cours-details": [],
   "sombre-instrument-glacier-680-erreur": [],
   "sombre-instrument-glacier-680-file-arret": [],
   "sombre-instrument-glacier-680-file-fin": [],
@@ -2870,9 +2309,7 @@
   "sombre-instrument-glacier-680-pause": [],
   "sombre-instrument-glacier-680-rattrapage": [],
   "sombre-instrument-glacier-680-reglages": [],
-  "sombre-instrument-glacier-680-rel-bornes": [
-   "ZONE A DEFILER de 3 px"
-  ],
+  "sombre-instrument-glacier-680-rel-bornes": [],
   "sombre-instrument-glacier-680-relecture": [],
   "sombre-instrument-glacier-680-repos": [],
   "sombre-instrument-glacier-680-stats": [],
@@ -2881,12 +2318,7 @@
   "sombre-instrument-glacier-720-capture": [],
   "sombre-instrument-glacier-720-constellation": [],
   "sombre-instrument-glacier-720-cours": [],
-  "sombre-instrument-glacier-720-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-glacier-720-cours-details": [],
   "sombre-instrument-glacier-720-erreur": [],
   "sombre-instrument-glacier-720-file-arret": [],
   "sombre-instrument-glacier-720-file-fin": [],
@@ -2898,9 +2330,7 @@
   "sombre-instrument-glacier-720-pause": [],
   "sombre-instrument-glacier-720-rattrapage": [],
   "sombre-instrument-glacier-720-reglages": [],
-  "sombre-instrument-glacier-720-rel-bornes": [
-   "ZONE A DEFILER de 3 px"
-  ],
+  "sombre-instrument-glacier-720-rel-bornes": [],
   "sombre-instrument-glacier-720-relecture": [],
   "sombre-instrument-glacier-720-repos": [],
   "sombre-instrument-glacier-720-stats": [],
@@ -2909,16 +2339,9 @@
   "sombre-instrument-sarcelle-320-capture": [],
   "sombre-instrument-sarcelle-320-constellation": [],
   "sombre-instrument-sarcelle-320-cours": [],
-  "sombre-instrument-sarcelle-320-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-sarcelle-320-cours-details": [],
   "sombre-instrument-sarcelle-320-erreur": [],
-  "sombre-instrument-sarcelle-320-file-arret": [
-   "TRONQUE sg-phrase « Correction interrompue au cut  »",
-   "COUPE EN HAUTEUR sg-phrase « Correction interrompue au cut  »"
-  ],
+  "sombre-instrument-sarcelle-320-file-arret": [],
   "sombre-instrument-sarcelle-320-file-fin": [],
   "sombre-instrument-sarcelle-320-file7": [],
   "sombre-instrument-sarcelle-320-fin": [],
@@ -2928,9 +2351,7 @@
   "sombre-instrument-sarcelle-320-pause": [],
   "sombre-instrument-sarcelle-320-rattrapage": [],
   "sombre-instrument-sarcelle-320-reglages": [],
-  "sombre-instrument-sarcelle-320-rel-bornes": [
-   "ZONE A DEFILER de 14 px"
-  ],
+  "sombre-instrument-sarcelle-320-rel-bornes": [],
   "sombre-instrument-sarcelle-320-relecture": [],
   "sombre-instrument-sarcelle-320-repos": [],
   "sombre-instrument-sarcelle-320-stats": [],
@@ -2939,11 +2360,7 @@
   "sombre-instrument-sarcelle-360-capture": [],
   "sombre-instrument-sarcelle-360-constellation": [],
   "sombre-instrument-sarcelle-360-cours": [],
-  "sombre-instrument-sarcelle-360-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-sarcelle-360-cours-details": [],
   "sombre-instrument-sarcelle-360-erreur": [],
   "sombre-instrument-sarcelle-360-file-arret": [],
   "sombre-instrument-sarcelle-360-file-fin": [],
@@ -2955,9 +2372,7 @@
   "sombre-instrument-sarcelle-360-pause": [],
   "sombre-instrument-sarcelle-360-rattrapage": [],
   "sombre-instrument-sarcelle-360-reglages": [],
-  "sombre-instrument-sarcelle-360-rel-bornes": [
-   "ZONE A DEFILER de 5 px"
-  ],
+  "sombre-instrument-sarcelle-360-rel-bornes": [],
   "sombre-instrument-sarcelle-360-relecture": [],
   "sombre-instrument-sarcelle-360-repos": [],
   "sombre-instrument-sarcelle-360-stats": [],
@@ -2966,11 +2381,7 @@
   "sombre-instrument-sarcelle-400-capture": [],
   "sombre-instrument-sarcelle-400-constellation": [],
   "sombre-instrument-sarcelle-400-cours": [],
-  "sombre-instrument-sarcelle-400-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-sarcelle-400-cours-details": [],
   "sombre-instrument-sarcelle-400-erreur": [],
   "sombre-instrument-sarcelle-400-file-arret": [],
   "sombre-instrument-sarcelle-400-file-fin": [],
@@ -2991,11 +2402,7 @@
   "sombre-instrument-sarcelle-440-capture": [],
   "sombre-instrument-sarcelle-440-constellation": [],
   "sombre-instrument-sarcelle-440-cours": [],
-  "sombre-instrument-sarcelle-440-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-sarcelle-440-cours-details": [],
   "sombre-instrument-sarcelle-440-erreur": [],
   "sombre-instrument-sarcelle-440-file-arret": [],
   "sombre-instrument-sarcelle-440-file-fin": [],
@@ -3016,12 +2423,7 @@
   "sombre-instrument-sarcelle-480-capture": [],
   "sombre-instrument-sarcelle-480-constellation": [],
   "sombre-instrument-sarcelle-480-cours": [],
-  "sombre-instrument-sarcelle-480-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-sarcelle-480-cours-details": [],
   "sombre-instrument-sarcelle-480-erreur": [],
   "sombre-instrument-sarcelle-480-file-arret": [],
   "sombre-instrument-sarcelle-480-file-fin": [],
@@ -3033,9 +2435,7 @@
   "sombre-instrument-sarcelle-480-pause": [],
   "sombre-instrument-sarcelle-480-rattrapage": [],
   "sombre-instrument-sarcelle-480-reglages": [],
-  "sombre-instrument-sarcelle-480-rel-bornes": [
-   "ZONE A DEFILER de 18 px"
-  ],
+  "sombre-instrument-sarcelle-480-rel-bornes": [],
   "sombre-instrument-sarcelle-480-relecture": [],
   "sombre-instrument-sarcelle-480-repos": [],
   "sombre-instrument-sarcelle-480-stats": [],
@@ -3044,12 +2444,7 @@
   "sombre-instrument-sarcelle-520-capture": [],
   "sombre-instrument-sarcelle-520-constellation": [],
   "sombre-instrument-sarcelle-520-cours": [],
-  "sombre-instrument-sarcelle-520-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-sarcelle-520-cours-details": [],
   "sombre-instrument-sarcelle-520-erreur": [],
   "sombre-instrument-sarcelle-520-file-arret": [],
   "sombre-instrument-sarcelle-520-file-fin": [],
@@ -3061,9 +2456,7 @@
   "sombre-instrument-sarcelle-520-pause": [],
   "sombre-instrument-sarcelle-520-rattrapage": [],
   "sombre-instrument-sarcelle-520-reglages": [],
-  "sombre-instrument-sarcelle-520-rel-bornes": [
-   "ZONE A DEFILER de 11 px"
-  ],
+  "sombre-instrument-sarcelle-520-rel-bornes": [],
   "sombre-instrument-sarcelle-520-relecture": [],
   "sombre-instrument-sarcelle-520-repos": [],
   "sombre-instrument-sarcelle-520-stats": [],
@@ -3072,12 +2465,7 @@
   "sombre-instrument-sarcelle-560-capture": [],
   "sombre-instrument-sarcelle-560-constellation": [],
   "sombre-instrument-sarcelle-560-cours": [],
-  "sombre-instrument-sarcelle-560-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-sarcelle-560-cours-details": [],
   "sombre-instrument-sarcelle-560-erreur": [],
   "sombre-instrument-sarcelle-560-file-arret": [],
   "sombre-instrument-sarcelle-560-file-fin": [],
@@ -3089,9 +2477,7 @@
   "sombre-instrument-sarcelle-560-pause": [],
   "sombre-instrument-sarcelle-560-rattrapage": [],
   "sombre-instrument-sarcelle-560-reglages": [],
-  "sombre-instrument-sarcelle-560-rel-bornes": [
-   "ZONE A DEFILER de 11 px"
-  ],
+  "sombre-instrument-sarcelle-560-rel-bornes": [],
   "sombre-instrument-sarcelle-560-relecture": [],
   "sombre-instrument-sarcelle-560-repos": [],
   "sombre-instrument-sarcelle-560-stats": [],
@@ -3100,12 +2486,7 @@
   "sombre-instrument-sarcelle-600-capture": [],
   "sombre-instrument-sarcelle-600-constellation": [],
   "sombre-instrument-sarcelle-600-cours": [],
-  "sombre-instrument-sarcelle-600-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-sarcelle-600-cours-details": [],
   "sombre-instrument-sarcelle-600-erreur": [],
   "sombre-instrument-sarcelle-600-file-arret": [],
   "sombre-instrument-sarcelle-600-file-fin": [],
@@ -3117,9 +2498,7 @@
   "sombre-instrument-sarcelle-600-pause": [],
   "sombre-instrument-sarcelle-600-rattrapage": [],
   "sombre-instrument-sarcelle-600-reglages": [],
-  "sombre-instrument-sarcelle-600-rel-bornes": [
-   "ZONE A DEFILER de 11 px"
-  ],
+  "sombre-instrument-sarcelle-600-rel-bornes": [],
   "sombre-instrument-sarcelle-600-relecture": [],
   "sombre-instrument-sarcelle-600-repos": [],
   "sombre-instrument-sarcelle-600-stats": [],
@@ -3128,12 +2507,7 @@
   "sombre-instrument-sarcelle-640-capture": [],
   "sombre-instrument-sarcelle-640-constellation": [],
   "sombre-instrument-sarcelle-640-cours": [],
-  "sombre-instrument-sarcelle-640-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-sarcelle-640-cours-details": [],
   "sombre-instrument-sarcelle-640-erreur": [],
   "sombre-instrument-sarcelle-640-file-arret": [],
   "sombre-instrument-sarcelle-640-file-fin": [],
@@ -3145,9 +2519,7 @@
   "sombre-instrument-sarcelle-640-pause": [],
   "sombre-instrument-sarcelle-640-rattrapage": [],
   "sombre-instrument-sarcelle-640-reglages": [],
-  "sombre-instrument-sarcelle-640-rel-bornes": [
-   "ZONE A DEFILER de 3 px"
-  ],
+  "sombre-instrument-sarcelle-640-rel-bornes": [],
   "sombre-instrument-sarcelle-640-relecture": [],
   "sombre-instrument-sarcelle-640-repos": [],
   "sombre-instrument-sarcelle-640-stats": [],
@@ -3156,12 +2528,7 @@
   "sombre-instrument-sarcelle-680-capture": [],
   "sombre-instrument-sarcelle-680-constellation": [],
   "sombre-instrument-sarcelle-680-cours": [],
-  "sombre-instrument-sarcelle-680-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-sarcelle-680-cours-details": [],
   "sombre-instrument-sarcelle-680-erreur": [],
   "sombre-instrument-sarcelle-680-file-arret": [],
   "sombre-instrument-sarcelle-680-file-fin": [],
@@ -3173,9 +2540,7 @@
   "sombre-instrument-sarcelle-680-pause": [],
   "sombre-instrument-sarcelle-680-rattrapage": [],
   "sombre-instrument-sarcelle-680-reglages": [],
-  "sombre-instrument-sarcelle-680-rel-bornes": [
-   "ZONE A DEFILER de 3 px"
-  ],
+  "sombre-instrument-sarcelle-680-rel-bornes": [],
   "sombre-instrument-sarcelle-680-relecture": [],
   "sombre-instrument-sarcelle-680-repos": [],
   "sombre-instrument-sarcelle-680-stats": [],
@@ -3184,12 +2549,7 @@
   "sombre-instrument-sarcelle-720-capture": [],
   "sombre-instrument-sarcelle-720-constellation": [],
   "sombre-instrument-sarcelle-720-cours": [],
-  "sombre-instrument-sarcelle-720-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-sarcelle-720-cours-details": [],
   "sombre-instrument-sarcelle-720-erreur": [],
   "sombre-instrument-sarcelle-720-file-arret": [],
   "sombre-instrument-sarcelle-720-file-fin": [],
@@ -3201,9 +2561,7 @@
   "sombre-instrument-sarcelle-720-pause": [],
   "sombre-instrument-sarcelle-720-rattrapage": [],
   "sombre-instrument-sarcelle-720-reglages": [],
-  "sombre-instrument-sarcelle-720-rel-bornes": [
-   "ZONE A DEFILER de 3 px"
-  ],
+  "sombre-instrument-sarcelle-720-rel-bornes": [],
   "sombre-instrument-sarcelle-720-relecture": [],
   "sombre-instrument-sarcelle-720-repos": [],
   "sombre-instrument-sarcelle-720-stats": [],
@@ -3212,16 +2570,9 @@
   "sombre-instrument-signal-320-capture": [],
   "sombre-instrument-signal-320-constellation": [],
   "sombre-instrument-signal-320-cours": [],
-  "sombre-instrument-signal-320-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-signal-320-cours-details": [],
   "sombre-instrument-signal-320-erreur": [],
-  "sombre-instrument-signal-320-file-arret": [
-   "TRONQUE sg-phrase « Correction interrompue au cut  »",
-   "COUPE EN HAUTEUR sg-phrase « Correction interrompue au cut  »"
-  ],
+  "sombre-instrument-signal-320-file-arret": [],
   "sombre-instrument-signal-320-file-fin": [],
   "sombre-instrument-signal-320-file7": [],
   "sombre-instrument-signal-320-fin": [],
@@ -3231,9 +2582,7 @@
   "sombre-instrument-signal-320-pause": [],
   "sombre-instrument-signal-320-rattrapage": [],
   "sombre-instrument-signal-320-reglages": [],
-  "sombre-instrument-signal-320-rel-bornes": [
-   "ZONE A DEFILER de 14 px"
-  ],
+  "sombre-instrument-signal-320-rel-bornes": [],
   "sombre-instrument-signal-320-relecture": [],
   "sombre-instrument-signal-320-repos": [],
   "sombre-instrument-signal-320-stats": [],
@@ -3242,11 +2591,7 @@
   "sombre-instrument-signal-360-capture": [],
   "sombre-instrument-signal-360-constellation": [],
   "sombre-instrument-signal-360-cours": [],
-  "sombre-instrument-signal-360-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-signal-360-cours-details": [],
   "sombre-instrument-signal-360-erreur": [],
   "sombre-instrument-signal-360-file-arret": [],
   "sombre-instrument-signal-360-file-fin": [],
@@ -3258,9 +2603,7 @@
   "sombre-instrument-signal-360-pause": [],
   "sombre-instrument-signal-360-rattrapage": [],
   "sombre-instrument-signal-360-reglages": [],
-  "sombre-instrument-signal-360-rel-bornes": [
-   "ZONE A DEFILER de 5 px"
-  ],
+  "sombre-instrument-signal-360-rel-bornes": [],
   "sombre-instrument-signal-360-relecture": [],
   "sombre-instrument-signal-360-repos": [],
   "sombre-instrument-signal-360-stats": [],
@@ -3269,11 +2612,7 @@
   "sombre-instrument-signal-400-capture": [],
   "sombre-instrument-signal-400-constellation": [],
   "sombre-instrument-signal-400-cours": [],
-  "sombre-instrument-signal-400-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-signal-400-cours-details": [],
   "sombre-instrument-signal-400-erreur": [],
   "sombre-instrument-signal-400-file-arret": [],
   "sombre-instrument-signal-400-file-fin": [],
@@ -3294,11 +2633,7 @@
   "sombre-instrument-signal-440-capture": [],
   "sombre-instrument-signal-440-constellation": [],
   "sombre-instrument-signal-440-cours": [],
-  "sombre-instrument-signal-440-cours-details": [
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-signal-440-cours-details": [],
   "sombre-instrument-signal-440-erreur": [],
   "sombre-instrument-signal-440-file-arret": [],
   "sombre-instrument-signal-440-file-fin": [],
@@ -3319,12 +2654,7 @@
   "sombre-instrument-signal-480-capture": [],
   "sombre-instrument-signal-480-constellation": [],
   "sombre-instrument-signal-480-cours": [],
-  "sombre-instrument-signal-480-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-signal-480-cours-details": [],
   "sombre-instrument-signal-480-erreur": [],
   "sombre-instrument-signal-480-file-arret": [],
   "sombre-instrument-signal-480-file-fin": [],
@@ -3336,9 +2666,7 @@
   "sombre-instrument-signal-480-pause": [],
   "sombre-instrument-signal-480-rattrapage": [],
   "sombre-instrument-signal-480-reglages": [],
-  "sombre-instrument-signal-480-rel-bornes": [
-   "ZONE A DEFILER de 18 px"
-  ],
+  "sombre-instrument-signal-480-rel-bornes": [],
   "sombre-instrument-signal-480-relecture": [],
   "sombre-instrument-signal-480-repos": [],
   "sombre-instrument-signal-480-stats": [],
@@ -3347,12 +2675,7 @@
   "sombre-instrument-signal-520-capture": [],
   "sombre-instrument-signal-520-constellation": [],
   "sombre-instrument-signal-520-cours": [],
-  "sombre-instrument-signal-520-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-signal-520-cours-details": [],
   "sombre-instrument-signal-520-erreur": [],
   "sombre-instrument-signal-520-file-arret": [],
   "sombre-instrument-signal-520-file-fin": [],
@@ -3364,9 +2687,7 @@
   "sombre-instrument-signal-520-pause": [],
   "sombre-instrument-signal-520-rattrapage": [],
   "sombre-instrument-signal-520-reglages": [],
-  "sombre-instrument-signal-520-rel-bornes": [
-   "ZONE A DEFILER de 11 px"
-  ],
+  "sombre-instrument-signal-520-rel-bornes": [],
   "sombre-instrument-signal-520-relecture": [],
   "sombre-instrument-signal-520-repos": [],
   "sombre-instrument-signal-520-stats": [],
@@ -3375,12 +2696,7 @@
   "sombre-instrument-signal-560-capture": [],
   "sombre-instrument-signal-560-constellation": [],
   "sombre-instrument-signal-560-cours": [],
-  "sombre-instrument-signal-560-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-signal-560-cours-details": [],
   "sombre-instrument-signal-560-erreur": [],
   "sombre-instrument-signal-560-file-arret": [],
   "sombre-instrument-signal-560-file-fin": [],
@@ -3392,9 +2708,7 @@
   "sombre-instrument-signal-560-pause": [],
   "sombre-instrument-signal-560-rattrapage": [],
   "sombre-instrument-signal-560-reglages": [],
-  "sombre-instrument-signal-560-rel-bornes": [
-   "ZONE A DEFILER de 11 px"
-  ],
+  "sombre-instrument-signal-560-rel-bornes": [],
   "sombre-instrument-signal-560-relecture": [],
   "sombre-instrument-signal-560-repos": [],
   "sombre-instrument-signal-560-stats": [],
@@ -3403,12 +2717,7 @@
   "sombre-instrument-signal-600-capture": [],
   "sombre-instrument-signal-600-constellation": [],
   "sombre-instrument-signal-600-cours": [],
-  "sombre-instrument-signal-600-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-signal-600-cours-details": [],
   "sombre-instrument-signal-600-erreur": [],
   "sombre-instrument-signal-600-file-arret": [],
   "sombre-instrument-signal-600-file-fin": [],
@@ -3420,9 +2729,7 @@
   "sombre-instrument-signal-600-pause": [],
   "sombre-instrument-signal-600-rattrapage": [],
   "sombre-instrument-signal-600-reglages": [],
-  "sombre-instrument-signal-600-rel-bornes": [
-   "ZONE A DEFILER de 11 px"
-  ],
+  "sombre-instrument-signal-600-rel-bornes": [],
   "sombre-instrument-signal-600-relecture": [],
   "sombre-instrument-signal-600-repos": [],
   "sombre-instrument-signal-600-stats": [],
@@ -3431,12 +2738,7 @@
   "sombre-instrument-signal-640-capture": [],
   "sombre-instrument-signal-640-constellation": [],
   "sombre-instrument-signal-640-cours": [],
-  "sombre-instrument-signal-640-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-signal-640-cours-details": [],
   "sombre-instrument-signal-640-erreur": [],
   "sombre-instrument-signal-640-file-arret": [],
   "sombre-instrument-signal-640-file-fin": [],
@@ -3448,9 +2750,7 @@
   "sombre-instrument-signal-640-pause": [],
   "sombre-instrument-signal-640-rattrapage": [],
   "sombre-instrument-signal-640-reglages": [],
-  "sombre-instrument-signal-640-rel-bornes": [
-   "ZONE A DEFILER de 3 px"
-  ],
+  "sombre-instrument-signal-640-rel-bornes": [],
   "sombre-instrument-signal-640-relecture": [],
   "sombre-instrument-signal-640-repos": [],
   "sombre-instrument-signal-640-stats": [],
@@ -3459,12 +2759,7 @@
   "sombre-instrument-signal-680-capture": [],
   "sombre-instrument-signal-680-constellation": [],
   "sombre-instrument-signal-680-cours": [],
-  "sombre-instrument-signal-680-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-signal-680-cours-details": [],
   "sombre-instrument-signal-680-erreur": [],
   "sombre-instrument-signal-680-file-arret": [],
   "sombre-instrument-signal-680-file-fin": [],
@@ -3476,9 +2771,7 @@
   "sombre-instrument-signal-680-pause": [],
   "sombre-instrument-signal-680-rattrapage": [],
   "sombre-instrument-signal-680-reglages": [],
-  "sombre-instrument-signal-680-rel-bornes": [
-   "ZONE A DEFILER de 3 px"
-  ],
+  "sombre-instrument-signal-680-rel-bornes": [],
   "sombre-instrument-signal-680-relecture": [],
   "sombre-instrument-signal-680-repos": [],
   "sombre-instrument-signal-680-stats": [],
@@ -3487,12 +2780,7 @@
   "sombre-instrument-signal-720-capture": [],
   "sombre-instrument-signal-720-constellation": [],
   "sombre-instrument-signal-720-cours": [],
-  "sombre-instrument-signal-720-cours-details": [
-   "ZONE A DEFILER de 49 px",
-   "POLICE 10px « Traités »",
-   "POLICE 10px « Posés »",
-   "POLICE 10px « À poser »"
-  ],
+  "sombre-instrument-signal-720-cours-details": [],
   "sombre-instrument-signal-720-erreur": [],
   "sombre-instrument-signal-720-file-arret": [],
   "sombre-instrument-signal-720-file-fin": [],
@@ -3504,9 +2792,7 @@
   "sombre-instrument-signal-720-pause": [],
   "sombre-instrument-signal-720-rattrapage": [],
   "sombre-instrument-signal-720-reglages": [],
-  "sombre-instrument-signal-720-rel-bornes": [
-   "ZONE A DEFILER de 3 px"
-  ],
+  "sombre-instrument-signal-720-rel-bornes": [],
   "sombre-instrument-signal-720-relecture": [],
   "sombre-instrument-signal-720-repos": [],
   "sombre-instrument-signal-720-stats": [],
