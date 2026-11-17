@@ -390,9 +390,9 @@ body.ui5:has(#ui5.u-cadran[data-theme="clair"]){background:#E6E8E7}
 #ui5.u-cadran .sg-mol-fen{position:relative;flex:1 1 auto;min-width:calc(var(--c) * 3);height:var(--mol-h);overflow:hidden;cursor:grab;user-select:none;-webkit-user-select:none;touch-action:pan-y;-webkit-mask:linear-gradient(90deg,transparent,#000 22%,#000 78%,transparent);mask:linear-gradient(90deg,transparent,#000 22%,#000 78%,transparent)}
 #ui5.u-cadran .sg-mol-fen:active{cursor:grabbing}
 #ui5.u-cadran .sg-mol-fen::before{content:"";position:absolute;left:50%;top:6px;bottom:6px;width:var(--c);margin-left:calc(var(--c) / -2);box-shadow:inset 0 -2px 0 var(--cours)}
-#ui5.u-cadran .sg-mol-bande{position:absolute;top:0;bottom:0;left:50%;display:flex;transform:translateX(calc(var(--c) * -1 * (var(--i, 0) + .5) + var(--dx, 0px)));transition:transform .24s var(--courbe)}
+#ui5.u-cadran .sg-mol-bande{position:absolute;top:0;bottom:0;left:50%;display:flex;transform:translateX(calc(var(--c) * -1 * (var(--i, 0) + .5) + var(--dx, 0px)));transition:transform .3s var(--courbe)}
 #ui5.u-cadran .sg-mol-bande.sg-glisse{transition:none}
-#ui5.u-cadran .sg-mol-n{flex:none;width:var(--c);display:flex;align-items:center;justify-content:center;font:400 20px/1 var(--mono);color:var(--encre2);cursor:pointer;transition:transform .24s var(--courbe),opacity .24s}
+#ui5.u-cadran .sg-mol-n{flex:none;width:var(--c);display:flex;align-items:center;justify-content:center;font:400 20px/1 var(--mono);color:var(--encre2);cursor:pointer;transition:transform .3s var(--courbe),opacity .3s}
 #ui5.u-cadran[data-taille="compact"] .sg-mol-n{font-size:18px}
 #ui5.u-cadran .sg-mol-n[data-d="0"]{font-weight:500;color:var(--encre);cursor:inherit}
 #ui5.u-cadran .sg-mol-n[data-d="1"]{transform:scale(.75)}
@@ -478,5 +478,7 @@ body.ui5:has(#ui5.u-cadran[data-theme="clair"]){background:#E6E8E7}
 @keyframes cd-descend{from{opacity:0;transform:translateY(-4px)}}
 @keyframes cd-fondu{from{opacity:0}}
 #ui5.u-cadran .sg-zone>*{animation:cd-monte .24s var(--courbe) both}
+/* les boutons du pied entrent avec l'écran (320 ms, la borne haute de la planche) : pendant ce temps la garde du pied (src/ui5.js, 400 ms) refuse déjà les clics */
+#ui5.u-cadran .sg-actions>button{animation:cd-monte .32s var(--courbe) both}
 #ui5.u-cadran .cd-coupe,#ui5.u-cadran .cd-pause{transition:x .26s var(--courbe)}
 @media (prefers-reduced-motion:reduce){#ui5.u-cadran *,#ui5.u-cadran *::before,#ui5.u-cadran *::after{animation:none!important;transition:none!important}}

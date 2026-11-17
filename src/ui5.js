@@ -641,7 +641,7 @@
        * tel clic, le pied n'accepte aucun clic (la feuille « Ce qui reste », elle, répond tout de suite : « Ouvrir » y est attendu aussitôt). Leur aspect et leurs ordres ne changent pas ; les changements venus du lot non plus. */
       const t = Date.now(), act = a.dataset.act;
       if (molette.sansClic > t && a.closest?.('.sg-molette')) return;   /* CH-105 : la fin d'un glisser n'est pas un clic sur un voisin */
-      if (ui.gardePied && t < ui.gardePied && a.closest?.('.sg-actions')) return;
+      if (ui.gardePied && t < ui.gardePied && a.closest?.('.sg-actions,.sg-poignee')) return;   /* CH-135 : en Cadran, « Ce qui reste » est sous le pied */
       if (/^(mode:|sg:onglet-|sg:tiroir$)/.test(act)) ui.gardePied = t + GARDE_PIED_MS;
       agir(act, a);
     });
