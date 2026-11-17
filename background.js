@@ -315,6 +315,9 @@ function obsFields(x){
  switch(x.kind){
   case 'write':return {kind:'write',via:'xhr',urlClass:'rail-pair-write',method:obsStr(x.method,8),status:obsInt(x.status,999),outcome:obsOutcome(x.outcome),attempt:obsInt(x.attempt,1000),
    railPairId:obsStr(x.railPairId,80)&&/^(?!\/)(?!.*\.\.)[\w.+\-/]+$/.test(x.railPairId)?x.railPairId:null,bodyKeys:obsInt(x.bodyKeys,1e6),body:obsBody(x.body),rowIndex:obsInt(x.rowIndex,1e7),...time};
+  /* Vision 19.1 : DÉPART d'une écriture de validation (la réponse du serveur peut tarder : terrain du 17/11, cut 2475). */
+  case 'write-start':return {kind:'write-start',via:'xhr',urlClass:'rail-pair-write',method:obsStr(x.method,8),attempt:obsInt(x.attempt,1000),
+   railPairId:obsStr(x.railPairId,80)&&/^(?!\/)(?!.*\.\.)[\w.+\-/]+$/.test(x.railPairId)?x.railPairId:null,bodyKeys:obsInt(x.bodyKeys,1e6),body:obsBody(x.body),rowIndex:obsInt(x.rowIndex,1e7),startedEpochMs:obsNum(x.startedEpochMs)};
   case 'list-page':{const c=x.counts&&typeof x.counts==='object'?{valid:obsInt(x.counts.valid),invalid:obsInt(x.counts.invalid),skipped:obsInt(x.counts.skipped)}:null;
    return {kind:'list-page',via:'xhr',urlClass:'rail-list',listKey:obsKey(x.listKey),status:obsInt(x.status,999),outcome:obsOutcome(x.outcome),chars:obsInt(x.chars,1e9),rows:obsInt(x.rows,1e7),counts:c,
     skipped:['oversize','unreadable'].includes(x.skipped)?x.skipped:null,basis:'row-string-values',...time};}
@@ -515,6 +518,7 @@ function rangerObservations(m){try{
   if(fields.kind==='resource'&&fields.echecs>0)try{lotSignalEchecVu(fields);}catch{/* CH-062 : relevé seulement */}
   /* 4.9.5.1 (D3) : suivi des écritures refusées, avant le plafond de la séance (rien n'est rangé de plus). */
   if(fields.kind==='write')try{ecritureCutNoter(fields);ecritureObservee(fields);relectureEcriture(fields);passeDiffEcriture(fields);}catch{}
+  if(fields.kind==='write-start')try{ecritureEnRoute(relecture.passe?.etat==='en-cours'&&relecture.passe.attente===relecture.attente?relecture.attente:null,fields);ecritureEnRoute(passeDiff.ecriture?.attente,fields);}catch{}
   try{relevesObservation(fields,m.observer);}catch{}
   const c=cible(fields),seen=c.seen;
   if(fields.kind!=='gap'&&seen.n>=cap){if(!seen.capped){seen.capped=true;add({kind:'gap',lost:null,reason:'session-cap',of:null},null,c);}rejected++;continue;}
@@ -2482,7 +2486,7 @@ async function passeDiffPoser(b,p,E){
  catch(e){E.attente=null;if(/rien n.a été envoyé/.test(e?.message||''))return refuse(await remettrePose(b,now,`validation refusée avant l’envoi : ${String(e.message).slice(0,160)}`),false);throw incertain(String(e?.message||e).slice(0,200));}
  finally{if(envoi)envoi.retourMs=Date.now();}
  if(!enPlaceProuvee(ev,now.identity)){E.attente=null;throw incertain('compteur ou cut affiché inattendus');}
- const fin=Date.now()+reglageRelecture().attenteEcritureMs;while(!a.ok&&a.refus==null&&Date.now()<fin)await attendreMs(100);
+ await attendreEcriture(a);
  E.attente=null;
  if(!a.ok)throw incertain(a.refus!=null?`ESV a refusé d’enregistrer la validation, statut ${a.refus}`:`aucune écriture de validation vue en ${Math.round(reglageRelecture().attenteEcritureMs/1000)} s`);
  /* T21d : la preuve est gardée AVANT d'effacer l'intention : au réveil, un cut prouvé est compté écrit, jamais réécrit ni dit incertain. */
@@ -3672,7 +3676,7 @@ const relecture={passe:null,tache:null,planifie:new Set(),attente:null,gen:0};
  * `plafondParZone` : budgets par zone (adv, abords, vert-hors-zone, ecartement ; PN hors budget) qui remplacent ceux du module (D-180). */
 /* 4.9.5.13 : `occupeAttentesMs` — attentes successives avant de redemander un passage que la page a refusé parce qu'une de ses actions n'était pas
  * finie (`ADAPTER_BUSY`, terrain 2:19) : 9 essais au plus, environ 106 s en tout (CH-045 : l’export de la Constellation 17→24 montre une capture figée 90 s, PC en veille, qui a fait échouer les 6 essais de 11,75 s). */
-const reglageRelecture=()=>({departMs:0,attenteEcritureMs:6000,attenteVuMs:2500,pasMax:40,plafondCuts:null,plafondParZone:null,validation:'maj-espace',
+const reglageRelecture=()=>({departMs:0,attenteEcritureMs:6000,attenteEcritureEnRouteMs:30000,attenteVuMs:2500,pasMax:40,plafondCuts:null,plafondParZone:null,validation:'maj-espace',
  occupeAttentesMs:[250,500,1000,2000,4000,8000,15000,30000,45000],...(globalThis.BananeSettings?.relecture||{})});
 /* Test 17 (D-232 à D-234) : une passe EN PAUSE n'agit plus, mais reste « active » pour les gardes : ni lot, ni Écho, ni retour à un cut,
  * ni seconde passe tant qu'elle n'est pas reprise ou arrêtée. `passeVivante` : celle qui travaille ou se prépare (l'ancien sens de `passeActive`). */
@@ -4026,6 +4030,13 @@ function ecritureAttendue(a,f,ok,corps){if(!a||f.rowIndex!==a.cut)return;
  const t=Number.isFinite(f.startedEpochMs)?f.startedEpochMs:Date.now();if(t<a.depuisMs-500)return;
  if(corps&&corps.ExtractionStatus!=='valid')return;
  if(ok)a.ok=true;else if(f.status!=null)a.refus=f.status;}
+/* Vision 19.1 : le départ de l'écriture de validation de la ligne attendue est vu : la réponse peut tarder, l'attente s'allonge (`attenteEcritureEnRouteMs`). */
+function ecritureEnRoute(a,f){if(!a||f?.kind!=='write-start'||f.rowIndex!==a.cut)return;
+ const t=Number.isFinite(f.startedEpochMs)?f.startedEpochMs:Date.now();if(t<a.depuisMs-500)return;
+ const corps=f.body&&typeof f.body==='object'?f.body:null;if(corps&&corps.ExtractionStatus!=='valid')return;a.enRoute=true;}
+/* Attente de la preuve d'écriture : `attenteEcritureMs`, allongée jusqu'à `attenteEcritureEnRouteMs` si le départ de l'écriture est vu. */
+async function attendreEcriture(a){const R=reglageRelecture(),t0=Date.now();
+ while(!a.ok&&a.refus==null){const d=Date.now()-t0;if(d>=(a.enRoute?Math.max(R.attenteEcritureMs,R.attenteEcritureEnRouteMs??0):R.attenteEcritureMs))break;await attendreMs(100);}}
 /* Garde d'une correction (revue, corrections 1, 3, 4) : tout doit tenir, sinon le cut reste en ombre, avec la raison. */
 function relectureGarde({c,etat,ligne,par,total}){
  if(c.role!=='vert')return {ok:false,raison:`rôle « ${c.role} » : jamais corrigé`};
@@ -4091,7 +4102,7 @@ async function relectureCorriger(p,b,etat,calc){const K=globalThis.BananeCore3,G
   if(/rien n.a été envoyé/.test(e?.message||''))return refusee(await remettrePose(b,now,`validation refusée avant l’envoi : ${String(e.message).slice(0,160)}`));
   throw Error(`cut ${cut} : validation incertaine (${String(e?.message||e).slice(0,200)}). Contrôle ce cut dans ESV.`);}
  if(ev?.commandSent!==true){lacher();throw Error(`cut ${cut} : validation incertaine (Maj+Espace non transmis). Contrôle ce cut dans ESV.`);}
- const fin=Date.now()+reglageRelecture().attenteEcritureMs;while(!a.ok&&a.refus==null&&Date.now()<fin)await attendreMs(100);
+ await attendreEcriture(a);
  lacher();
  if(!a.ok)throw Error(a.refus!=null?`cut ${cut} : ESV a refusé d’enregistrer la validation (statut ${a.refus}). Contrôle ce cut dans ESV.`
   :`cut ${cut} : Maj+Espace envoyé, aucune écriture de validation vue en ${Math.round(reglageRelecture().attenteEcritureMs/1000)} s. Contrôle ce cut dans ESV.`);

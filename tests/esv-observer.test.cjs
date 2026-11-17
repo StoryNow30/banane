@@ -225,3 +225,16 @@ test('résumé d’une partie : 11 pages chaînées sous …/rails/<table>, clé
  assert.deepEqual([by[TABLE].pages,by[TABLE].okPages,by[TABLE].rows],[11,11,1100],'la partie : ses 11 pages, sans la requête « invalides »');
  assert.deepEqual([by.undefined.pages,by.undefined.rows],[1,0],'« invalides » : 1 page, 0 ligne, jamais prise pour une partie');
 });
+
+/* Vision 19.1 (terrain du 17/11, cut 2475) : une écriture de VALIDATION (corps avec ExtractionStatus) est notée à son départ (`write-start`), avant sa fin. */
+test('écriture de validation : le départ est noté tout de suite (write-start), puis l’écriture à sa fin ; une écriture « vu » seule n’a pas de départ noté',async()=>{
+ const w=world({observe:true,routes:()=>({status:204,text:''})});
+ const envoyer=body=>{const x=new w.win.XMLHttpRequest();x.open('PUT',ORIGIN+'/api/u3d/projects/p-key/rails/traj__00+0071551.725/00071552.685?merge=true',true);x.send(JSON.stringify(body));};
+ envoyer({ExtractionStatus:'valid',TreatedByOperator:true,SeenByOperator:true});
+ const avant=w.observed().map(e=>e.kind);assert.ok(avant.includes('write-start'),'départ noté avant la fin : '+avant.join(','));
+ const d=w.observed().find(e=>e.kind==='write-start');assert.equal(d.body.ExtractionStatus,'valid');assert.equal(d.railPairId,'traj__00+0071551.725/00071552.685');assert.ok(d.startedEpochMs>1e12);
+ await tick();await tick();w.runTimers();
+ const k=w.observed().map(e=>e.kind);assert.ok(k.indexOf('write-start')<k.indexOf('write'),'puis l’écriture, à sa fin');
+ const n=w.observed().length;envoyer({SeenByOperator:true});await tick();await tick();w.runTimers();
+ assert.deepEqual(w.observed().slice(n).map(e=>e.kind),['write'],'« vu » seul : pas de départ noté');
+});

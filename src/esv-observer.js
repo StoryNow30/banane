@@ -325,7 +325,12 @@
    if(m.cls==='write'){const id=railPairId(m.url,base()),key=m.method+' '+id,prev=id===null?undefined:lastSend.get(key),
      st=prev&&prev.xhr!==xhr&&prev.xhr.readyState===4&&Number.isInteger(prev.xhr.status)?prev.xhr.status:null;
     m.attempt=st!==null&&st!==200&&st!==204&&started-(prev.endedAt??started)<LIMITS.retryWindowMs?prev.attempt+1:1;
-    if(id!==null){m.sent={xhr,attempt:m.attempt,endedAt:null};lastSend.set(key,m.sent);if(lastSend.size>64)lastSend.delete(lastSend.keys().next().value);}}
+    if(id!==null){m.sent={xhr,attempt:m.attempt,endedAt:null};lastSend.set(key,m.sent);if(lastSend.size>64)lastSend.delete(lastSend.keys().next().value);}
+    /* Vision 19.1 (terrain du 17/11, cut 2475) : le DÉPART d'une écriture de validation (corps avec `ExtractionStatus`) est noté tout de suite ; l'écriture
+     * elle-même n'est notée qu'à sa fin (`loadend`), qui peut tarder si le serveur est lent. Ligne de la table lue sans rien y changer. */
+    if(enabled&&body?.values&&typeof body.values.ExtractionStatus==='string'){let rowIndex=null;
+     if(tablesOn&&id!==null){const k=id.lastIndexOf('/'),t=k>0?tables.get(id.slice(0,k)):null,i=t?t.idx.get(id.slice(k+1)):undefined;if(Number.isInteger(i))rowIndex=i;}
+     try{record({kind:'write-start',urlClass:'rail-pair-write',method:m.method,railPairId:id,attempt:m.attempt,bodyKeys:body.keys??null,body:body.values,rowIndex,startedEpochMs:epoch(started)});}catch{}}}
    const flag=name=>()=>{outcome=name;};
    xhr.addEventListener('abort',flag('abort'));xhr.addEventListener('timeout',flag('timeout'));
    xhr.addEventListener('loadend',()=>{
