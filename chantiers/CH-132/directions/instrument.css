@@ -26,3 +26,4 @@
 :root #ui5.u-signal .sg-constel-t .sg-chiffre{font-size:56px;font-weight:200}
 /* l'alerte de la Constellation passe avant le choix du nombre de parties (elle demande un geste) */
 :root #ui5.u-signal .sg-onglet-file>[data-k="alerte"]{order:-1}
+:root #ui5.u-signal .sg-anneau .sg-suite,:root #ui5.u-signal .sg-anneau[data-forme="pct"] .sg-suite{font-size:12px!important}

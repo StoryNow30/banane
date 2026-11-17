@@ -34,3 +34,10 @@
 :root #ui5.u-signal .sg-details-b{right:var(--marge);bottom:10px}
 /* l'alerte de la Constellation passe avant le choix du nombre de parties (elle demande un geste) */
 :root #ui5.u-signal .sg-onglet-file>[data-k="alerte"]{order:-1}
+:root #ui5.u-signal .sg-fen .sg-tu-etat .sg-texte{min-width:0;flex:1 1 auto}
+:root #ui5.u-signal .sg-fen .sg-tu-etat .sg-phrase{-webkit-line-clamp:2}
+:root #ui5.u-signal .sg-anneau .sg-suite,:root #ui5.u-signal .sg-anneau[data-forme="pct"] .sg-suite{font-size:12px!important}
+:root #ui5.u-signal .sg-fen .sg-tu-etat .sg-texte{flex:1 1 0}
+:root #ui5.u-signal .sg-fen:is([data-activite="orbite"],[data-activite="echo"]) .sg-anneau{flex:none}
+:root #ui5.u-signal .sg-fen:is([data-activite="orbite"],[data-activite="echo"]) .sg-anneau .sg-chiffre svg{width:24px;height:24px}
+:root #ui5.u-signal .sg-fen:is([data-activite="orbite"],[data-activite="echo"]) .sg-anneau .sg-anneau-c>svg{width:26px;height:26px;stroke:var(--c1);fill:none;stroke-width:2.2}
