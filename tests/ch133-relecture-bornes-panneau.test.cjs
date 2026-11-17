@@ -25,6 +25,17 @@ test('pause : deux champs préremplis après la série et « Reprendre du cut 11
  assert.equal(js(P.vue(PAUSE({pauseRaison:'mic',bornesProposees:{debut:113,fin:116}}))).bornes.texte,'Reprendre du cut 113 au cut 116');
 });
 
+test('saisie hors de la partie ou non entière : une ligne sobre sous les champs, bouton grisé (pas d’erreur rouge) ; refus du service worker dit au même endroit',()=>{
+ const T=x=>PAUSE({totalPartie:200,...x});
+ const hors=js(P.vue(T(),{saisie:{du:'116',au:'250'}})).bornes;assert.equal(hors.actif,false);assert.equal(hors.raison,'Le cut 250 est hors de la partie (cuts 0 à 199).');
+ const dec=js(P.vue(T(),{saisie:{du:'113.5',au:'116'}})).bornes;assert.equal(dec.actif,false);assert.equal(dec.raison,'Les cuts s’écrivent en nombres entiers.');
+ const refus=js(P.vue(T(),{refus:'aucun cut de la relecture entre le cut 117 et le cut 150.'})).bornes;assert.equal(refus.actif,true);assert.equal(refus.raison,'aucun cut de la relecture entre le cut 117 et le cut 150.');
+ const h=S.rendre(snap({ar:ar('rel'),relPause:js(P.vue(T(),{saisie:{du:'116',au:'250'}}))}),ui());
+ assert.match(h,/data-k="relecture-bornes"[\s\S]*<small class="sg-bornes-dit">Le cut 250 est hors de la partie \(cuts 0 à 199\)\.<\/small>/);
+ assert.doesNotMatch(h.match(/data-k="relecture-bornes"[\s\S]*?<\/section>/)[0],/error|sg-incident|role="alert"/);
+ assert.match(fs.readFileSync(path.join(__dirname,'..','panel.html'),'utf8'),/id="relecture-du" step="1"/);
+});
+
 test('relecture arrêtée (défaut) ou finie, sur le lot affiché : « Relancer du cut A au cut B » ; jamais tant qu’une correction interrompue attend, ni relecture coupée, ni autre lot',()=>{
  const v=js(P.vue(ARRET()));
  assert.equal(v.bornes.action,'relancer');assert.equal(v.bornes.texte,'Relancer du cut 116 au cut 116');assert.equal(v.bornes.actif,true);

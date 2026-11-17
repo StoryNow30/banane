@@ -81,3 +81,19 @@ test('relance bornée après une relecture finie ; bornes refusées au lancement
  const vus=cutsAllees(adapter).slice(a0);assert.ok(vus.every(c=>c>=112&&c<=114),vus.join(','));
  assert.ok(adapter.majEspace.slice(maj0).every(x=>x.cut>=113&&x.cut<=114));
 });
+
+test('une correction interrompue non acquittée bloque la reprise et la relance, avec ou sans bornes ; acquittée, la reprise bornée part',async()=>{
+ const {b,local}=await pauseSurSerie();
+ const lotId=b.get('relecture').passe.lotId;
+ local.m.banane50RelectureIntention=[{cut:110,part:23,lotId,origine:'relecture'}];
+ for(const args of [{},{debut:116,fin:116}])
+  await assert.rejects(b.api('relecture-reprendre',args),/Une correction de la relecture a été interrompue au cut 110.*J’ai contrôlé le cut 110/s);
+ assert.equal(b.get('relecture').passe.etat,'en-pause');assert.equal(H.evenements(b,'relecture-bornes').length,0);
+ await b.api('relecture-arreter');assert.equal(b.get('relecture').passe.etat,'arretee');
+ const e=await b.api('relecture-etat');assert.equal(e.correctionInterrompue?.cut,110);
+ for(const args of [{},{debut:116,fin:116}])
+  await assert.rejects(b.api('relecture-lancer',args),/Une correction de la relecture a été interrompue au cut 110/);
+ await b.api('relecture-acquitter',{cut:110});
+ await b.api('relecture-lancer',{debut:116,fin:116});
+ const f=await H.finPasse(b,60000);assert.equal(f.etat,'finie',f.message);assert.equal(f.faits,1);
+});

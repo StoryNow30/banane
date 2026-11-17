@@ -418,7 +418,7 @@
     const B = snap.relPause?.bornes;
     if (!B || m.activite !== 'orbite' || !(m.etat === 'rel' && B.action === 'reprendre' || m.objet === 'fin' && B.action === 'relancer')) return '';
     const v = x => esc(x ?? '');
-    return `<section class="sg-tu sg-large sg-tu-bornes" data-k="relecture-bornes"><h4>${B.action === 'reprendre' ? 'Reprendre entre deux cuts' : 'Relancer la relecture'}</h4>${B.ligne || snap.relPause.raisonPause === 'points' ? `<p class="sg-meta">${esc(B.ligne || snap.relPause.ligne)}</p>` : ''}<div class="sg-bornes"><label class="sg-rang"><span>Du cut</span><input type="number" min="0" data-borne="relecture-du" value="${v(B.debut)}"></label><label class="sg-rang"><span>Au cut</span><input type="number" min="0" data-borne="relecture-au" value="${v(B.fin)}"></label><small>${esc(B.raison || B.note)}</small></div></section>`;
+    return `<section class="sg-tu sg-large sg-tu-bornes" data-k="relecture-bornes"><h4>${B.action === 'reprendre' ? 'Reprendre entre deux cuts' : 'Relancer la relecture'}</h4>${B.ligne || snap.relPause.raisonPause === 'points' ? `<p class="sg-meta">${esc(B.ligne || snap.relPause.ligne)}</p>` : ''}<div class="sg-bornes"><label class="sg-rang"><span>Du cut</span><input type="number" min="0" data-borne="relecture-du" value="${v(B.debut)}"></label><label class="sg-rang"><span>Au cut</span><input type="number" min="0" data-borne="relecture-au" value="${v(B.fin)}"></label><small class="sg-bornes-dit">${esc(B.raison || B.note)}</small></div></section>`;
   }
   /* CH-025 : la Constellation dite dans Orbite (pendant la file, ou arrêtée pendant que le lot garde l'écran) et le bilan par partie (écran de fin de
    * la file). Ses boutons (`#file-principal`, `#file-secondaire`) sont en pied, avec ceux du lot. */
