@@ -44,7 +44,7 @@ test('réglages : quatre réglages hors de l’écran, cases d’origine inchang
   await page.evaluate(()=>window.ArianeUi5.agir('sg:reglages'));await page.waitForTimeout(300);
   const t=await page.evaluate(()=>document.querySelector('#ui5 .sg-feuille').textContent);
   for(const m of [/Clic du mode rapide/,/passage entre parties/,/Série de cuts/,/Rattrapage/])assert.doesNotMatch(t,m);
-  assert.match(t,/Thème/);assert.match(t,/Palette/);assert.match(t,/À l’essai : hauteur des poses/);
+  assert.match(t,/Thème/);assert.match(t,/Palette/);assert.match(t,/Hauteur des poses/);   /* D-367 : allumé par défaut, plus « à l’essai » */
   await page.evaluate(()=>{window.__marque=1;});await page.click('#ui5 [data-act="sg:choix:palette:signal"]');await page.waitForTimeout(400);
   const p=await page.evaluate(()=>({pal:document.getElementById('ui5').dataset.palette,fond:getComputedStyle(document.querySelector('#ui5 .sg-fen')).backgroundColor,marque:window.__marque,garde:window.__ecrits.some(o=>o.banane51Palette==='signal')}));
   assert.deepEqual(p,{pal:'signal',fond:'rgb(8, 9, 11)',marque:1,garde:true});
