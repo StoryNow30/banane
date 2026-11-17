@@ -20,7 +20,7 @@ Branche `chantier/CH-129`, partie du tronc 15a3ac9. Page montrée à l'opérateu
 ## Preuves (ÉTABLI)
 - Essais du panneau (80 fichiers) : 302 réussis, 0 échec, 1 sauté.
 - Audit `chantiers/CH-129/outils/audit.cjs` : 13 scènes × 7 largeurs (320 à 720 px) × 3 palettes = 273 vues, 0 débordement, 0 troncature, 0 contraste sous 4,5:1 (la bande du sélecteur de parties reste exclue, CH-108). Défaut trouvé et corrigé : à 320 px, la pastille ESV rognée à côté du bouton des statistiques.
-- Maquette ESV : voir le message de fin.
+- Maquette ESV (`tests/esv-maquette/essais.cjs`, sur 5403eb6) : 89 essais, 86 réussis, 0 échec, 3 sautés ; suite complémentaire 15 sur 15. Code 0.
 
 ## Non vérifié
 Le vrai panneau dans Chrome à côté d'ESV ; le verify complet (intégrateur, sur le tronc).
