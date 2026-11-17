@@ -19,8 +19,10 @@
   const D = root.document, S5 = root.ArianeSignalRendu, CLE = 'banane51Interface', CLE_EX = 'banane51Examines', CLE_PALETTE = 'banane51Palette';
   if (!D || !S5 || !root.ArianePanel) return;
   /* Test 23 : les présentations d'essai « ariane2 » et « palette » sont retirées (opérateur, après la test 21) ; Signal est la seule présentation. */
-  const VARIANTES = ['signal'], defaut = 'signal';
-  const TAILLE = { signal: [600, 760] };
+  /* CH-135 (D-368) : « cadran », l'interface alternative (src/cadran-rendu.js, panel-cadran.css), choisie dans les Réglages ; mêmes boutons, mêmes gardes. */
+  const VARIANTES = ['signal', 'cadran'], defaut = 'signal';
+  const TAILLE = { signal: [600, 760], cadran: [600, 760] };
+  const rendu = () => variante === 'cadran' && root.ArianeCadranRendu ? root.ArianeCadranRendu : S5;
   const ui = { last: '', pauseLot: null, q: '', pi: 0, focusQ: false, tiroir: false, couche: null, sel: null, note: '', onglet: null, details: false, stats: false, palette: 'glacier' };
   const examines = { lot: null, cles: new Set() };
   let variante = defaut, hote = null, gcv2Base = null, secours = false;
@@ -331,11 +333,11 @@
       /* CH-025 : la boîte de la file ne vaut qu'au repos ; la file lancée (ou arrêtée, finie), elle se ferme. */
       if (ui.couche === 'file' && snap.file?.etat !== 'repos') ui.couche = null;
       if (ui.onglet !== 'file') ui.stats = false;
-      html = S5.rendre(snap, ui); hote.dataset.theme = snap.sig.theme; hote.dataset.taille = snap.sig.taille; hote.dataset.palette = snap.sig.palette;
+      html = rendu().rendre(snap, ui); hote.dataset.theme = snap.sig.theme; hote.dataset.taille = snap.sig.taille; hote.dataset.palette = snap.sig.palette;
       /* CH-115 : détails repliés par défaut (panel-signal.css lit `data-details`) */
       if (ui.details) hote.dataset.details = '1'; else delete hote.dataset.details;
       /* CH-129 : les détails techniques (couche hors de #ui5) suivent le thème et la palette du panneau */
-      if (tech?.c?.dataset) { tech.c.dataset.theme = snap.sig.theme; tech.c.dataset.palette = snap.sig.palette; }
+      if (tech?.c?.dataset) { tech.c.dataset.theme = snap.sig.theme; tech.c.dataset.palette = snap.sig.palette; tech.c.dataset.variante = variante; }
     } catch (e) { secourir(e); return; }
     /* Revue T21 (R6) : l'anneau du cut et « en pause depuis » changent à chaque seconde, et `vivant()` les fait avancer : ils ne décident pas d'une
      * réécriture de l'écran (qui refermerait une liste ouverte et recréerait la feuille de réglages, le tiroir, le choix d'onglet). */
@@ -450,7 +452,7 @@
    * service worker après l'export) n'est ni ouverte ni à terminer : le panneau s'ouvre sur Orbite. */
   let entre = false;
   function entrer(s) {
-    if (entre || variante !== 'signal' || secours) return;
+    if (entre || !VARIANTES.includes(variante) || secours) return;
     entre = true;
     if ((D.body?.dataset?.window || 'home') !== 'home') return;
     const n = s?.native, echo = !!n && (['RUNNING', 'PAUSED', 'STARTING', 'PAUSED_ADAPTER_UNRESPONSIVE'].includes(n.status) || (n.status !== 'FINISHED' && !!n.visits?.length));
@@ -464,7 +466,7 @@
   }
   /* Entre deux rendus du panneau : l'anneau « en cours » (temps passé sur le cut ÷ médiane) et « en pause depuis ». Le DOM seulement. */
   function vivant() {
-    if (!hote || variante !== 'signal' || hote.hidden || !hote.querySelector) return;
+    if (!hote || !VARIANTES.includes(variante) || hote.hidden || !hote.querySelector) return;
     /* Revue T21 (R6) : l'écran n'est plus réécrit chaque seconde : tous les anneaux (instrument et poignée du tiroir) avancent ici. */
     const t = Date.now();
     const p = hote.querySelector('.sg-pause-depuis[data-debut]');
@@ -480,7 +482,7 @@
   function ouvrirTech() {
     if (tech || !D.createElement) return;
     const c = D.createElement('div'); c.id = 'ui5-tech'; c.className = 'sg-tech';
-    if (hote?.dataset) { c.dataset.theme = hote.dataset.theme || 'sombre'; c.dataset.palette = hote.dataset.palette || 'glacier'; }
+    if (hote?.dataset) { c.dataset.theme = hote.dataset.theme || 'sombre'; c.dataset.palette = hote.dataset.palette || 'glacier'; c.dataset.variante = variante; }
     c.innerHTML = '<div class="sg-tech-tete"><b>Détails techniques</b><span>Santé de la collecte, qualité de capture, départs des parties, résumé de la partie, exports et journal</span><button type="button" id="ui5-tech-fermer">Fermer</button></div><div class="sg-tech-corps"></div>';
     D.body.appendChild(c);
     const corps = c.querySelector('.sg-tech-corps'), deplaces = [];
@@ -749,7 +751,8 @@
   function appliquer(v, redimensionner) {
     variante = v;
     D.body.classList.toggle('ui5', !secours);
-    hote.className = 'u-signal';
+    /* CH-135 : Cadran a sa propre feuille (panel-cadran.css, sous `#ui5.u-cadran`) ; celle de l'instrument ne s'y applique pas. */
+    hote.className = v === 'cadran' ? 'u-cadran' : 'u-signal';
     hote.hidden = secours;
     ui.focusQ = ui.couche === 'palette';
     ui.last = '';

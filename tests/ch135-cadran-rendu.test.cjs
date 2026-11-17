@@ -98,8 +98,9 @@ test('CH-135 : la voie en élévation remplace l’anneau, tirée de l’instant
  assert.ok(n(g,/class="cd-tr /g)<=60,'au plus 60 traverses');assert.equal(n(g,/class="cd-fanion"/g),7);
 });
 
-test('CH-135 : l’en-tête dit le cut n sur N quand le total est connu',()=>{
- assert.match(C.rendre(SCENES.cours,ui()),/<span class="cd-cut sg-mono">cut 21\/40<\/span>/);
+test('CH-135 : l’en-tête dit le cut n sur N quand le total est connu (le cut en cours : traités + 1, maquette ; terminé : N sur N)',()=>{
+ assert.match(C.rendre(SCENES.cours,ui()),/<span class="cd-cut sg-mono">cut 22\/40<\/span>/);
+ assert.match(C.rendre(SCENES.fini,ui()),/<span class="cd-cut sg-mono">cut 40\/40<\/span>/);
  assert.doesNotMatch(C.rendre(SCENES.sansTotal,ui()),/cd-cut/);
 });
 

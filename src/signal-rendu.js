@@ -616,6 +616,7 @@
  ${ligne('Télécommande (iPhone)', 'Suivre et piloter Ariane depuis le téléphone, par ton relais chiffré', '<button type="button" class="sg-annuler" data-act="sg:telecommande">Ouvrir</button>')}
  ${ligne('Thème', '', seg('theme', [['sombre', 'Sombre'], ['clair', 'Clair']], g.theme === 'clair' ? 'clair' : 'sombre', 'Thème'))}
  ${ligne('Palette', 'Thème sombre · gardée pour la prochaine ouverture', seg('palette', [['glacier', 'Glacier'], ['sarcelle', 'Sarcelle'], ['signal', 'Signal']], ['sarcelle', 'signal'].includes(g.palette) ? g.palette : 'glacier', 'Palette'))}
+ ${ligne('Interface', 'Instrument, ou Cadran (la voie vue de côté) · mêmes boutons · gardée pour la prochaine ouverture', seg('variante', [['signal', 'Instrument'], ['cadran', 'Cadran']], snap.variante === 'cadran' ? 'cadran' : 'signal', 'Interface'))}
  ${r.ajustement === null || r.ajustement === undefined ? '' : ligne('Hauteur des poses', 'Ajuster la hauteur des poses sur le dessus du rail · allumé par défaut (D-367), vaut dès le cut suivant', seg('ajustement', [['non', 'Coupé'], ['oui', 'Allumé']], r.ajustement ? 'oui' : 'non', 'À l’essai : ajuster la hauteur des poses sur le dessus du rail'))}
  ${snap.gcv2 ? `<div class="sg-reg"><span class="sg-lib"><span>Exemples d’apprentissage</span><small>cuts corrigés dans les Échos archivées, tous projets · au ${esc(snap.gcv2.date)} · ne mesure aucune qualité</small></span><span class="sg-mono">${esc(snap.gcv2.total)}</span></div>` : ''}
  ${historiqueHtml(g.historique)}
