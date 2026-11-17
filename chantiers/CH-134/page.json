@@ -1,0 +1,4 @@
+{"titre":"Panneau Instrument et fil","modele":"chantiers/CH-134/outils/page-modele.html","scenesCH129":true,"scenesCH132":true,"scenesCH134":true,
+ "variantes":[
+  {"id":"instrument","nom":"Vue instrument","sous":"Par défaut : un seul grand repère d'état, une action pleine, le détail derrière « Détails »."},
+  {"id":"fil","nom":"Vue fil","sous":"Dans Orbite : l'en-tête d'état en haut, le fil des derniers cuts, les actions en bas."}]}

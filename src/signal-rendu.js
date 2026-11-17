@@ -71,7 +71,7 @@
     aurore: '<path d="M5 16.5a7 7 0 0 1 14 0"/><path d="M3 19.5h18"/><path d="M12 4.5v2.5M5.6 8.1l1.6 1.6M18.4 8.1l-1.6 1.6"/>',
     /* CH-134 : les deux vues du lot dans Orbite (le bouton montre la vue où il mène) */
     'vue-fil': '<path d="M9 6.5h11M9 12h11M9 17.5h7"/><circle cx="4.8" cy="6.5" r="1.3"/><circle cx="4.8" cy="12" r="1.3"/><circle cx="4.8" cy="17.5" r="1.3"/>',
-    'vue-instrument': '<circle cx="12" cy="12" r="8.5" stroke-opacity=".35"/><path d="M12 3.5a8.5 8.5 0 0 1 8.5 8.5"/>',
+    'vue-instrument': '<path d="M3.8 16.5a8.2 8.2 0 1 1 16.4 0"/><path d="M12 16.5l4.2-5.2"/><circle cx="12" cy="16.5" r="1.2"/>',
   };
   const ic = (n, cls) => SVG(IC[n] || '', cls);
   /* CH-036 : le vocabulaire de l'opérateur (D-274, décisions du 01/11) :

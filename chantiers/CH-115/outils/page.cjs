@@ -75,6 +75,16 @@ if (CONFIG.scenesCH132) {
     motifFin: { code: 'ecriture-incertaine', texte: 'correction interrompue au cut 2475 : à contrôler dans ESV' }, alerte: { texte: 'Correction interrompue au cut 2475 : contrôle ce cut dans ESV, puis clique sur « J’ai contrôlé le cut 2475 ».' }, reprise: { rang: 2, part: 15, reste: 3 }, reprises: 0 };
   SCENES.splice(SCENES.findIndex(x => x.cle === 'aurore'), 0, S('Constellation arrêtée (correction interrompue)', 'file-arret', [{ state: { ...E['relecture-interrompue'].state, fileParties: arret }, rel: { ...clone(E['relecture-interrompue'].rel), passe: { ...E['relecture-interrompue'].rel.passe, cut: 2475 }, correctionInterrompue: { cut: 2475, part: 15, origine: 'relecture' } }, fiches: FICHES, onglet: 'file' }], { duree: 6000 }));
 }
+/* CH-134 : Orbite pendant une Constellation (partie 7 sur 8), le lot avec ses détails ouverts, la relecture en pause avec ses bornes (CH-133). */
+if (CONFIG.scenesCH134) {
+  const plan = [1, 2, 3, 4, 5, 6, 7, 8], P = (part, rang) => ({ part, rang, issueLot: 'fin', motifs: ['fin-normale'], resume: { poses: 80 + rang * 7, differes: 3 + rang % 4 }, passe: null, relecture: { issue: 'finie', corriges: 2 + rang % 3 }, alertes: [] });
+  const vueF = (etat, rang) => ({ id: 'file-1', etat, n: 8, plan, rang, enCours: { part: plan[rang], rang, lot: etat === 'lot' }, changement: null, bilan: plan.slice(0, rang).map((p, i) => P(p, i)), motifFin: null, alerte: null, reprises: 0 });
+  const relPause = { ...clone(E['relecture-pause'].rel), passe: { ...E['relecture-pause'].rel.passe, pauseRaison: 'points', bornesProposees: { debut: 4796, fin: 4811 }, totalPartie: 5200 }, repriseReglage: { actif: true, f5: 'pause' } };
+  SCENES.splice(SCENES.findIndex(x => x.cle === 'fin'), 0,
+    S('Lot pendant une Constellation', 'lot-file', [4800, 4802, 4805, 4808].map(n => ({ state: { ...lot('RUNNING', n, { cutStartedAt: 'MAINTENANT-2' }), fileParties: vueF('lot', 6) } })), { pas: 1500 }),
+    S('Détails ouverts', 'cours-details', [{ state: avecFile(E.cours.state), actions: ['sg:details'] }], { duree: 6000 }),
+    S('Relecture en pause, bornes', 'rel-bornes', [{ state: avecFile(E['relecture-pause'].state), rel: relPause }], { duree: 6000 }));
+}
 const DONNEES = { titre: CONFIG.titre, intro: CONFIG.intro, pied: CONFIG.pied, reglages: CONFIG.reglages || {}, mesures: MESURES, variantes: VARIANTES.map(({ id, nom, sous, note, maquette, defautClair }) => ({ id, nom, sous, note: note || '', maquette, defautClair: !!defautClair })), scenes: SCENES };
 const CSS = Object.fromEntries(VARIANTES.map(v => [v.id, v.css]));
 const JSX = Object.fromEntries(VARIANTES.map(v => [v.id, (v.js || []).map(f => fs.readFileSync(path.join(DIR, f), 'utf8')).join('\n;\n')]));
