@@ -1,0 +1,44 @@
+/* CH-132, direction B « Console » : un outil professionnel, dense et précis, proche de la page à 73 % que l'opérateur a aimée. Petite typographie
+ * (11 à 13 px), aucune carte, sections à filets, lignes clé-valeur alignées en colonnes tabulaires ; l'anneau devient un petit cadran à gauche de la
+ * phrase. Sacrifie le grand chiffre lisible de loin et la chaleur ; le mouvement se réduit aux chiffres qui changent. */
+:root #ui5.u-signal{--marge:16px;--anneau:46px;--ep:3.4;--rayon:6px}
+:root #ui5.u-signal[data-taille="compact"]{--anneau:42px}
+:root #ui5.u-signal .sg-barre{height:40px;border-bottom:1px solid var(--trait)}
+:root #ui5.u-signal .sg-bascule button{font-size:12px}
+:root #ui5.u-signal .sg-fen[data-activite] :is(.sg-tu-etat,.sg-constel),:root #ui5.u-signal .sg-zone .sg-tu:not(.sg-tu-avis){background:none!important;box-shadow:none!important;border-radius:0;margin:0}
+:root #ui5.u-signal .sg-zone .sg-tu:not(.sg-tu-avis){border-top:1px solid var(--trait)!important;padding:10px 0!important}
+/* la tuile d'état : une bande, pas une carte ; ligne d'état, puis cadran + phrase sur une ligne, puis les trois compteurs alignés, d'emblée */
+:root #ui5.u-signal:not([data-details]) .sg-fen:is([data-activite="orbite"],[data-activite="echo"],[data-activite="file"]) .sg-tu-etat{flex:0 0 auto!important;padding:12px 0 14px!important;justify-content:flex-start}
+:root #ui5.u-signal:not([data-details]) .sg-fen .sg-tu-etat::after{display:none}
+:root #ui5.u-signal:not([data-details]) .sg-fen .sg-tu-etat>.sg-haut{margin:0 0 10px!important}
+:root #ui5.u-signal .sg-tu-etat .sg-milieu{flex-direction:row;align-items:center;gap:12px;margin:0}
+:root #ui5.u-signal .sg-anneau .sg-chiffre{font-size:13px;font-weight:600;letter-spacing:0}
+:root #ui5.u-signal .sg-anneau .sg-suite{display:none}
+:root #ui5.u-signal .sg-anneau::before{display:none}
+:root #ui5.u-signal .sg-fen .sg-tu-etat .sg-phrase{font-size:15px;font-weight:500}
+:root #ui5.u-signal .sg-mot{font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+:root #ui5.u-signal:not([data-details]) .sg-trio{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin-top:12px;border-top:1px solid var(--trait)}
+:root #ui5.u-signal:not([data-details]) .sg-trio>div{display:flex!important;justify-content:space-between;align-items:baseline;padding:7px 12px 7px 0;border-right:1px solid var(--trait);margin-right:12px}
+:root #ui5.u-signal .sg-trio>div:last-child{border-right:0}
+:root #ui5.u-signal .sg-trio dt{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3)}
+:root #ui5.u-signal .sg-trio dd{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+:root #ui5.u-signal .sg-details-b{right:0;bottom:2px}
+/* la trace : une ligne de points fins, sans boîte */
+:root #ui5.u-signal:not([data-details]) .sg-tu-fil{padding:8px 0!important}
+/* boutons : rectangles bas, à gauche */
+:root #ui5.u-signal .sg-actions{padding:10px var(--marge) 12px;gap:6px;justify-content:flex-start;border-top:1px solid var(--trait)}
+:root #ui5.u-signal .sg-actions>button{flex:0 1 auto;min-width:0;height:32px;padding:0 14px;border-radius:6px;font-size:12.5px;box-shadow:none!important;background-image:none!important}
+:root #ui5.u-signal .sg-actions>.sg-principal{background:var(--accent)!important;color:var(--sur-accent,#0E0F14)}
+:root #ui5.u-signal .sg-actions>.sg-secondaire{box-shadow:inset 0 0 0 1px var(--trait-fort)!important}
+:root #ui5.u-signal .sg-tu-avis{border-radius:0}
+/* Constellation : chaîne fine, titre moyen */
+:root #ui5.u-signal .sg-constel-t .sg-chiffre{font-size:22px;font-weight:500}
+:root #ui5.u-signal .sg-chaine i{width:14px!important;height:14px!important}
+:root #ui5.u-signal .sg-chaine li::before,:root #ui5.u-signal .sg-chaine li::after{top:6px!important}
+:root #ui5.u-signal .sg-chaine li[data-etat="faite"] i::after{width:5px;height:2.5px;margin:-2.5px 0 0 -2.5px;border-width:1.5px}
+:root #ui5.u-signal .sg-chaine li[data-etat="en-cours"] i::before,:root #ui5.u-signal .sg-chaine li[data-etat="en-cours"] i::after{inset:4px}
+/* l'alerte de la Constellation passe avant le choix du nombre de parties (elle demande un geste) */
+:root #ui5.u-signal .sg-onglet-file>[data-k="alerte"]{order:-1}
+:root #ui5.u-signal:not([data-details]) .sg-fen:is([data-activite="orbite"],[data-activite="echo"],[data-activite="file"]) .sg-tu-etat{padding-left:18px!important;padding-right:18px!important}
+:root #ui5.u-signal .sg-tu-etat .sg-milieu{padding-left:2px}
+:root #ui5.u-signal .sg-fen[data-activite] .sg-tu-etat.sg-tu-etat.sg-instrument{padding-left:18px!important;padding-right:18px!important;padding-bottom:18px!important}

@@ -24,7 +24,8 @@
     'legacy:file-secondaire': 'constellation-arreter' });
   /* Navigation locale du téléphone : ne part jamais vers Ariane. */
   /* `sg:stats` : le bilan et les départs des parties, derrière l'icône d'en-tête de la Constellation (CH-129, D-362). */
-  const NAVIGATION = Object.freeze(['mode:automatic', 'mode:native', 'sg:onglet-file', 'sg:onglet-correction', 'sg:tiroir', 'sg:details', 'sg:fermer', 'sg:menu', 'sg:stats']);
+  /* `sg:vue-lot` : la vue « fil » du lot dans Orbite (CH-134, D-368), choisie sur le téléphone même. */
+  const NAVIGATION = Object.freeze(['mode:automatic', 'mode:native', 'sg:onglet-file', 'sg:onglet-correction', 'sg:tiroir', 'sg:details', 'sg:fermer', 'sg:menu', 'sg:stats', 'sg:vue-lot']);
   const ordreDe = (act, vue) => { const o = Object.hasOwn(ACTES, act) ? ACTES[act] : null; return o && vue?.boutons?.[o] === true ? o : null; };
   const permis = (act, vue) => NAVIGATION.includes(act) || ordreDe(act, vue) !== null;
   /* Le HTML du rendu, sans les actions non permises : bouton retiré, autre élément privé de son action. */
