@@ -21,4 +21,5 @@ But : à la fin du mois, OpenCode fait seul la production et le développement d
 Les interdits de `CLAUDE.md` (aucune donnée de terrain ni nom dans `banane`, jamais SKIP, plafond de 10, pas de réécriture d'historique, aucun nom de modèle d'IA, adresse du relais hors dépôt) ; les décisions de l'opérateur (`DECISIONS.md`, jamais réécrites) ; une version = un verify complet, la maquette si un chemin navigateur change, les parités si un module de décision change.
 
 ## État
+- **17/11 : SUSPENDU par l'opérateur (D-365)** : d'abord clore Ariane 5.0. Rien n'est lancé chez OpenCode.
 - 17/11 : D-364 écrite, `AGENTS.md` et ce plan au tronc, émetteur `opencode` reconnu par le hub, ticket CH-131 prêt. En attente : le VPS prêt (liste ci-dessus).
