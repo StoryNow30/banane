@@ -119,8 +119,9 @@ test('CH-135 : aucun message au service worker, rien d’un serveur, fichiers ch
  assert.doesNotMatch(css,/url\((?!fonts\/)/,'aucune ressource hors du paquet');assert.doesNotMatch(css,/https?:/);
  for(const f of css.matchAll(/url\((fonts\/[^)]+)\)/g))assert.ok(fs.existsSync(path.join(R,f[1])),f[1]);
  assert.match(css,/IBM Plex Mono/);assert.match(css,/IBM Plex Sans/);
- const sels=css.replace(/\/\*[\s\S]*?\*\//g,'').replace(/@font-face\{[^}]*\}/g,'').replace(/@media[^{]*\{/g,'').match(/[^{}]+(?=\{)/g)||[];
- for(const s of sels)for(const p of s.split(','))assert.match(p.trim(),/^(#ui5\.u-cadran|body\.ui5:has\(#ui5\.u-cadran|\.sg-tech\[data-variante="cadran"\]|from|to|\d+%)/,'tout est sous #ui5.u-cadran : '+p.trim());
+ const sels=css.replace(/\/\*[\s\S]*?\*\//g,'').replace(/@font-face\{[^}]*\}/g,'').replace(/@media[^{]*\{/g,'').replace(/@keyframes [a-z-]+\{/g,'').match(/[^{}]+(?=\{)/g)||[];
+ const haut=s=>{const o=[];let d=0,c='';for(const x of s){if(x==='('||x==='[')d++;if(x===')'||x===']')d--;if(x===','&&!d){o.push(c);c='';}else c+=x;}o.push(c);return o;};
+ for(const s of sels)for(const p of haut(s))assert.match(p.trim(),/^(#ui5\.u-cadran|body\.ui5:has\(#ui5\.u-cadran|\.sg-tech\[data-variante="cadran"\]|from|to|\d+%)/,'tout est sous #ui5.u-cadran : '+p.trim());
  const iC=html.indexOf('src/cadran-rendu.js'),iU=html.indexOf('src/ui5.js'),iS=html.indexOf('src/signal-rendu.js');
  assert.ok(iS>0&&iC>iS&&iU>iC,'signal-rendu, puis cadran-rendu, puis ui5');
  assert.ok(html.indexOf('panel-cadran.css')>html.indexOf('panel-signal.css'),'la feuille Cadran après celle de Signal');
