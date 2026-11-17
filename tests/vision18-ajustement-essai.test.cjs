@@ -20,10 +20,14 @@ test('recette livrée : ajustementFin coupé ; réglage figé de l\'essai = celu
   assert.ok(Object.isFrozen(L1.AJ_ESSAI)); assert.deepEqual({ ...L1.AJ_ESSAI }, ESSAI);
 });
 
-test('rien de gardé : coupé, l\'étage n\'a aucun réglage ; allumé : le réglage figé de l\'essai ; oui ou non seulement', async () => {
+/* D-367 (opérateur, 17/11) : aj5 allumé par défaut ; « coupé » choisi et gardé reste coupé. Avant (Vision 18) : rien de gardé = coupé. */
+test('rien de gardé : ALLUMÉ par défaut (D-367), le réglage figé de l\'essai ; « coupé » gardé reste coupé ; oui ou non seulement', async () => {
   const local = memoire(), b = production({ local });
-  assert.deepEqual(j(await b.api('ajustement-hauteur-etat')), { actif: false });
-  assert.equal(b.get('ajustementFinReglage')(), null);
+  assert.deepEqual(j(await b.api('ajustement-hauteur-etat')), { actif: true });
+  assert.deepEqual(j(b.get('ajustementFinReglage')()), ESSAI);
+  const local2 = memoire(); local2.m[CLE] = false; const b2 = production({ local: local2 });
+  assert.deepEqual(j(await b2.api('ajustement-hauteur-etat')), { actif: false }, 'le choix gardé de l\'opérateur passe devant le défaut');
+  assert.equal(b2.get('ajustementFinReglage')(), null);
   assert.deepEqual(j(await b.api('ajustement-hauteur', { actif: true })), { actif: true });
   assert.equal(local.m[CLE], true);
   assert.deepEqual(j(b.get('ajustementFinReglage')()), ESSAI);
@@ -45,16 +49,17 @@ test('un levier réglé pour une mesure passe devant l\'interrupteur, et le reto
   assert.deepEqual(j(b.get('ajustementFinReglage')()), ESSAI);
 });
 
-test('redémarrage du service worker : le choix gardé est relu ; valeur autre que true ou stockage illisible : coupé', async () => {
+/* D-367 : seul « coupé » gardé (false) coupe ; une valeur illisible ou un stockage en panne donnent le défaut, allumé. Avant : coupé. */
+test('redémarrage du service worker : le choix gardé est relu ; valeur autre que false ou stockage illisible : le défaut, allumé (D-367)', async () => {
   const local = memoire(); local.m[CLE] = true;
   const b = production({ local });
   assert.equal(b.get('ajustementFinReglage')(), null, 'avant la première lecture : coupé');
   assert.deepEqual(j(await b.api('ajustement-hauteur-etat')), { actif: true });
   assert.deepEqual(j(b.get('ajustementFinReglage')()), ESSAI);
   const l2 = memoire(); l2.m[CLE] = 'oui';
-  assert.deepEqual(j(await production({ local: l2 }).api('ajustement-hauteur-etat')), { actif: false });
+  assert.deepEqual(j(await production({ local: l2 }).api('ajustement-hauteur-etat')), { actif: true });
   const casse = { get: async k => { if ([].concat(k ?? []).includes(CLE)) throw Error('stockage'); return {}; }, set: async () => {} };
-  assert.deepEqual(j(await production({ local: casse }).api('ajustement-hauteur-etat')), { actif: false });
+  assert.deepEqual(j(await production({ local: casse }).api('ajustement-hauteur-etat')), { actif: true });
 });
 
 test('le lot relit le choix sans appel de plus : la lecture des choix du lot porte la clé de l\'essai', async () => {

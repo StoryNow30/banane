@@ -1486,7 +1486,7 @@ const CLE_CLIC_HUMAIN='banane50ClicHumain',CLE_GRAPPE_DIFFERES='banane50GrappeDi
  * gardées) mais il est relu AVEC eux, dans le même appel, au départ de chaque lot ; `ajEssai` (null : pas encore lu dans cette vie du service worker) le garde en
  * mémoire pour que la commande d'un cut n'attende rien. Allumé, l'étage `ajustementFinCommande` prend le réglage figé `AJ_ESSAI` de src/gcv2-l1.js. */
 const CLE_AJUSTEMENT_HAUTEUR='banane58AjustementHauteur';let ajEssai=null;
-async function ajustementHauteurEtat(){if(ajEssai===null){try{ajEssai=(await chrome.storage.local.get([CLE_AJUSTEMENT_HAUTEUR]))?.[CLE_AJUSTEMENT_HAUTEUR]===true;}catch{ajEssai=false;}}return {actif:ajEssai};}
+async function ajustementHauteurEtat(){if(ajEssai===null){try{ajEssai=(await chrome.storage.local.get([CLE_AJUSTEMENT_HAUTEUR]))?.[CLE_AJUSTEMENT_HAUTEUR]!==false;}catch{ajEssai=true;}   /* D-367 : allumé par défaut ; « coupé » gardé reste coupé */}return {actif:ajEssai};}
 async function ajustementHauteurChoisir(args){if(typeof args?.actif!=='boolean')throw Error('Ajustement de hauteur : oui ou non.');
  await chrome.storage.local.set({[CLE_AJUSTEMENT_HAUTEUR]:args.actif});ajEssai=args.actif;journalerSimple('ajustement-hauteur-choix',{actif:ajEssai});return {actif:ajEssai};}
 /* Réglage de l'étage : un levier réglé pour une mesure (`reglerLeviers` : banc, parité) passe devant ; sinon l'essai allumé ; sinon rien (null : étage coupé). */
