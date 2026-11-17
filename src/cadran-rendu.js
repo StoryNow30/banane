@@ -143,6 +143,15 @@
       const n = a.etat === 'fini' ? Math.min(N, a.traites || 0) : Math.min(N, (a.traites || 0) + 1);
       h = h.replace(/(<section class="sg-instrument[^"]*"[^>]*><div class="sg-haut">[\s\S]*?)(<\/div><div class="sg-milieu">)/, `$1<span class="cd-cut sg-mono">cut ${n}/${N}</span>$2`);
     }
+    /* Bascule de la vue du lot « instrument / fil » (CH-134, D-368) : l'état est `ui.vueLot`, l'action `sg:vue-lot` est câblée par CH-134 dans src/ui5.js.
+     * Si le rendu de l'instrument porte déjà le bouton (CH-134 fusionnée), Cadran le garde tel quel ; sinon il le pose ici, au même endroit logique (la tête,
+     * quand un lot est ouvert ou fini, pas hors ESV), et pose `data-vue="fil"` sur la fenêtre. */
+    const lotVu = activite === 'orbite' && (a.lotOuvert || ['fini', 'arrete'].includes(a.etat)) && g0 !== 'hors';
+    if (lotVu && !h.includes('data-act="sg:vue-lot"')) {
+      const fil = u.vueLot === 'fil';
+      h = h.replace(/(<section class="sg-instrument[^"]*"[^>]*><div class="sg-haut">[\s\S]*?)(<\/div><div class="sg-milieu">)/, `$1<button type="button" class="sg-vue-b" data-act="sg:vue-lot" aria-pressed="${fil}" aria-label="${fil ? 'Vue instrument' : 'Vue fil'}" title="${fil ? 'Vue instrument' : 'Vue fil'}"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 12h16M4 18h10"/></svg></button>$2`);
+      if (fil && !/^<div class="sg-fen"[^>]*data-vue=/.test(h)) h = h.replace(/^(<div class="sg-fen"[^>]*?)>/, '$1 data-vue="fil">');
+    }
     /* les compteurs de la maquette : Posés · À poser · Reste, quand le reste est connu (sinon ceux de l'instrument : Traités · Posés · À poser) */
     if (activite === 'orbite' && Number.isInteger(a.restants)) h = h.replace(/<dl class="sg-trio"><div><dt>Traités<\/dt><dd class="sg-n">[^<]*<\/dd><\/div>(<div><dt>Posés<\/dt><dd class="sg-n">[^<]*<\/dd><\/div><div><dt>À poser<\/dt><dd class="sg-n[^"]*">[^<]*<\/dd><\/div>)<\/dl>/,
       (t, deux) => `<dl class="sg-trio">${deux}<div><dt>Reste</dt><dd class="sg-n cd-reste">${esc(a.restants)}</dd></div></dl>`);

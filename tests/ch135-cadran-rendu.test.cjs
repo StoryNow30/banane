@@ -26,8 +26,9 @@ const snap=(x={})=>({variante:'signal',mode:'automatic',notice:{texte:'',erreur:
  onglets:[{valeur:'12',texte:'ESV · onglet 2'}],ongletChoisi:'12',reglages:{relecture:'corriger',clic:'tel-quel',grappe:false,passe2:true,raison:false,bandeau:false,ajustement:true},
  relectureModifiable:true,echo:{visites:'0',corriges:0},echoRows:[],ar:ar('cours'),sig:sig(),...x});
 const ui=(x={})=>({tiroir:false,couche:null,sel:null,q:'',pi:0,note:'',...x});
-const acts=h=>[...h.matchAll(/data-act="([^"]+)"/g)].map(m=>m[1]);
-const grises=h=>[...h.matchAll(/<button\b[^>]*>/g)].map(m=>m[0]).filter(t=>/\sdisabled\b/.test(t)).map(t=>(t.match(/data-act="([^"]+)"/)||[])[1]||'?');
+/* `sg:vue-lot` (bascule instrument / fil de CH-134) : Cadran la pose lui-même tant que CH-134 n'est pas fusionnée ; hors de la comparaison d'ici là. */
+const acts=h=>[...h.matchAll(/data-act="([^"]+)"/g)].map(m=>m[1]).filter(a=>a!=='sg:vue-lot');
+const grises=h=>[...h.matchAll(/<button\b[^>]*>/g)].map(m=>m[0]).filter(t=>!t.includes('sg:vue-lot')).filter(t=>/\sdisabled\b/.test(t)).map(t=>(t.match(/data-act="([^"]+)"/)||[])[1]||'?');
 const champs=h=>[...h.matchAll(/data-(?:borne|sel)="([^"]+)"/g)].map(m=>m[1]);
 
 /* Les scènes : chaque état d'Orbite (repos, en cours, pause demandée, pause, à toi, incident, rattrapage, relecture, relecture en pause, arrêté,
@@ -107,6 +108,15 @@ test('CH-135 : l’en-tête dit le cut n sur N quand le total est connu (le cut 
 test('CH-135 : compteurs de la maquette (Posés, À poser, Reste) quand le reste est connu ; sinon ceux de l’instrument',()=>{
  assert.match(C.rendre(SCENES.cours,ui()),/<dl class="sg-trio"><div><dt>Posés<\/dt><dd class="sg-n">18<\/dd><\/div><div><dt>À poser<\/dt><dd class="sg-n sg-dif">2<\/dd><\/div><div><dt>Reste<\/dt><dd class="sg-n cd-reste">19<\/dd><\/div><\/dl>/);
  assert.match(C.rendre(SCENES.sansTotal,ui()),/<dt>Traités<\/dt>/);
+});
+
+test('CH-135 : la bascule « vue fil » de CH-134 est offerte quand un lot est ouvert ou fini, une seule fois, et la vue fil marque la fenêtre',()=>{
+ const nb=h=>(h.match(/data-act="sg:vue-lot"/g)||[]).length;
+ for(const k of ['cours','pause','arrete','fini','toi'])assert.equal(nb(C.rendre(SCENES[k],ui())),1,k);
+ for(const k of ['pret','hors','echo'])assert.equal(nb(C.rendre(SCENES[k],ui())),0,k);
+ assert.match(C.rendre(SCENES.cours,ui({vueLot:'fil'})),/^<div class="sg-fen" data-activite="orbite" data-etat="cours" data-teinte="[^"]*" data-vue="fil">/);
+ assert.match(C.rendre(SCENES.cours,ui({vueLot:'fil'})),/aria-pressed="true" aria-label="Vue instrument"/);
+ assert.doesNotMatch(C.rendre(SCENES.cours,ui()),/data-vue=/);
 });
 
 test('CH-135 : Réglages, « Interface : Instrument / Cadran » ; l’instrument reste celui d’avant',()=>{
