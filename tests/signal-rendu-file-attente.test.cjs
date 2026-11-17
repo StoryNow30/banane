@@ -39,3 +39,20 @@ test('activité finie (lot clos) : l’écran d’arrêt habituel, avec « Repre
  const h=S.rendre(snap({ar:ar('fini'),file:F()}),ui({onglet:'file'}));
  assert.match(h,/class="sg-mot">Arrêtée</);assert.match(h,/data-act="legacy:file-reprendre">.*Reprendre à la partie 4 · 1 restante/);
 });
+
+/* Vision 19, capture de l'opérateur (17/11) : Constellation arrêtée sur une correction de la relecture interrompue (cut 2475) ; l'avis dit « clique sur
+ * « J’ai contrôlé le cut 2475 » », mais l'écran d'Orbite n'offrait que « Reprendre », l'Aurore, l'export et « Voir la Constellation » : aucun moyen d'acquitter
+ * (ni dans la palette), et « Reprendre » est refusé tant que la correction n'est pas acquittée. Le bouton d'acquittement passe devant, comme pendant la relecture. */
+for(const etat of ['fini','arrete']) test(`Constellation arrêtée, correction interrompue (lot ${etat}) : « J’ai contrôlé le cut 2475 » est le bouton principal, « Reprendre » après`,()=>{
+ const s=snap({ar:ar(etat),file:F({reprise:{rang:2,part:3,reste:11}}),relecture:{interrompue:'Une correction de la relecture a été interrompue au cut 2475 (partie 3) : contrôle ce cut dans ESV, puis clique sur « J’ai contrôlé le cut 2475 ».'},
+  boutonsOrbite:[b('relecture-acquitter','J’ai contrôlé le cut 2475'),b('export-tout','Exporter le dossier')]});
+ const h=S.rendre(s,ui()),l=legacy(h);
+ assert.equal(l[0],'relecture-acquitter','le premier bouton est l’acquittement');assert.match(h,/J’ai contrôlé le cut 2475/);
+ assert.ok(l.includes('file-reprendre'),'« Reprendre » reste offert, après');
+ assert.ok(S.paletteListe?S.paletteListe(s,ui({q:'contrôlé'})).some(c=>c.act==='legacy:relecture-acquitter'):true,'la palette le trouve');
+});
+test('onglet Constellation, arrêtée sur une correction interrompue : « J’ai contrôlé le cut 2475 » avant « Reprendre »',()=>{
+ const s=snap({ar:ar('fini'),file:F({reprise:{rang:2,part:3,reste:11}}),boutonsOrbite:[b('relecture-acquitter','J’ai contrôlé le cut 2475'),b('export-tout','Exporter le dossier')]});
+ const l=legacy(S.rendre(s,ui({onglet:'file'})));
+ assert.ok(l.includes('relecture-acquitter'));assert.ok(l.indexOf('relecture-acquitter')<l.indexOf('file-reprendre'),'acquitter avant reprendre');
+});

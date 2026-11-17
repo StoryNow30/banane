@@ -270,6 +270,10 @@
     Object.assign(m, { glyphe: arret ? (F.alerte ? 'toi' : 'arrete') : 'fini', ton: arret ? (F.alerte ? 'alerte' : 'attention') : 'vivant', mot: arret ? 'Constellation arrêtée' : 'Constellation terminée',
       phrase: esc(vf(F.phrase)), objet: null, fin: null, incident: F.alerte ? { texte: F.alerte } : null, verrou: false, raison: '', fileBilan: (F.bilan || []).map(vf),
       principal: plein || rep || fp, secondaires: [plein ? rep || fp : corrigerBouton(s), ex ? versAction(ex) : null, { texte: 'Voir la Constellation', act: 'sg:onglet-file' }].filter(Boolean) });
+    /* Vision 19 (capture de l'opérateur, 17/11) : une correction interrompue bloque tout, la reprise comprise, jusqu'à « J'ai contrôlé le cut N » : ce bouton passe
+     * devant, comme pendant la relecture (sans lui, l'avis le demandait et aucun bouton ne le donnait). */
+    const acq = (s.boutonsOrbite || []).find(x => x.id === 'relecture-acquitter');
+    if (acq) { m.secondaires = [m.principal, ...m.secondaires].filter(Boolean); m.principal = versAction(acq); }
   }
   const texteReprise = F => { const R = F.reprise, n = R ? R.reste ?? R.restantes : null;
     return R && R.part != null && Number.isInteger(n) ? `Reprendre à la partie ${R.part} · ${n} ${n > 1 ? 'restantes' : 'restante'}` : vf(F.reprendre?.texte || 'Reprendre la Constellation'); };
@@ -678,10 +682,12 @@
         lancer: { seg: null, note: `${enCours[0].toUpperCase()}${enCours.slice(1)} de la partie continue : la Constellation s’est arrêtée et ne repartira pas seule. Reprise et nouvelle Constellation : à sa fin.`,
           boutons: [off(bt(F.reprendre, 'legacy:file-reprendre', 'plein', texteReprise(F))), off(lancer && { ...lancer, cls: F.reprendre ? 'second' : 'plein' })].filter(Boolean) } });
     } else if (etat === 'arret') {
-      const rep = bt(F.reprendre, 'legacy:file-reprendre', 'plein', texteReprise(F));
+      /* Vision 19 (capture de l'opérateur, 17/11) : correction interrompue → « J'ai contrôlé le cut N » d'abord ; la reprise serait refusée avant. */
+      const acqB = (s.boutonsOrbite || []).find(x => x.id === 'relecture-acquitter'), acq = acqB ? { texte: acqB.texte, act: 'legacy:relecture-acquitter', cls: 'plein', inactif: !acqB.actif } : null;
+      const rep0 = bt(F.reprendre, 'legacy:file-reprendre', 'plein', texteReprise(F)), rep = rep0 && acq ? { ...rep0, cls: 'second' } : rep0;
       Object.assign(m, { glyphe: F.alerte ? 'toi' : 'arrete', ton: F.alerte ? 'alerte' : 'attention', mot: 'Arrêtée', phrase: esc(vf(F.phrase)), alerte: F.alerte,
         lancer: { seg, note: R ? `ESV doit afficher la partie ${R.part} : ouvre-la, puis reprends. « Nouvelle Constellation » part de la partie affichée.` : 'Tout est fait : une nouvelle Constellation part de la partie affichée.',
-          boutons: [rep, lancer && { ...lancer, cls: rep ? 'second' : 'plein' }].filter(Boolean) } });
+          boutons: [acq, rep, lancer && { ...lancer, cls: rep || acq ? 'second' : 'plein' }].filter(Boolean) } });
     } else if (etat === 'fin') {
       const aur = corrigerBouton(s), plein = aur && !/en cours/.test(aur.texte) ? { texte: aur.texte, act: aur.act, cls: 'plein', ic: 'aurore' } : null;
       Object.assign(m, { glyphe: 'fini', ton: 'vivant', mot: 'Terminée', phrase: esc(vf(F.phrase)),
