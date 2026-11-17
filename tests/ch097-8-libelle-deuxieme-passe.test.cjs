@@ -37,7 +37,7 @@ test('textes (un seul module, `passe2Textes`) : « en ombre » seulement quand l
  assert.match(off.mode,/coupée par le réglage/);
  for(const t of Object.values(inconnu))assert.doesNotMatch(t,/ombre|pose et valide/,'mode pas encore lu : ni l’un ni l’autre');});
 
-test('feuille de réglages de Signal : le libellé suit le mode effectif',()=>{
+test('feuille de réglages de Signal : le rattrapage n’y est plus (D-361), quel que soit le mode',()=>{
  const snap=reglage=>({variante:'signal',mode:'automatic',notice:{texte:'',erreur:false},boutonsOrbite:[],boutonsEcho:[],onglets:[],ongletChoisi:'',
   reglages:{relecture:'corriger',clic:'tel-quel',grappe:false,passe2:true,passe2Reglage:reglage,raison:false,bandeau:false},echo:{visites:'0',corriges:0},echoRows:[],
   ar:{etat:'pret',etatTexte:'Prêt',horsLigne:false,partie:13,cutEsv:1,cibles:null,poses:0,differes:0,traites:0,restants:null,cours:null,dernier:null,bornes:{debut:null,fin:null},differesListe:[],
@@ -45,8 +45,9 @@ test('feuille de réglages de Signal : le libellé suit le mode effectif',()=>{
   sig:{activite:'orbite',statuts:[],allure:{mediane:null,parMinute:null,debutCut:null,debutPause:null,depuisS:null,pauseS:null},echo:{mediane:null,marques:[]},
    connexion:{statut:'ready',tabId:'12',nomme:true,reconnect:null},onglet:'ESV',historique:null,goto:{present:false,actif:false,raison:'',etat:'',texte:''},examines:[],theme:'sombre',f5:null,taille:'normal'}});
  const ui={tiroir:false,couche:'reglages',sel:null,q:'',pi:0,note:''};
- const e=S.rendre(snap(ECRIT),ui);assert.doesNotMatch(e,/Rattrapage \(en ombre\)|sans rien écrire dans ESV/);assert.match(e,/Rattrapage/);assert.match(e,/pose et valide dans ESV jusqu’à 10 cuts/);
- const o=S.rendre(snap(OMBRE),ui);assert.match(o,/Rattrapage \(en ombre\)/);assert.match(o,/sans rien écrire dans ESV/);});
+ /* D-361 (CH-129, Vision 19) : l'interrupteur du rattrapage quitte la feuille de réglages (l'opérateur le laisse toujours allumé) ; son comportement ne change pas
+  * (deuxième passe en écriture, plafonnée à 10). Avant : la ligne « Rattrapage » et son libellé selon le mode. Le libellé reste vérifié par l'essai précédent. */
+ for(const r of [ECRIT,OMBRE]){const h=S.rendre(snap(r),ui);assert.doesNotMatch(h,/Rattrapage/);assert.doesNotMatch(h,/pose et valide dans ESV jusqu’à 10 cuts|sans rien écrire dans ESV/);}});
 
 test('panneau : le libellé de la case et l’avis après le clic suivent le mode rendu par le service worker ; rien d’écrit en dur',async()=>{
  const html=lire('panel.html');

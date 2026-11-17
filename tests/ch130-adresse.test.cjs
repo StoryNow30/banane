@@ -20,13 +20,7 @@ test('aucune adresse *.workers.dev réelle dans les fichiers suivis',()=>{
  assert.deepEqual(vus,[]);
 });
 
-test('aucune adresse *.workers.dev réelle dans l’historique disponible (toutes branches)',()=>{
- /* Intégration : `-G` ne sort que les commits dont le diff porte un hôte *.workers.dev ; sans lui, l'historique de toutes les branches dépassait le tampon (statut null). */
- const r=git('log','--all','-p','--format=commit %h','-G','[.]workers[.]dev');assert.equal(r.status,0,r.stderr);
- const vus=[];let c='';for(const l of r.stdout.split('\n')){if(l.startsWith('commit '))c=l.slice(7);else for(const m of l.matchAll(HOTE))if(!permis(m[0]))vus.push(c+' : '+m[0].replace(/^[^.]+/,'<…>'));}
- assert.deepEqual(vus,[]);
-});
-
+/* L'essai sur l'historique est dans tests/ch130-adresse-historique.test.cjs (fichier à part : plus de 7 s à lui seul, le fichier entier dépassait 20 s pendant le verify). */
 test('le fichier de réglage du paquet n’est jamais suivi ni écrit dans le dépôt',()=>{
  assert.equal(fs.existsSync(path.join(racine,'telecommande-relais.json')),false);
  assert.equal(git('ls-files','telecommande-relais.json').stdout.trim(),'');

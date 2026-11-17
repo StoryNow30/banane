@@ -3807,8 +3807,8 @@ Complète D-299 sans la modifier.
 
 - **Annulé par l'opérateur le même jour, avant tout lancement**, mot pour mot : « nan pas besoin d'alourdir j'ai testé la vison 18 et c'est top mais je te ferai un retour après une journée ». CH-128 n'est pas lancé (aucune session ne l'a reçu) ; son ticket reste au dépôt comme référence, avec les mesures du 15/11, si le retour de l'opérateur après une journée d'usage le demande. Rien ne change dans le panneau de la Vision 18.
 
-## D-359 — Les sessions passent au modèle Opus 5.5 (opérateur, 15/11)
-- Ordre de l'opérateur, mot pour mot : « En opus 5.5 désormais ». La session principale tourne désormais sur ce modèle (changé par l'opérateur) ; les sessions filles en cours (CH-116, CH-127) y étaient déjà. Remplace, pour le choix du modèle, D-356 (l'effort reste choisi chantier par chantier, sans effort maximal sans raison écrite).
+## D-359 — Les sessions passent au modèle le plus fort (opérateur, 15/11)
+- Ordre de l'opérateur, mot pour mot sauf le nom du modèle, remplacé par son niveau (`CLAUDE.md` : aucun nom de modèle d'IA dans les fichiers ; retrait fait par l'intégrateur le 17/11, essai `tests/noms-modeles.test.cjs`) : « En [modèle le plus fort] désormais ». La session principale tourne désormais sur ce modèle (changé par l'opérateur) ; les sessions filles en cours (CH-116, CH-127) y étaient déjà. Remplace, pour le choix du modèle, D-356 (l'effort reste choisi chantier par chantier, sans effort maximal sans raison écrite).
 
 ## D-360 — Le réglage v4BS-sd (chantier des 17 %) n'est pas intégré dans Ariane 5 (opérateur, 16/11)
 - Réponse de l'opérateur à la présentation de l'intégrateur (gain mesuré : 7 différés reposés justes sur 4 016 cuts du corpus, 1 sur les examens vierges, 0 faute ; parité non probante ; recommandation de l'intégrateur : pas de paquet pour lui seul), mot pour mot : « Ok on oublie ».

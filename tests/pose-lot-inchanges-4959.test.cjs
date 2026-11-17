@@ -119,7 +119,8 @@ const GARDE_PASSE=['garde-passe-appuis.js'];
 /* Test 25 (CH-018) : déplacement de la vue à geste réglable (src/deplacement-vue.js). Le détecteur de SKIP de CH-016 a été retiré à la demande de l'opérateur (D-268). */
 const SKIP_OMBRE=['deplacement-vue.js'];
 /* CH-111 (D-345) : la télécommande (module du service worker, son panneau d'appairage et le QR code) ; ni pose, ni validation, ni lot : ses ordres passent par le message `panel` du bouton. */
-const TELECOMMANDE=['qr.js','telecommande-panneau.js','telecommande.js'];
+/* CH-130 (D-361) : l'instantané du panneau pour le téléphone (rendu du vrai panneau sur le relais) ; ni pose, ni validation, ni lot. */
+const TELECOMMANDE=['qr.js','telecommande-instantane.js','telecommande-panneau.js','telecommande.js'];
 /* CH-017 : la file de parties (machine à états pure), lue par le service worker seulement quand `file.actif` est allumé (éteinte à la livraison) ;
  * elle ne lit ni ne commande la pose ; le lot qu'elle démarre est le lot ordinaire. */
 const FILE_PARTIES=['file-parties.js'];
