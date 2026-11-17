@@ -60,3 +60,8 @@ test('hub : un message adressé à cursor commence par la mention qui lance son 
  assert.doesNotMatch(H.formater({de:'cursor',a:'cursor',type:'info',chantier:'CH-001',texte:'x'}),/^@cursor/);
  assert.doesNotMatch(H.formater({de:'integrateur',a:'glm',type:'ticket',chantier:'CH-001',texte:'x'}),/@cursor/);
 });
+
+test('hub : OpenCode (D-364) est un émetteur reconnu', () => {
+  const m = H.formater({ de: 'opencode', type: 'rapport', chantier: 'CH-131', texte: 'fait.', date: new Date('2026-11-17T15:00:00Z') });
+  assert.match(m, /^\*\*\[opencode → tous\] rapport · CH-131 · 17\/11\/2026 16:00 Paris\*\*/);
+});
