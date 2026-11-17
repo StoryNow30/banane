@@ -16,12 +16,12 @@
  * Les choix « après le lot », « clic », « grappe », « deuxième passe », « raison » sont ceux du panneau : un clic sur la case ou le bouton radio d'origine. */
 (function (root) {
   'use strict';
-  const D = root.document, S5 = root.ArianeSignalRendu, CLE = 'banane51Interface', CLE_EX = 'banane51Examines', CLE_PALETTE = 'banane51Palette';
+  const D = root.document, S5 = root.ArianeSignalRendu, CLE = 'banane51Interface', CLE_EX = 'banane51Examines', CLE_PALETTE = 'banane51Palette', CLE_VUE = 'banane51VueLot';
   if (!D || !S5 || !root.ArianePanel) return;
   /* Test 23 : les présentations d'essai « ariane2 » et « palette » sont retirées (opérateur, après la test 21) ; Signal est la seule présentation. */
   const VARIANTES = ['signal'], defaut = 'signal';
   const TAILLE = { signal: [600, 760] };
-  const ui = { last: '', pauseLot: null, q: '', pi: 0, focusQ: false, tiroir: false, couche: null, sel: null, note: '', onglet: null, details: false, stats: false, palette: 'glacier' };
+  const ui = { last: '', pauseLot: null, q: '', pi: 0, focusQ: false, tiroir: false, couche: null, sel: null, note: '', onglet: null, details: false, stats: false, palette: 'glacier', vueLot: 'instrument' };
   const examines = { lot: null, cles: new Set() };
   let variante = defaut, hote = null, gcv2Base = null, secours = false;
   const $ = id => D.getElementById(id);
@@ -541,6 +541,8 @@
     else if (quoi === 'details') ui.details = !ui.details;
     /* CH-129 (D-362) : l'écran des statistiques de la Constellation (bilan par partie, départs d'ESV) ; rien n'est envoyé */
     else if (quoi === 'stats') ui.stats = !ui.stats;
+    /* CH-134 (D-368) : la vue du lot dans Orbite, « instrument » (défaut) ou « fil », sans recharger, gardée pour la prochaine ouverture ; rien n'est envoyé */
+    else if (quoi === 'vue-lot') { ui.vueLot = ui.vueLot === 'fil' ? 'instrument' : 'fil'; void root.chrome?.storage?.local?.set?.({ [CLE_VUE]: ui.vueLot })?.catch?.(() => {}); }
     /* CH-025 : un nombre de parties est un clic sur le bouton de la carte d'origine (`#file-n`, sans id : choisi par son `data-n`). */
     /* CH-105 : la molette écrit le champ d'origine `#file-n` et déclenche `change` (panel.js : `fileUI.n`, `fileUI.prete=false`, même rendu). Hors bornes : rien. */
     else if (quoi === 'file-n') { const c = $('file-n'), N = nombreDuChamp(), k = Number(v);
@@ -766,7 +768,8 @@
   async function init() {
     hote = D.createElement('div'); hote.id = 'ui5'; hote.hidden = true; D.body.appendChild(hote);
     /* Un choix gardé inconnu, l'ancien « ancienne » compris (le panneau d'avant n'est plus proposé, D-250), laisse le départ. */
-    try { const o = await root.chrome?.storage?.local?.get?.([CLE, CLE_EX, CLE_PALETTE]), v = o?.[CLE], ex = o?.[CLE_EX];
+    try { const o = await root.chrome?.storage?.local?.get?.([CLE, CLE_EX, CLE_PALETTE, CLE_VUE]), v = o?.[CLE], ex = o?.[CLE_EX];
+      if (o?.[CLE_VUE] === 'fil') ui.vueLot = 'fil';
       if (['sarcelle', 'glacier', 'signal'].includes(o?.[CLE_PALETTE])) ui.palette = o[CLE_PALETTE];
       if (VARIANTES.includes(v)) variante = v;
       if (ex && typeof ex.lot === 'string' && Array.isArray(ex.cles)) { examines.lot = ex.lot; examines.cles = new Set(ex.cles.filter(c => typeof c === 'string').slice(0, 2000)); } } catch { /* défaut de la version */ }
