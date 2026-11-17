@@ -7,9 +7,11 @@ const { lotPasse, relancer, ev } = require('./helpers/passe-differes.cjs');
 const ecrit = x => x.pasPasse.filter(c => c === 'apply' || c === 'validateInPlace');
 const fin = x => ev(x.b, 'passe-differes-ecriture-fin').at(-1);
 
-test('cut rouge mais « traité par un opérateur » dans la liste d’ESV : jamais écrasé', async () => {
+test('cut rouge mais « traité par un opérateur » dans la liste d’ESV : jamais écrasé (D-363 : la passe passe au suivant)', async () => {
   const x = await lotPasse({ passe: { passes: 1 }, deux: true });
   x.adapter.operateur = [112];
   await relancer(x);
-  assert.deepEqual(ecrit(x), []); assert.match(fin(x).raison, /invalid, traité par un opérateur/);
+  /* D-363 : la garde ne vaut que pour le 112 ; la passe passe ensuite au 114, qui s'écrit. Avant (D-237) : arrêt, rien d'écrit. */
+  assert.deepEqual(x.adapter.enPlace.map(e => e.cut), [114], '112 jamais validé'); assert.equal(ecrit(x).filter(c => c === 'apply').length, 1, 'une seule pose : celle du 114');
+  assert.match(fin(x).raison, /invalid, traité par un opérateur/);
 });

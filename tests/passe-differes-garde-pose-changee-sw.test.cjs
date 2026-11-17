@@ -7,10 +7,12 @@ const { lotPasse, relancer, ev } = require('./helpers/passe-differes.cjs');
 const ecrit = x => x.pasPasse.filter(c => c === 'apply' || c === 'validateInPlace');
 const fin = x => ev(x.b, 'passe-differes-ecriture-fin').at(-1);
 
-test('pose d’ESV du cut changée depuis la visite du lot (1 mm) : rien n’est écrit', async () => {
+test('pose d’ESV du cut changée depuis la visite du lot (1 mm) : rien n’est écrit sur lui (D-363 : la passe passe au suivant)', async () => {
   const x = await lotPasse({ passe: { passes: 1 }, deux: true });
   const aller = x.adapter.goToCut.bind(x.adapter);
   x.adapter.goToCut = async (t, o, id) => { const r = await aller(t, o, id); if (t.cut === 112) x.adapter.rails.left.railLocalToSceneRelative[12] += 0.005; return r; };
   await relancer(x);
-  assert.deepEqual(ecrit(x), []); assert.match(fin(x).raison, /pose d’ESV du cut changée depuis la visite du lot/);
+  /* D-363 : la garde ne vaut que pour le 112 ; la passe passe ensuite au 114, qui s'écrit. Avant (D-237) : arrêt, rien d'écrit. */
+  assert.deepEqual(x.adapter.enPlace.map(e => e.cut), [114], '112 jamais validé'); assert.equal(ecrit(x).filter(c => c === 'apply').length, 1, 'une seule pose : celle du 114');
+  assert.match(fin(x).raison, /pose d’ESV du cut changée depuis la visite du lot/);
 });

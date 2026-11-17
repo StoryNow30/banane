@@ -2395,7 +2395,7 @@ async function passeDiffEcrire(b,poses,rg,vue,aReprendre=null){
  for(let i=0;i<200&&engine.task;i++)await engine.task.catch(()=>{});
  /* T21d : reprise où tout était déjà écrit (redémarrage juste avant la fin) : rien à contrôler, la fin est seulement notée. */
  const raison0=!aEcrire.length?null:['en-cours','en-pause'].includes(relecture.passe?.etat)?'une relecture est en cours ou en pause':await lotCloRefus(b,true,null);let issue=raison0?'refus-depart':'fin',raison=raison0;
- let refusees=0;
+ let refusees=0,dernierRefus=null;
  if(!raison0){const EC=passeDiff.ecriture={arret:false,attente:null,etat:E};
   try{
    for(const [ip,p] of aEcrire.entries()){
@@ -2411,10 +2411,12 @@ async function passeDiffEcrire(b,poses,rg,vue,aReprendre=null){
     if(E){if(r.resultat==='ecrit'){E.ecriture.faits++;E.vue.ecrites=vue.ecrites+1;}else if(r.resultat==='refuse'&&r.avantPose===true)(E.ecriture.refuses||(E.ecriture.refuses=[])).push(p.cut);if(r.resultat!=='incertain')E.ecriture.enVol=null;await passeDiffSauver(E);}
     journalerSimple('passe-differes-ecriture',{identity:{part:b.scope.part,cut:p.cut},passe:p.passe,decal:p.decal,...r});
     /* D-363 (opérateur, 17/11) : un refus avant toute pose dans ESV n'arrête plus la passe, elle passe au cut suivant ; tout le reste l'arrête (D-237). */
-    if(r.resultat==='refuse'&&r.avantPose===true){refusees++;continue;}
+    if(r.resultat==='refuse'&&r.avantPose===true){refusees++;dernierRefus=r.raison;continue;}
     if(r.resultat!=='ecrit'){issue=r.resultat;raison=r.raison;break;}
     l1ResteOter(p.r.identity);vue.ecrites++;}
-  }finally{passeDiff.ecriture=null;vue.cut=null;}}
+  }finally{passeDiff.ecriture=null;vue.cut=null;}
+  /* D-363 : liste parcourue mais des cuts refusés avant la pose : la passe se dit arrêtée sur le dernier refus (« Relancer » reste offert pour eux), comme avant. */
+  if(issue==='fin'&&refusees>0){issue='refuse';raison=refusees>1?`${refusees} cuts refusés avant la pose ; dernier : ${dernierRefus}`:dernierRefus;}}
  vue.etat=issue==='fin'?'finie':'arretee';vue.message=raison;
  if(E){E.phase='finie';E.vue=vueComptes(vue);await passeDiffSauver(E);}
  journalerSimple('passe-differes-ecriture-fin',{lotId:b.id,issue,raison,ecrites:vue.ecrites,demandees,decidees:poses.length,refusees,...(aReprendre?{reprise:'sw-redemarre'}:{})});}

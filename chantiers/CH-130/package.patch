@@ -1,17 +1,19 @@
 diff --git a/tools/package.py b/tools/package.py
-index a314777..780fb63 100644
 --- a/tools/package.py
 +++ b/tools/package.py
-@@ -6,6 +6,8 @@ from pathlib import Path
+@@ -6,6 +6,11 @@
  import subprocess
  import zipfile
  
++import sys
++
++sys.path.insert(0, str(Path(__file__).resolve().parent))  # relais_paquet est à côté, même quand ce fichier est chargé par chemin (essais)
 +import relais_paquet  # CH-130 : l'adresse du relais, lue hors dépôt, écrite dans le zip seulement
 +
  ROOT = Path(__file__).resolve().parent.parent
  
  
-@@ -54,6 +56,8 @@ def build(destination, include_tests=False):
+@@ -54,6 +59,8 @@
      check = subprocess.run(['node', str(ROOT / 'tools' / 'rust-lidar-paquet.cjs'), '--verifier'], capture_output=True, text=True)
      if check.returncode != 0:
          raise ValueError('Lecture LiDAR en Rust : fichiers de page pas à jour (node tools/rust-lidar-paquet.cjs --construire) :\n' + check.stderr)
@@ -20,7 +22,7 @@ index a314777..780fb63 100644
      destination = Path(destination).resolve()
      destination.parent.mkdir(parents=True, exist_ok=True)
      with zipfile.ZipFile(destination, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
-@@ -74,9 +78,15 @@ def build(destination, include_tests=False):
+@@ -74,9 +81,15 @@
                  continue
              if file.is_symlink():
                  raise ValueError(f'Symlink refused: {relative}')

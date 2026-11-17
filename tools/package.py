@@ -6,6 +6,9 @@ from pathlib import Path
 import subprocess
 import zipfile
 
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # relais_paquet est à côté, même quand ce fichier est chargé par chemin (essais)
 import relais_paquet  # CH-130 : l'adresse du relais, lue hors dépôt, écrite dans le zip seulement
 
 ROOT = Path(__file__).resolve().parent.parent

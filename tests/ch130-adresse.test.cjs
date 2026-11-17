@@ -59,8 +59,9 @@ test('package.patch : appelle relais_paquet et n’écrit le réglage que dans l
  assert.match(p,/^\+\+\+ b\/tools\/package\.py$/m);
  assert.match(p,/^\+.*relais_paquet\.lire\(\)/m);assert.match(p,/^\+.*archive\.writestr\(relais_paquet\.NOM/m);
  assert.doesNotMatch(p,HOTE);
- const r=spawnSync('git',['-C',racine,'apply','--check',path.join(racine,'chantiers/CH-130/package.patch')],{encoding:'utf8'});
- assert.equal(r.status,0,'le patch s’applique au tronc : '+r.stderr);
+ /* Vision 19 : le patch est appliqué par l'intégrateur ; il doit se défaire exactement (le dépôt porte tools/package.py patché, rien d'autre). */
+ const r=spawnSync('git',['-C',racine,'apply','--reverse','--check',path.join(racine,'chantiers/CH-130/package.patch')],{encoding:'utf8'});
+ assert.equal(r.status,0,'le patch est celui appliqué à tools/package.py : '+r.stderr);
 });
 
 test('package.py patché : sans source, paquet identique à aujourd’hui ; avec ARIANE_RELAIS, telecommande-relais.json en plus',py?{skip:py}:{},()=>{
@@ -69,9 +70,10 @@ test('package.py patché : sans source, paquet identique à aujourd’hui ; avec
  const w=path.join(dir,'w');
  try{
   /* L'arbre de travail en cours (fichiers non encore validés compris) : on y recopie les fichiers de ce chantier. */
-  for(const f of ['tools/relais_paquet.py','chantiers/CH-130/package.patch']){fs.mkdirSync(path.dirname(path.join(w,f)),{recursive:true});fs.copyFileSync(path.join(racine,f),path.join(w,f));}
+  for(const f of ['tools/relais_paquet.py','tools/package.py','chantiers/CH-130/package.patch']){fs.mkdirSync(path.dirname(path.join(w,f)),{recursive:true});fs.copyFileSync(path.join(racine,f),path.join(w,f));}
   const crc=out=>JSON.parse(spawnSync('python3',['-c',`import zipfile,sys,json;z=zipfile.ZipFile(sys.argv[1]);print(json.dumps(sorted([i.filename,i.CRC] for i in z.infolist() if i.filename not in ('BUILD','tools/package.py'))))`,out],{encoding:'utf8'}).stdout);
-  /* Le paquet d'aujourd'hui (package.py non patché), pour comparer. */
+  /* Le paquet d'avant (package.py sans le patch, défait dans la copie : Vision 19, le dépôt porte le patch appliqué), pour comparer. */
+  const d=spawnSync('git',['-C',w,'apply','--reverse',path.join(w,'chantiers/CH-130/package.patch')],{encoding:'utf8'});assert.equal(d.status,0,d.stderr);
   const r1=spawnSync('python3',[path.join(w,'tools/package.py'),'--output',path.join(dir,'avant.zip')],{encoding:'utf8',env:{PATH:process.env.PATH,HOME:dir}});assert.equal(r1.status,0,r1.stderr);
   const a=spawnSync('git',['-C',w,'apply',path.join(w,'chantiers/CH-130/package.patch')],{encoding:'utf8'});assert.equal(a.status,0,a.stderr);
   const zip=(env,nom)=>{const out=path.join(dir,nom);const r=spawnSync('python3',[path.join(w,'tools/package.py'),'--output',out],{encoding:'utf8',env:{PATH:process.env.PATH,HOME:dir,...env}});

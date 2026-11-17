@@ -11,6 +11,7 @@ test('le cut n’est posé qu’atteint par un pas (boutons d’ESV), jamais jus
   const aller = x.adapter.goToCut.bind(x.adapter);
   x.adapter.goToCut = async (t, o, id) => ({ ...await aller(t, o, id), chemin: 'evenement' });
   await relancer(x);
-  assert.deepEqual(x.pasPasse, ['goToCut', 'goToCut'], 'saut au cut d’avant, puis pas demandé ; rien de lu ni d’écrit');
+  /* D-363 : chaque cut est refusé avant la pose ; la passe passe au suivant (112 puis 114), rien de lu ni d'écrit. Avant (D-237) : arrêt après le 112. */
+  assert.deepEqual(x.pasPasse, ['goToCut', 'goToCut', 'goToCut', 'goToCut'], 'pour chaque cut : saut au cut d’avant, puis pas demandé ; rien de lu ni d’écrit');
   assert.equal(fin(x).issue, 'refuse'); assert.match(fin(x).raison, /atteint par la carte \(saut\) : pas de pose juste après un saut/);
 });

@@ -7,9 +7,11 @@ const { lotPasse, relancer, ev, K } = require('./helpers/passe-differes.cjs');
 const ecrit = x => x.pasPasse.filter(c => c === 'apply' || c === 'validateInPlace');
 const fin = x => ev(x.b, 'passe-differes-ecriture-fin').at(-1);
 
-test('cut bloqué par un résultat incertain archivé : rien n’est écrit', async () => {
+test('cut bloqué par un résultat incertain archivé : rien n’est écrit sur lui (D-363 : la passe passe au suivant)', async () => {
   const x = await lotPasse({ passe: { passes: 1 }, deux: true });
   x.b.get('engine').s.blockedTargets = [K.key({ ...x.adapter.identity, cut: 112 })];
   await relancer(x);
-  assert.deepEqual(ecrit(x), []); assert.match(fin(x).raison, /cible bloquée par un résultat incertain archivé/);
+  /* D-363 : la garde ne vaut que pour le 112 ; la passe passe ensuite au 114, qui s'écrit. Avant (D-237) : arrêt, rien d'écrit. */
+  assert.deepEqual(x.adapter.enPlace.map(e => e.cut), [114], '112 jamais validé'); assert.equal(ecrit(x).filter(c => c === 'apply').length, 1, 'une seule pose : celle du 114');
+  assert.match(fin(x).raison, /cible bloquée par un résultat incertain archivé/);
 });
