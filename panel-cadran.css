@@ -161,7 +161,7 @@ body.ui5:has(#ui5.u-cadran[data-theme="clair"]){background:#E6E8E7}
 /* les compteurs : trois colonnes séparées par un filet vertical */
 #ui5.u-cadran .sg-trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:14px}
 #ui5.u-cadran .sg-trio>div{padding:2px 12px 2px 12px;border-left:1px solid var(--filet-fort);min-width:0}
-#ui5.u-cadran .sg-trio dt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:7px}
+#ui5.u-cadran .sg-trio dt{display:flex;align-items:flex-start;gap:7px;overflow-wrap:anywhere}
 #ui5.u-cadran .sg-trio dt::before{content:"";flex:none;width:3px;height:12px;background:var(--pose)}
 #ui5.u-cadran .sg-trio>div:has(.sg-dif) dt::before{width:9px;height:12px;background:linear-gradient(var(--differe),var(--differe)) 0 0/1.2px 12px no-repeat,linear-gradient(var(--differe),var(--differe)) 1px 0/8px 6px no-repeat}
 #ui5.u-cadran .sg-trio>div:has(.cd-reste) dt::before{background:none;box-shadow:inset 0 0 0 1px var(--encre2)}
@@ -457,6 +457,7 @@ body.ui5:has(#ui5.u-cadran[data-theme="clair"]){background:#E6E8E7}
 .sg-tech[data-variante="cadran"] .sg-tech-tete{background:var(--bg-2)}
 .sg-tech[data-variante="cadran"] .sg-tech-tete b{font:500 12px/1 "IBM Plex Mono",monospace;letter-spacing:.12em;text-transform:uppercase}
 .sg-tech[data-variante="cadran"] :is(button,.sg-tech-tete button){border-radius:2px}
+.sg-tech[data-variante="cadran"] :is(summary,h2,.lbl){font-size:11px}
 
 /* ───────────────────────────── mouvement : une courbe, 200 à 320 ms, aucune boucle */
 @keyframes cd-monte{from{opacity:0;transform:translateY(6px)}}
