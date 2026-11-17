@@ -17,7 +17,7 @@ const SCENES = {
 (async () => {
   const { chromium } = require(navigateur.modulePlaywright()); const nav = await chromium.launch({ executablePath: navigateur.executable() });
   const res = {}; let n = 0, defauts = 0;
-  for (const pal of PALETTES) for (const w of LARGEURS) for (const [nom, sc] of Object.entries(SCENES)) {
+  for (const pal of PALETTES) for (const w of LARGEURS) for (const [nom, sc] of Object.entries(SCENES).filter(([k]) => !process.env.SCENES || process.env.SCENES.split(',').includes(k))) {
     const ctx = await nav.newContext({ viewport: { width: w, height: 760 } }), page = await ctx.newPage(), erreurs = [];
     page.on('pageerror', x => erreurs.push(x.message));
     const state = JSON.parse(JSON.stringify({ connection: { status: 'ready', observedAt: 't', message: null, tabId: 1 }, ...sc.state, fileParties: sc.state.fileParties ?? null }).replace(/"MAINTENANT-(\d+)"/g, (_, s) => JSON.stringify(new Date(Date.now() - s * 1000).toISOString())));
@@ -36,7 +36,20 @@ const SCENES = {
     if (process.env.FEUILLE_EN_PLUS) await page.addStyleTag({ content: fs.readFileSync(process.env.FEUILLE_EN_PLUS, 'utf8') });
     await page.addStyleTag({ content: '*,*::before,*::after{animation:none!important;transition:none!important}' }); await page.waitForTimeout(500);
     const petits = await page.evaluate(() => [...new Set([...document.querySelectorAll('#ui5 .sg-fen *')].filter(e => [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()) && e.getClientRects().length && getComputedStyle(e).visibility !== 'hidden' && !e.closest('[aria-hidden="true"],.sg-mol-fen') && parseFloat(getComputedStyle(e).fontSize) < 11).map(e => `POLICE ${parseFloat(getComputedStyle(e).fontSize)}px « ${e.textContent.trim().slice(0, 20)} »`))]);
-    const m = [...erreurs.map(x => 'ERREUR ' + x), ...await page.evaluate(MESURE), ...petits];
+    /* CH-132 (intégrateur, 17/11) : aucun anneau ni son halo à moins de 12 px d'un bord qui coupe (premier parent dont le débordement n'est pas visible) */
+    const anneaux = await page.evaluate(() => { const o = [];
+      for (const a of document.querySelectorAll('#ui5 .sg-anneau')) { if (!a.getClientRects().length || getComputedStyle(a).display === 'none') continue;
+        const r = a.getBoundingClientRect(), svg = a.querySelector('svg'); if (!svg || getComputedStyle(svg).display === 'none' || r.width < 20) continue;
+        let p = a.parentElement; while (p && p.id !== 'ui5' && getComputedStyle(p).overflowX === 'visible' && getComputedStyle(p).overflowY === 'visible') p = p.parentElement;
+        if (!p) continue; const q = p.getBoundingClientRect();
+        /* halo : le voile ::before (s'il est affiché, il dépasse de son « inset » négatif) et l'ombre portée de l'arc (filter: drop-shadow) */
+        const av = getComputedStyle(a, '::before'), arc = a.querySelector('.sg-arc'), f = arc ? getComputedStyle(arc).filter : 'none';
+        const voile = av.display !== 'none' && av.content !== 'none' ? Math.max(0, -parseFloat(av.left) || 0, -parseFloat(av.top) || 0) : 0;
+        const ombre = /drop-shadow/.test(f) ? Math.max(0, ...[...f.matchAll(/(-?[\d.]+)px/g)].map(x => Math.abs(+x[1]))) : 0, halo = Math.max(voile, ombre);
+        const d = Math.min(r.left - q.left, q.right - r.right, r.top - q.top, q.bottom - r.bottom) - halo;
+        if (d < 12) o.push(`ANNEAU (halo ${Math.round(halo)} px compris) à ${Math.round(d)} px d'un bord qui coupe (${['gauche','droite','haut','bas'][[r.left - q.left, q.right - r.right, r.top - q.top, q.bottom - r.bottom].map(x => x - halo).indexOf(d)]}, ${(p.className && p.className.baseVal === undefined ? p.className : p.tagName).toString().split(' ')[0]})`); }
+      return o; });
+    const m = [...erreurs.map(x => 'ERREUR ' + x), ...await page.evaluate(MESURE), ...petits, ...anneaux];
     res[`${pal}-${w}-${nom}`] = m; n++; defauts += m.length; await ctx.close();
   }
   await nav.close();

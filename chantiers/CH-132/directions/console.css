@@ -39,3 +39,6 @@
 :root #ui5.u-signal .sg-chaine li[data-etat="en-cours"] i::before,:root #ui5.u-signal .sg-chaine li[data-etat="en-cours"] i::after{inset:4px}
 /* l'alerte de la Constellation passe avant le choix du nombre de parties (elle demande un geste) */
 :root #ui5.u-signal .sg-onglet-file>[data-k="alerte"]{order:-1}
+:root #ui5.u-signal:not([data-details]) .sg-fen:is([data-activite="orbite"],[data-activite="echo"],[data-activite="file"]) .sg-tu-etat{padding-left:18px!important;padding-right:18px!important}
+:root #ui5.u-signal .sg-tu-etat .sg-milieu{padding-left:2px}
+:root #ui5.u-signal .sg-fen[data-activite] .sg-tu-etat.sg-tu-etat.sg-instrument{padding-left:18px!important;padding-right:18px!important;padding-bottom:18px!important}

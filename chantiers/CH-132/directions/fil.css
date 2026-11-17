@@ -41,3 +41,4 @@
 :root #ui5.u-signal .sg-fen:is([data-activite="orbite"],[data-activite="echo"]) .sg-anneau{flex:none}
 :root #ui5.u-signal .sg-fen:is([data-activite="orbite"],[data-activite="echo"]) .sg-anneau .sg-chiffre svg{width:24px;height:24px}
 :root #ui5.u-signal .sg-fen:is([data-activite="orbite"],[data-activite="echo"]) .sg-anneau .sg-anneau-c>svg{width:26px;height:26px;stroke:var(--c1);fill:none;stroke-width:2.2}
+:root #ui5.u-signal .sg-fen .sg-tu-etat .sg-anneau{margin-left:4px}

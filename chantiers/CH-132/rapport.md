@@ -10,6 +10,7 @@ Branche `chantier/CH-132`, partie du tronc 001c12f. Rien n'entre au tronc : c'es
 
 ## Mesures (ÉTABLI, `chantiers/CH-129/outils/audit.cjs` avec `FEUILLE_EN_PLUS` et un contrôle des tailles de police)
 - Chaque direction : 13 scènes × 360, 600 et 720 px × 3 palettes = 117 vues ; 0 débordement, 0 troncature, 0 contraste sous 4,5:1, aucun texte sous 11 px. Défauts trouvés et corrigés en route : « % » à 10,5 px (A et C), phrase coupée et coche géante en fin de lot à 360 px (C).
+- Règle ajoutée à l'audit (intégrateur, 17/11) : aucun anneau ni son halo (voile `::before`, ombre portée de l'arc) à moins de 12 px d'un bord qui coupe (premier parent en `overflow` non visible). Sur la version précédente, B · Console échouait à 600 px : anneau à 0 px du bord gauche, halo à -6 px (27 vues sur 39). La règle a aussi trouvé B au repos (8 px du bas) et C dans l'Aurore à 360 px (10 px de gauche). Corrigés : marge intérieure de 18 px à gauche, à droite et en bas de la tuile d'état de B ; 4 px de plus à gauche de l'anneau de C. Après correction : 0 défaut sur 117 vues dans chaque direction.
 - Scène ajoutée : Constellation arrêtée sur une correction interrompue (Vision 19.1), « J'ai contrôlé le cut 2475 » en premier bouton (relevé dans le vrai panneau).
 
 ## Limites
