@@ -25,7 +25,7 @@ const DIR = path.join(R, 'chantiers/CH-115/directions');
 /* CONFIG : chantiers/CH-115/pages/<page>.json : { titre, intro, pied, reglages: { fond, ralenti }, mesures: chemin, variantes: [{ id, nom, sous, note,
  * rev: '5e8d305' (feuilles de Vision 14) ou absent (tronc), css: [feuilles posées par-dessus, dans directions/], maquette: bool, defautClair: bool }] } */
 const CONFIG = JSON.parse(fs.readFileSync(path.resolve(process.argv[3] || path.join(R, 'chantiers/CH-115/pages/tour1.json')), 'utf8'));
-const VARIANTES = CONFIG.variantes.map(v => ({ ...v, css: feuillesDe(v.rev || null) + '\n' + (v.css || []).map(f => polices(fs.readFileSync(path.join(DIR, f), 'utf8'), null)).join('\n'), maquette: !!v.maquette }));
+const VARIANTES = CONFIG.variantes.map(v => ({ ...v, css: feuillesDe(v.rev || null) + '\n' + (v.css || []).map(f => polices(fs.readFileSync(f.includes('/') ? path.join(R, f) : path.join(DIR, f), 'utf8'), null)).join('\n'), maquette: !!v.maquette }));
 const MESURES = CONFIG.mesures && fs.existsSync(path.join(R, CONFIG.mesures)) ? JSON.parse(fs.readFileSync(path.join(R, CONFIG.mesures), 'utf8')) : null;
 const JS = scripts.map(s => ({ s, t: lire(null, s) }));
 const MAQ = fs.readFileSync(path.join(DIR, 'maquette.js'), 'utf8');
@@ -67,6 +67,13 @@ if (CONFIG.scenesCH129) {
     S('Bilan et départs', 'stats', [{ state: { ...E['file-cours'].state, fileParties: vueF('lot', 6) }, fiches: FICHES, onglet: 'file', actions: ['sg:stats'] }], { duree: 6000 }),
     S('Réglages', 'reglages', [{ state: avecFile(E.pret.state), actions: ['sg:reglages'] }], { duree: 6000 }),
     S('Détails techniques', 'tech', [{ state: avecFile(E.fin.state), actions: ['sg:tech'] }], { duree: 6000 }));
+}
+/* CH-132 : la Constellation arrêtée sur une correction interrompue (Vision 19.1) : relecture interrompue, file arrêtée avec son alerte. */
+if (CONFIG.scenesCH132) {
+  const plan = [13, 14, 15, 16, 17], P = (part, rang) => ({ part, rang, issueLot: 'fin', motifs: ['fin-normale'], resume: { poses: 80 + rang * 7, differes: 4 }, passe: null, relecture: { issue: 'finie', corriges: 2 }, alertes: [] });
+  const arret = { id: 'file-1', etat: 'arret', n: 5, plan, rang: 2, enCours: null, changement: null, bilan: [P(13, 0), P(14, 1), { ...P(15, 2), interrompue: true, relecture: { issue: 'arretee', corriges: 1 }, motifs: ['ecriture-incertaine'] }],
+    motifFin: { code: 'ecriture-incertaine', texte: 'correction interrompue au cut 4812 : à contrôler dans ESV' }, alerte: { texte: 'Correction interrompue au cut 4812 : contrôle ce cut dans ESV, puis clique sur « J’ai contrôlé le cut ».' }, reprise: { rang: 2, part: 15, reste: 3 }, reprises: 0 };
+  SCENES.splice(SCENES.findIndex(x => x.cle === 'aurore'), 0, S('Constellation arrêtée (correction interrompue)', 'file-arret', [{ state: { ...E['relecture-interrompue'].state, fileParties: arret }, rel: E['relecture-interrompue'].rel, fiches: FICHES, onglet: 'file' }], { duree: 6000 }));
 }
 const DONNEES = { titre: CONFIG.titre, intro: CONFIG.intro, pied: CONFIG.pied, reglages: CONFIG.reglages || {}, mesures: MESURES, variantes: VARIANTES.map(({ id, nom, sous, note, maquette, defautClair }) => ({ id, nom, sous, note: note || '', maquette, defautClair: !!defautClair })), scenes: SCENES };
 const CSS = Object.fromEntries(VARIANTES.map(v => [v.id, v.css]));

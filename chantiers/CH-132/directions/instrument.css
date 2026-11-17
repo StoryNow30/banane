@@ -1,0 +1,28 @@
+/* CH-132, direction A « Instrument » : l'actuel poussé au bout. Un seul grand repère d'état au centre (l'anneau agrandi, le mot dessous, la phrase
+ * courte), une seule action pleine, tout le reste derrière « Détails ». Pas de cartes : le fond seul, un filet sous l'en-tête. Sacrifie la densité. */
+:root #ui5.u-signal .sg-barre{border-bottom:1px solid var(--trait)}
+:root #ui5.u-signal .sg-fen[data-activite] :is(.sg-tu-etat,.sg-constel),:root #ui5.u-signal .sg-zone .sg-tu:not(.sg-tu-avis){background:none!important;box-shadow:none!important;border-radius:0}
+/* le repère : anneau grand, centré ; la ligne d'état reste en haut */
+:root #ui5.u-signal{--anneau:210px;--ep:2.4}
+:root #ui5.u-signal[data-taille="compact"]{--anneau:168px;--ep:2.6}
+:root #ui5.u-signal .sg-tu-etat .sg-milieu{flex-direction:column;align-items:center;text-align:center;gap:18px}
+:root #ui5.u-signal .sg-tu-etat .sg-texte{display:flex;flex-direction:column;align-items:center}
+:root #ui5.u-signal .sg-anneau .sg-chiffre{font-size:64px;font-weight:200;letter-spacing:-.05em}
+:root #ui5.u-signal[data-taille="compact"] .sg-anneau .sg-chiffre{font-size:52px}
+:root #ui5.u-signal .sg-anneau .sg-suite{font-size:12px}
+:root #ui5.u-signal .sg-fen .sg-tu-etat .sg-phrase{font-size:20px;font-weight:450}
+:root #ui5.u-signal .sg-consigne{border-left:0;padding-left:0;color:var(--attn-tx)}
+/* tout le reste derrière « Détails » : la trace et la ligne de la Constellation aussi */
+:root #ui5.u-signal:not([data-details]) .sg-zone .sg-tu-fil,:root #ui5.u-signal:not([data-details]) .sg-zone .sg-file-trace .sg-fil{display:none!important}
+:root #ui5.u-signal .sg-poignee{justify-content:center}
+/* une seule action pleine, les autres en liens discrets */
+:root #ui5.u-signal .sg-actions{justify-content:center}
+:root #ui5.u-signal .sg-actions>.sg-principal{flex:1 1 100%;height:44px;font-size:14px}
+:root #ui5.u-signal .sg-actions>.sg-secondaire{flex:0 1 auto;min-width:0;height:32px;background:none;box-shadow:none!important;color:var(--tx2);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--trait-fort)}
+:root #ui5.u-signal .sg-actions>.sg-secondaire.sg-danger{color:var(--crit-tx)}
+/* Constellation : le titre de la partie en grand, la chaîne dessous, centrés */
+:root #ui5.u-signal .sg-constel{text-align:center}
+:root #ui5.u-signal .sg-constel-t{justify-content:center;gap:12px}
+:root #ui5.u-signal .sg-constel-t .sg-chiffre{font-size:56px;font-weight:200}
+/* l'alerte de la Constellation passe avant le choix du nombre de parties (elle demande un geste) */
+:root #ui5.u-signal .sg-onglet-file>[data-k="alerte"]{order:-1}

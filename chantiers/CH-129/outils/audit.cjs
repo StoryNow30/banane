@@ -32,8 +32,11 @@ const SCENES = {
     await page.evaluate(p => window.ArianeUi5.agir('sg:choix:palette:' + p), pal);
     if (sc.onglet === 'file') await page.evaluate(() => window.ArianeUi5.agir('sg:onglet-file'));
     if (sc.onglet === 'correction') await page.evaluate(() => window.ArianeUi5.agir('sg:onglet-correction'));
+    /* CH-132 : FEUILLE_EN_PLUS=chemin.css pose une feuille de direction par-dessus ; la plus petite taille de texte rendue est contrôlée (11 px au moins) */
+    if (process.env.FEUILLE_EN_PLUS) await page.addStyleTag({ content: fs.readFileSync(process.env.FEUILLE_EN_PLUS, 'utf8') });
     await page.addStyleTag({ content: '*,*::before,*::after{animation:none!important;transition:none!important}' }); await page.waitForTimeout(500);
-    const m = [...erreurs.map(x => 'ERREUR ' + x), ...await page.evaluate(MESURE)];
+    const petits = await page.evaluate(() => [...new Set([...document.querySelectorAll('#ui5 .sg-fen *')].filter(e => [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()) && e.getClientRects().length && getComputedStyle(e).visibility !== 'hidden' && !e.closest('[aria-hidden="true"],.sg-mol-fen') && parseFloat(getComputedStyle(e).fontSize) < 11).map(e => `POLICE ${parseFloat(getComputedStyle(e).fontSize)}px « ${e.textContent.trim().slice(0, 20)} »`))]);
+    const m = [...erreurs.map(x => 'ERREUR ' + x), ...await page.evaluate(MESURE), ...petits];
     res[`${pal}-${w}-${nom}`] = m; n++; defauts += m.length; await ctx.close();
   }
   await nav.close();
