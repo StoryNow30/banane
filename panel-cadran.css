@@ -187,6 +187,11 @@ body.ui5:has(#ui5.u-cadran[data-theme="clair"]){background:#E6E8E7}
 #ui5.u-cadran:not([data-details]) :is(.sg-tu-etapes,.sg-lot-bornes,.sg-phrase-longue,.sg-poignee .sg-reste){display:none}
 #ui5.u-cadran:not([data-details]) .sg-fen[data-activite="echo"] .sg-objet{display:none}
 #ui5.u-cadran .sg-of-note,#ui5.u-cadran .sg-corr-note,#ui5.u-cadran .sg-tu[data-k="note"],#ui5.u-cadran .sg-tu-verrou{display:none}
+/* Accroche de CH-134 (bascule Orbite « instrument / fil », à câbler à l'intégration) : `data-vue="fil"` sur l'hôte. En Cadran, la vue fil montre le fil des
+ * derniers cuts déplié, sous la voie, comme les Détails ; rien d'autre ne change (mêmes boutons). */
+#ui5.u-cadran[data-vue="fil"] .sg-fen[data-activite="orbite"] .sg-tu-fil{border-top:1px solid var(--filet);padding-top:14px}
+#ui5.u-cadran[data-vue="fil"] .sg-fen[data-activite="orbite"] .sg-tu-fil :is(h4,.sg-fil,.sg-vide){display:revert}
+#ui5.u-cadran[data-vue="fil"] .sg-fen[data-activite="orbite"] .sg-tu-fil .sg-fil{display:block}
 /* le fil des cuts (Détails) */
 #ui5.u-cadran .sg-fil{list-style:none}
 #ui5.u-cadran .sg-fil li{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:10px;height:36px;border-top:1px solid var(--filet);overflow:hidden}
