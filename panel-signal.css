@@ -826,3 +826,37 @@ body.ui5:has(#ui5.u-signal[data-palette="signal"]:not([data-theme="clair"])){bac
 #ui5.u-signal[data-taille="compact"] .sg-fen[data-activite="file"] .sg-puce[data-etat="verrou"] svg{display:none}
 #ui5.u-signal[data-taille="compact"] .sg-fen[data-activite="file"] .sg-puce{flex:none;padding-inline:8px}
 #ui5.u-signal[data-taille="compact"] .sg-fen[data-activite="file"] .sg-puce .sg-tx{display:none}
+
+/* ═════════════════════════════ CH-134 (D-368) : la direction A « Instrument » est l'allure du panneau (règles ci-dessus) ; dans Orbite, un bouton
+ * d'icône de la ligne d'état (`sg:vue-lot`, src/signal-rendu.js et src/ui5.js) bascule la vue du lot vers la vue « fil » de la direction C (CH-132) :
+ * l'en-tête d'état collé en haut (mot, partie, phrase sur deux lignes, avancement chiffré à droite), le fil des derniers cuts sur toute la hauteur
+ * libre (le plus récent en haut, durée et statut ; les avis et les événements du lot au-dessus), les actions collées en bas sur une bande. */
+#ui5.u-signal .sg-haut:has(.sg-vue-b) .sg-partie{margin-left:auto}
+#ui5.u-signal .sg-vue-b{flex:none;width:30px;height:30px;margin:-6px -6px -6px 0;display:grid;place-items:center;border-radius:9px;color:var(--tx2);transition:color .2s,background-color .2s}
+#ui5.u-signal .sg-vue-b svg{width:17px;height:17px}
+#ui5.u-signal .sg-vue-b:hover{color:var(--tx);background:var(--creux)}
+#ui5.u-signal .sg-vue-b:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+#ui5.u-signal[data-taille="compact"] .sg-vue-b{width:26px;height:26px;margin:-4px -4px -4px 0}
+/* l'en-tête : une bande sous la barre, sans grand vide */
+#ui5.u-signal:is(:not([data-details]),[data-details]) .sg-fen[data-activite="orbite"][data-vue="fil"] .sg-tu-etat{flex:0 0 auto;justify-content:flex-start;margin:0 calc(-1 * var(--marge));padding:12px var(--marge) 34px;border-bottom:1px solid var(--trait)}
+#ui5.u-signal:is(:not([data-details]),[data-details]) .sg-fen[data-activite="orbite"][data-vue="fil"] .sg-tu-etat::after{display:none}
+#ui5.u-signal:is(:not([data-details]),[data-details]) .sg-fen[data-activite="orbite"][data-vue="fil"] .sg-tu-etat>.sg-haut{position:static;margin:0 0 10px}
+#ui5.u-signal:is(:not([data-details]),[data-details]) .sg-fen[data-activite="orbite"][data-vue="fil"] .sg-milieu{flex-direction:row-reverse;justify-content:space-between;align-items:center;text-align:left;gap:14px;margin:0}
+#ui5.u-signal:is(:not([data-details]),[data-details]) .sg-fen[data-activite="orbite"][data-vue="fil"] .sg-texte{flex:1 1 0;align-items:flex-start}
+#ui5.u-signal:is(:not([data-details]),[data-details]) .sg-fen[data-activite="orbite"][data-vue="fil"] .sg-phrase{font-size:17px;font-weight:500;-webkit-line-clamp:2}
+/* l'avancement : l'anneau devient un chiffre, à droite de la phrase */
+#ui5.u-signal:is(:not([data-details]),[data-details]) .sg-fen[data-activite="orbite"][data-vue="fil"] .sg-anneau{width:auto;aspect-ratio:auto;flex:none;margin-left:4px}
+#ui5.u-signal:is(:not([data-details]),[data-details]) .sg-fen[data-activite="orbite"][data-vue="fil"] .sg-anneau>svg,#ui5.u-signal .sg-fen[data-vue="fil"] .sg-anneau::before{display:none}
+#ui5.u-signal:is(:not([data-details]),[data-details]) .sg-fen[data-activite="orbite"][data-vue="fil"] .sg-anneau-c{position:static;flex-direction:row;align-items:baseline;gap:4px}
+#ui5.u-signal:is(:not([data-details]),[data-details]) .sg-fen[data-activite="orbite"][data-vue="fil"] .sg-anneau .sg-chiffre{font-size:30px;font-weight:300}
+#ui5.u-signal:is(:not([data-details]),[data-details]) .sg-fen[data-activite="orbite"][data-vue="fil"] .sg-anneau .sg-anneau-c>.sg-suite{margin:0}
+#ui5.u-signal:is(:not([data-details]),[data-details]) .sg-fen[data-activite="orbite"][data-vue="fil"] .sg-anneau-c>svg{width:26px;height:26px}
+#ui5.u-signal:is(:not([data-details]),[data-details]) .sg-fen[data-activite="orbite"][data-vue="fil"] .sg-details-b{right:var(--marge);bottom:12px}
+/* le fil : toute la hauteur libre ; les lignes qui ne tiennent pas s'effacent sous le bord (rien ne défile) */
+#ui5.u-signal:is(:not([data-details]),[data-details]) .sg-fen[data-activite="orbite"][data-vue="fil"] .sg-zone{flex:1 1 auto;min-height:0;padding-top:6px}
+#ui5.u-signal:is(:not([data-details]),[data-details]) .sg-fen[data-activite="orbite"][data-vue="fil"] .sg-duo{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+#ui5.u-signal:is(:not([data-details]),[data-details]) .sg-fen[data-activite="orbite"][data-vue="fil"] .sg-zone .sg-tu-fil{display:flex;flex:1 1 0;min-height:0;padding:6px 2px 0}
+#ui5.u-signal:is(:not([data-details]),[data-details]) .sg-fen[data-activite="orbite"][data-vue="fil"] .sg-fil li{height:38px}
+#ui5.u-signal:is(:not([data-details]),[data-details]) .sg-fen[data-activite="orbite"][data-vue="fil"] .sg-fil li .sg-cut{font-weight:600}
+/* les actions : une bande collée en bas */
+#ui5.u-signal .sg-fen[data-activite="orbite"][data-vue="fil"] .sg-actions{border-top:1px solid var(--trait)}
