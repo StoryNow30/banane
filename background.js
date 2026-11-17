@@ -3710,7 +3710,8 @@ async function relectureEtat(){const p=relecture.passe,intentions=await relectur
  return {choix:await relectureChoix(),lot:b?.id?{id:b.id,mode:relectureDuLot(b)||'coupee',etat:b.state}:null,reglages:await relectureReglagesResume(),
   passe:p?{lotId:p.lotId,mode:p.mode,modeEffectif:p.modeEffectif,etat:p.etat,auto:p.auto===true,total:p.total,faits:p.faits,corriges:p.corriges,refusees:p.refusees,
    vus:p.vus,cutsNeufs:p.cutsNeufs,cutsNeufsAnnonces:p.cutsNeufsAnnonces,cut:p.cut,plage:p.plage,message:p.message,debut:p.debut,fin:p.fin,arretDemande:p.arret===true,reglages:p.reglages??null,pauseDemandee:p.pauseDemandee===true,pauseRaison:p.pauseRaison??null,reprise:p.reprise===true,
-   expire:p.etat==='en-pause'&&p.point?.savedAt?Date.parse(p.point.savedAt)+REPRISE_DUREE_MS:null}:null,
+   expire:p.etat==='en-pause'&&p.point?.savedAt?Date.parse(p.point.savedAt)+REPRISE_DUREE_MS:null,
+   horsBornes:p.horsBornes||0,bornes:p.bornes??null,bornesProposees:relectureBornesProposees(p)}:null,
   correctionInterrompue:intentions.length&&!passeVivante()?intentions[0]:null,correctionsInterrompues:passeVivante()?[]:intentions,
   repriseReglage:await relectureRepriseReglage()};}
 function relectureVue(){const p=relecture.passe;return p?{etat:p.etat,mode:p.modeEffectif||p.mode,faits:p.faits,total:p.total,corriges:p.corriges,vus:p.vus,cut:p.cut,message:p.message,...(p.reprise?{pauseDemandee:p.pauseDemandee===true,pauseRaison:p.pauseRaison??null}:{})}:null;}
@@ -3833,8 +3834,31 @@ async function lotCloRefus(b,auto,repartir){
  const a=engine.s.applied?.identity;
  if(a&&a.part===lu.part&&a.cut===lu.cut)return `une pose d’Ariane attend ta validation au cut ${a.cut} : valide-la (ou corrige-la) dans ESV${repartir?`, puis « ${repartir} »`:''}`;
  return null;}
-async function relectureLancer({auto=false,passe=null}={}){
- let p;
+/* CH-133 (D-366, D-367) — BORNES DE LA RELECTURE. « Reprendre » (pause) et « Lancer » (relecture arrêtée, en erreur ou finie) acceptent {debut, fin} :
+ * deux numéros de cut, entiers, debut ≤ fin, dans la partie (0 à total − 1 quand le total est connu), avec au moins un cut de la relecture entre eux ;
+ * sinon refus dit en clair, rien ne change. Un cut hors des bornes n'est NI VISITÉ NI ÉCRIT (jamais SKIP, aucune écriture nouvelle) : il est retiré de
+ * la liste de la passe, compté « non relu » (`horsBornes`) et listé au journal (`relecture-bornes`). Sans bornes : comportement d'avant. */
+const BORNES_REFUS='Bornes de la relecture refusées';
+function relectureBornesForme(args){if(args?.debut==null&&args?.fin==null)return null;const {debut,fin}=args;
+ if(!Number.isInteger(debut)||!Number.isInteger(fin))throw Error(`${BORNES_REFUS} : les cuts de départ et de fin doivent être des entiers.`);
+ if(debut>fin)throw Error(`${BORNES_REFUS} : le cut de départ (${debut}) est après le cut de fin (${fin}).`);
+ return {debut,fin};}
+function relectureBornesFiltrer(bo,cuts,totalPartie){
+ if(bo.debut<0||Number.isInteger(totalPartie)&&bo.fin>totalPartie-1)throw Error(`${BORNES_REFUS} : du cut ${bo.debut} au cut ${bo.fin}, hors de la partie (cuts 0 à ${Number.isInteger(totalPartie)?totalPartie-1:'…'}).`);
+ const garde=[],ecartes=[];for(const c of cuts)(c.cut>=bo.debut&&c.cut<=bo.fin?garde:ecartes).push(c);
+ if(!garde.length)throw Error(`${BORNES_REFUS} : aucun cut de la relecture entre le cut ${bo.debut} et le cut ${bo.fin}.`);
+ return {garde,ecartes};}
+function relectureBornesJournal(p,bo,ecartes,quand){p.horsBornes=(p.horsBornes||0)+ecartes.length;p.bornes={debut:bo.debut,fin:bo.fin};
+ relectureJournal('relecture-bornes',{quand,debut:bo.debut,fin:bo.fin,ecartes:ecartes.length,cuts:ecartes.slice(0,200).map(c=>c.cut),horsBornes:p.horsBornes},p);}
+/* Bornes proposées au panneau : en pause, le premier cut après une série sans point (sinon le cut gardé) ; après un arrêt, le cut qui suit le dernier
+ * relu (ou le premier cut après la série) ; après une fin, le premier cut ; la fin : le dernier cut de la liste de la passe. */
+function relectureBornesProposees(p){const l=p?.listeCuts;if(!Array.isArray(l)||!l.length)return null;const fin=l.at(-1);
+ if(p.etat==='en-pause')return {debut:Number.isInteger(p.apresSerie)?p.apresSerie:Number.isInteger(p.cut)?p.cut:l[0],fin};
+ if(p.etat==='finie')return {debut:l[0],fin};
+ if(['arretee','erreur'].includes(p.etat))return {debut:Number.isInteger(p.apresSerie)?p.apresSerie:Number.isInteger(p.suiteCut)?p.suiteCut:l[0],fin};
+ return null;}
+async function relectureLancer({auto=false,passe=null,bornes:argsBornes=null}={}){
+ let p;const bornes=auto?null:relectureBornesForme(argsBornes),passeAvant=relecture.passe;
  if(auto){p=passe;if(!p||relecture.passe!==p||p.etat!=='preparation')return relectureEtat();}
  else{if(passeActive())throw Error(`Relecture déjà ${relecture.passe.etat==='preparation'?'en préparation':'en cours'} : une seule passe à la fois.`);
   p=relectureNouvelle(engine.s.batch,false);}
@@ -3872,6 +3896,10 @@ async function relectureLancer({auto=false,passe=null}={}){
   s=suite();if(s==='remplacee')return relectureEtat();if(s)return nonLancee('arrêtée à ta demande avant le départ','arret');
   /* Test 18 : la deuxième passe des différés et la relecture n'écrivent jamais ensemble dans ESV (contrôle juste avant le départ ; une passe en ombre ne touche pas ESV). */
   if(passeDiff.ecriture||passeDiffReglage().mode==='ecriture'&&passeDiff.cours)return nonLancee('la deuxième passe des différés travaille dans ESV');
+  /* CH-133 : relance bornée ; le total de la partie vient de l'entrée, sinon de la passe d'avant du même lot. */
+  let ecartesBornes=null;
+  if(bornes){const tp=Number.isInteger(entree.total)?entree.total:passeAvant?.lotId===p.lotId?passeAvant.totalPartie:null;
+   try{const f=relectureBornesFiltrer(bornes,sel.cuts,tp);ecartesBornes=f.ecartes;sel.cuts=f.garde;sel.total=f.garde.length;}catch(e){return nonLancee(String(e.message).replace(/^Bornes de la relecture refusées : /,'bornes refusées : ').replace(/\.$/,''));}}
   const b=engine.s.batch,affiches=[...new Set([...sel.cuts.map(c=>c.cut),...sel.plages.flatMap(x=>x.traverses||[])])];
   const neufs=entree.vu&&affiches.every(c=>entree.vu.has(c))?affiches.filter(c=>entree.vu.get(c)===false).length:null;
   Object.assign(p,{etat:'en-cours',modeEffectif,total:sel.total,cutsNeufsAnnonces:neufs,
@@ -3886,6 +3914,7 @@ async function relectureLancer({auto=false,passe=null}={}){
    zonesSource:entree.zonesSource,zones:{pn:entree.zonesPN.slice(0,64),adv:entree.zonesADV.slice(0,64)},tempsEstimeS:sel.tempsEstimeS,plafondCuts:sel.plafondCuts,plafondParZone:sel.plafondParZone,
    plages:sel.plages.map(x=>({debut:x.debut,fin:x.fin,zone:x.zone,libelle:x.libelle,relus:x.relus})),horsPlafond:sel.horsPlafond.map(x=>({debut:x.debut,fin:x.fin,libelle:x.libelle})),
    reglages:p.reglages},p);
+  if(ecartesBornes)relectureBornesJournal(p,bornes,ecartesBornes,'lancement');
   relecture.tache=relecturePasse(p,b,sel,reglages,entree).catch(e=>{if(relecture.passe===p&&p.etat==='en-cours'){p.etat='erreur';p.message=`Relecture arrêtée : ${String(e?.message||e).slice(0,300)}`;p.fin=new Date().toISOString();
    relectureJournal('relecture-fin',{mode:p.mode,modeEffectif:p.modeEffectif,issue:'erreur',raison:p.message,faits:p.faits,corriges:p.corriges,vus:p.vus},p);}
    void relectureOublierPasse(p);void relectureRepriseEffacer();});
@@ -3921,7 +3950,8 @@ function relectureDepuisPoint(pt,raison,f5='pause'){const sc=pt.sel.cuts[pt.inde
  relecture.passe={gen:++relecture.gen,lotId:pt.lotId,mode:pt.mode,modeEffectif:pt.modeEffectif,etat:'en-pause',auto:false,total:pt.total,faits:pt.faits,corriges:pt.corriges,refusees:pt.refusees,
   vus:pt.vus,vusCuts:new Set(pt.vusCuts||[]),cutsNeufs:pt.cutsNeufs||0,cutsNeufsAnnonces:pt.cutsNeufsAnnonces??null,cut:sc?.cut??null,plage:pt.sel.plages?.[sc?.plage]?.libelle??null,
   message:`Relecture gardée en pause au cut ${sc?.cut??'?'} : ${pluriel(pt.faits,'cut')} relu${pt.faits>1?'s':''} sur ${pt.total}. Tu peux la reprendre.`,debut:pt.debut,fin:null,arret:false,
-  reglages:pt.reglages??null,operationId:null,attente:null,noteMode:pt.noteMode??null,reprise:true,repriseF5:f5,pauseDemandee:false,pauseRaison:raison,point:pt,pointStocke:true};
+  reglages:pt.reglages??null,operationId:null,attente:null,noteMode:pt.noteMode??null,reprise:true,repriseF5:f5,pauseDemandee:false,pauseRaison:raison,point:pt,pointStocke:true,
+  horsBornes:pt.horsBornes||0,bornes:pt.bornes??null,totalPartie:pt.totalPartie??null,apresSerie:pt.apresSerie??null,listeCuts:pt.sel.cuts.map(c=>c.cut),suiteCut:sc?.cut??null};
  return relecture.passe;}
 /* Au redémarrage du service worker : une passe en cours a été perdue. Avec un point de reprise valable (réglage allumé, même lot, moins de 24 h), elle revient EN PAUSE ;
  * sinon elle est close dans le journal (« interrompue »). */
@@ -3952,8 +3982,9 @@ function relectureMettreEnPause(){const p=relecture.passe;
  if(p.operationId)void adapter.cancel({operationId:p.operationId,reason:'goto-cut-cancel'}).catch(()=>{});
  return {pauseDemandee:true,etat:p.etat};}
 /* Reprise : mêmes contrôles qu'au départ, puis la passe repart au cut gardé. */
-async function relectureReprendre(){const p=relecture.passe;
+async function relectureReprendre(args=null){const p=relecture.passe;
  if(!p||p.etat!=='en-pause')throw Error('Aucune relecture en pause.');
+ const bornes=relectureBornesForme(args);   /* CH-133 */
  const b=engine.s.batch,pt=p.point&&!repriseExpiree(p.point)?p.point:await relectureRepriseLire();
  if(!pt||pt.lotId!==p.lotId||b?.id!==p.lotId||repriseExpiree(pt)){p.etat='arretee';p.fin=new Date().toISOString();p.message='Relecture en pause abandonnée : le lot a changé ou la reprise a plus d’un jour.';
   await relectureRepriseEffacer();await relectureOublierPasse(p);relectureJournal('relecture-fin',{mode:p.mode,modeEffectif:p.modeEffectif,issue:'interrompue',raison:'reprise expirée ou lot changé',faits:p.faits,total:p.total},p);
@@ -3967,11 +3998,19 @@ async function relectureReprendre(){const p=relecture.passe;
  const entree=await relectureEntree(b);
  const entreeReprise={...entree,ecartementPartieMm:Number.isFinite(pt.ecartementPartieMm)?pt.ecartementPartieMm:entree.ecartementPartieMm};
  if(relecture.passe!==p||p.etat!=='en-pause')throw Error('Relecture non reprise : la passe a changé pendant les contrôles.');
+ /* CH-133 : les cuts déjà relus restent dans la liste (le point garde son index) ; seuls les cuts restants hors des bornes en sortent. */
+ let ptPasse=pt,ecartesBornes=null;
+ if(bornes){const tp=Number.isInteger(entree.total)?entree.total:Number.isInteger(pt.totalPartie)?pt.totalPartie:p.totalPartie;
+  const f=relectureBornesFiltrer(bornes,pt.sel.cuts.slice(pt.index),tp);ecartesBornes=f.ecartes;
+  ptPasse={...pt,sel:{...pt.sel,cuts:[...pt.sel.cuts.slice(0,pt.index),...f.garde]},total:Math.max(0,pt.total-f.ecartes.length)};
+  p.total=ptPasse.total;p.point=ptPasse;p.apresSerie=null;}
  p.gen=++relecture.gen;p.etat='en-cours';p.pauseDemandee=false;p.arret=false;p.fin=null;p.modeEffectif=modeEffectif;p.message=`Relecture reprise au cut ${pt.sel.cuts[pt.index]?.cut??'?'}.`;
- relectureJournal('relecture-reprise',{mode:p.mode,modeEffectif,raisonPause:p.pauseRaison,index:pt.index,cut:pt.sel.cuts[pt.index]?.cut??null,faits:p.faits,total:p.total},p);
+ if(ecartesBornes)relectureBornesJournal(p,bornes,ecartesBornes,'reprise');
+ p.message=`Relecture reprise au cut ${ptPasse.sel.cuts[pt.index]?.cut??'?'}.`;
+ relectureJournal('relecture-reprise',{mode:p.mode,modeEffectif,raisonPause:p.pauseRaison,index:pt.index,cut:ptPasse.sel.cuts[pt.index]?.cut??null,faits:p.faits,total:p.total,bornes:bornes??null},p);
  try{await chrome.storage.local.set({[CLE_RELECTURE_PASSE]:{lotId:p.lotId,gen:p.gen,debut:p.debut,mode:p.mode,modeEffectif}});}catch{/* mémoire seule */}
  void syncLauncher().catch(()=>{});   /* la page ESV (rechargée pendant la pause) relit tout de suite qu'une séance d'observation est ouverte */
- relecture.tache=relecturePasse(p,b,pt.sel,reglages,entreeReprise,pt).catch(e=>{if(relecture.passe===p&&p.etat==='en-cours'){p.etat='erreur';p.message=`Relecture arrêtée : ${String(e?.message||e).slice(0,300)}`;p.fin=new Date().toISOString();
+ relecture.tache=relecturePasse(p,b,ptPasse.sel,reglages,entreeReprise,ptPasse).catch(e=>{if(relecture.passe===p&&p.etat==='en-cours'){p.etat='erreur';p.message=`Relecture arrêtée : ${String(e?.message||e).slice(0,300)}`;p.fin=new Date().toISOString();
    relectureJournal('relecture-fin',{mode:p.mode,modeEffectif:p.modeEffectif,issue:'erreur',raison:p.message,faits:p.faits,corriges:p.corriges,vus:p.vus},p);}
    void relectureOublierPasse(p);void relectureRepriseEffacer();});
  return relectureEtat();}
@@ -4194,6 +4233,8 @@ async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=glob
  const mediane=t=>{const v=t.slice().sort((x,y)=>x-y),m=v.length>>1;return v.length%2?v[m]:(v[m-1]+v[m])/2;};
  const ctx={chaine,ecartementRef:()=>Number.isFinite(ecartementPartieMm)?ecartementPartieMm:ecartementsVerts.length>=5?Math.round(mediane(ecartementsVerts)*10)/10:null};
  let total=Number.isInteger(entree.total)?entree.total:null;
+ /* CH-133 : liste des cuts de la passe et total de la partie (pour les bornes proposées et leur contrôle). */
+ p.listeCuts=sel.cuts.map(c=>c.cut);if(Number.isInteger(total))p.totalPartie=total;
  const borne=Math.max(...[total!==null?total-1:null,...sel.cuts.map(c=>c.cut)].filter(Number.isInteger));
  const vivante=()=>relecture.passe===p&&p.gen===relecture.gen&&p.etat==='en-cours';
  const plagesSautees=new Set(reprise?.plagesSautees||[]);let precedent=null,ici=null,issue='fin',derniereArrivee=null,ciCourant=reprise?.index??0,indexPause=null;
@@ -4206,7 +4247,8 @@ async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=glob
  const reprisePoser=async index=>{
   const pt={v:1,lotId:p.lotId,mode:p.mode,modeEffectif:p.modeEffectif,debut:p.debut,total:p.total,index,faits:p.faits,corriges:p.corriges,refusees:p.refusees,vus:p.vus,vusCuts:[...p.vusCuts],
    cutsNeufs:p.cutsNeufs,cutsNeufsAnnonces:p.cutsNeufsAnnonces,chaine:JSON.parse(JSON.stringify(chaine)),ecartementsVerts:ecartementsVerts.slice(),ecartementPartieMm:Number.isFinite(ecartementPartieMm)?ecartementPartieMm:null,
-   plagesSautees:[...plagesSautees],sel:{cuts:sel.cuts,plages:sel.plages},reglages:p.reglages??null,noteMode:p.noteMode??null,savedAt:new Date().toISOString()};
+   plagesSautees:[...plagesSautees],sel:{cuts:sel.cuts,plages:sel.plages},reglages:p.reglages??null,noteMode:p.noteMode??null,savedAt:new Date().toISOString(),
+   horsBornes:p.horsBornes||0,bornes:p.bornes??null,totalPartie:Number.isInteger(total)?total:null,apresSerie:Number.isInteger(p.apresSerie)?p.apresSerie:null};
   p.point=pt;try{await chrome.storage.local.set({[CLE_RELECTURE_REPRISE]:pt});p.pointStocke=true;}catch{p.pointStocke=false;}};
  if(p.reprise)await reprisePoser(reprise?.index??0);
  /* Champs communs des événements d'un cut relu (revue, R10). */
@@ -4227,7 +4269,7 @@ async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=glob
    await engine.event('relecture-navigation-attente',{identity:{part:partie,cut},code:'ADAPTER_BUSY',essai:demandes,attenteMs,essaisMax:attentes.length,
     raison:String(nav.refusal?.message||'').slice(0,200)}).catch(()=>{});
    await attendreMs(attenteMs);}
-  if(nav?.bornes?.source==='compteur'&&Number.isInteger(nav.bornes.total)&&nav.bornes.total>0)total=nav.bornes.total;
+  if(nav?.bornes?.source==='compteur'&&Number.isInteger(nav.bornes.total)&&nav.bornes.total>0){total=nav.bornes.total;p.totalPartie=total;}
   if(nav?.resultat==='confirme'){ici=cut;return {ok:true,par:nav.chemin==='pas-a-pas'?'pas':nav.chemin==='aucun'?'aucun':'evenement'};}
   if(nav?.resultat==='refuse'){const code=String(nav.refusal?.code||'');
    if(p.arret||p.pauseDemandee||/^(OUT_OF_BOUNDS|CANCELLED_)/.test(code))return {saut:true,raison:nav.refusal?.message??code};
@@ -4239,7 +4281,7 @@ async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=glob
   if(p.arret){issue='arret';p.message=`Relecture arrêtée à ta demande : ${pluriel(p.faits,'cut')} relu${p.faits>1?'s':''} sur ${p.total}.`;break;}
   if(p.pauseDemandee&&p.reprise){issue='pause';indexPause=ci;break;}
   if(plagesSautees.has(c.plage))continue;
-  const plage=sel.plages[c.plage];p.cut=c.cut;p.plage=plage?.libelle??null;
+  const plage=sel.plages[c.plage];p.cut=c.cut;p.plage=plage?.libelle??null;p.suiteCut=c.cut;
   const t0=Date.now(),chemins=[];let par=null,r=null;
    const memePlage=precedent&&precedent.plage===c.plage,enPas=ici!==null&&c.cut>ici&&(memePlage?c.cut-ici<=cfg.pasMax:c.cut-ici===1);
    if(enPas){chemins.push('pas');r=await aller(c.cut,'pas');}
@@ -4288,7 +4330,7 @@ async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=glob
    if(!garde.ok)action={action:'visite',raison:`correction écartée : ${garde.raison}`};
    else{try{action=await relectureCorriger(p,b,etat,calc);}
     catch(e){stop(`Relecture arrêtée : ${String(e?.message||e).slice(0,300)}`);
-     relectureJournal('relecture-ombre',evenementCut(c,plage,{action:'correction-incertaine',raison:p.message,statutEsv:ligne,arrivee:par,chemins}),p);p.faits++;break;}
+     relectureJournal('relecture-ombre',evenementCut(c,plage,{action:'correction-incertaine',raison:p.message,statutEsv:ligne,arrivee:par,chemins}),p);p.faits++;p.suiteCut=sel.cuts[ci+1]?.cut??null;break;}
     if(action.action==='corrige'){p.corriges++;ici=action.arrivee?action.arrivee.cut:null;}else p.refusees++;}}
   const j=calc?.jugement;capture=null;
   relectureJournal('relecture-ombre',evenementCut(c,plage,{statutEsv:ligne,arrivee:par,chemins,
@@ -4299,20 +4341,22 @@ async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=glob
    critere:calc?{corriger:calc.critere.corriger,regle:calc.critere.regle,raison:calc.critere.raison}:null,garde,
    action:action.action,raisonAction:action.raison,erreurCapture,erreurCalcul,
    durees:{navigationMs:tNav-t0,captureMs:tCap-tNav,calculMs:tCalc-tCap,totalMs:Date.now()-t0}}),p);
-  p.faits++;
+  p.faits++;p.suiteCut=sel.cuts[ci+1]?.cut??null;
   if(p.reprise)await reprisePoser(ci+1);
   if(action.stopApres){stop(action.stopApres);break;}
   /* CH-107 : série de cuts vides (ESV n'affiche plus les points). Au seuil, la passe n'écrit plus rien : pause au PREMIER cut vide de la série
    * (ses cuts seront relus), rechargement d'ESV et reprise, une fois par série ; sans pause permise, arrêt. */
   {const sv=relecturePointsVides(p,{vide:cutVide,capture:!!capture,ci,faits:p.faits});
    if(sv){const debut=sel.cuts[sv.debut]?.cut??c.cut,ligneDe=`${pluriel(sv.vides,'cut')} de suite sans point, dès le cut ${debut}`;
+    /* CH-133 : le premier cut relu après la série (borne de départ proposée) ; sans lui, la série finit la liste. */
+    const apres=sel.cuts.slice(ci+1).find(x=>!plagesSautees.has(x.plage))?.cut??null;p.apresSerie=apres;
     relectureJournal('relecture-points-vides',{etape:'detecte',action:!p.reprise?'arret':sv.recharger?'recharger':'pause',identity:{part:partie,cut:debut},vides:sv.vides,seuil:sv.seuil,
      cuts:sel.cuts.slice(sv.debut,ci+1).map(x=>x.cut),rechargements:sv.rechargements},p);
     /* Sans pause permise : arrêt au premier cut vide ; les cuts de la série ne comptent pas comme relus, le message dit ce qui reste à relire. */
-    if(!p.reprise){const reste=sel.cuts.slice(sv.debut).filter(x=>!plagesSautees.has(x.plage));p.faits=sv.faitsAvant;
+    if(!p.reprise){const reste=sel.cuts.slice(sv.debut).filter(x=>!plagesSautees.has(x.plage));p.faits=sv.faitsAvant;p.suiteCut=debut;
      stop(`Relecture arrêtée au cut ${debut} : ESV n’affiche plus les points (${ligneDe}). ${pluriel(reste.length,'cut')} non relu${reste.length>1?'s':''}, du cut ${debut} au cut ${reste.at(-1)?.cut??debut} ; rien n’a été écrit sur ces cuts. Recharge ESV (F5) puis relance la relecture.`);break;}
     p.faits=sv.faitsAvant;p.pointsVidesMessage=sv.recharger?`ESV n’affiche plus les points (${ligneDe}) : Ariane recharge la page ESV, puis reprend la relecture au cut ${debut}`
-     :`ESV n’affiche plus les points (${ligneDe}${sv.rechargements?', même après le rechargement':''}) : relecture gardée en pause au cut ${debut}. Recharge ESV (F5) puis reprends la relecture`;
+     :`ESV n’affiche plus les points (${ligneDe}${sv.rechargements?', même après le rechargement':''}) : relecture gardée en pause au cut ${debut}. Recharge ESV (F5) puis reprends${apres!==null?`, ou reprends après la série (cut ${apres})`:' la relecture'}`;
     p.pointsVidesRecharger=sv.recharger;issue='pause-points';indexPause=sv.debut;break;}}
   if(signalAction==='recharger'&&p.reprise&&!p.arret&&ci+1<sel.cuts.length){issue='pause-signal';indexPause=ci+1;break;}}
  /* Les « vu » des derniers cuts affichés arrivent après eux : la passe les attend (aucune commande pendant ce temps). */
@@ -4332,10 +4376,12 @@ async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=glob
  if(p.reprise){p.pauseDemandee=false;await relectureRepriseEffacer();}
  const vu=p.vus?` ; ESV a marqué ${pluriel(p.vus,'cut')} « vu »`:'';
  if(issue==='fin'&&p.etat==='en-cours')p.message=`Relecture finie : ${pluriel(p.faits,'cut')} relu${p.faits>1?'s':''}${p.modeEffectif==='corriger'?`, ${pluriel(p.corriges,'corrigé')}${p.refusees?`, ${pluriel(p.refusees,'correction')} refusée${p.refusees>1?'s':''} par la page`:''}`:', rien de modifié'}${vu}.${p.noteMode?` ${p.noteMode}`:''}`;
+ /* CH-133 : les cuts écartés par les bornes ne sont pas relus, et c'est dit. */
+ if(p.horsBornes&&relecture.passe===p&&p.message&&!/hors des bornes/.test(p.message))p.message+=` ${pluriel(p.horsBornes,'cut')} non relu${p.horsBornes>1?'s':''} (hors des bornes) : relecture du cut ${p.bornes?.debut} au cut ${p.bornes?.fin}.`;
  else if(issue!=='fin'&&vu&&p.message&&!p.message.includes('« vu »'))p.message=p.message.replace(/\.?$/,`${vu}.`);
  if(relecture.passe===p){p.etat=issue==='fin'?'finie':issue==='arret'?'arretee':'erreur';p.fin=new Date().toISOString();p.cut=null;}
  relectureJournal('relecture-fin',{mode:p.mode,modeEffectif:p.modeEffectif,issue,raison:p.message,faits:p.faits,total:p.total,corriges:p.corriges,refusees:p.refusees,
-  vus:p.vus,cutsNeufs:p.cutsNeufs,cutsNeufsAnnonces:p.cutsNeufsAnnonces,dureeMs:Date.parse(p.fin||new Date().toISOString())-Date.parse(p.debut)},p);
+  vus:p.vus,cutsNeufs:p.cutsNeufs,cutsNeufsAnnonces:p.cutsNeufsAnnonces,dureeMs:Date.parse(p.fin||new Date().toISOString())-Date.parse(p.debut),...(p.horsBornes?{horsBornes:p.horsBornes,bornes:p.bornes??null}:{})},p);
  await relectureOublierPasse(p);}
 /* Test 29 (CH-027 ; ordre écrit de l'opérateur du 31/10 : « garder le système éveillé via Chrome, j'autorise la permission du manifeste ») — ÉVEIL DU SYSTÈME.
  * Pendant un lot, une file de parties, la deuxième passe ou la relecture, Ariane demande à Chrome de ne pas mettre l'ordinateur en veille
@@ -4759,7 +4805,7 @@ async function dispatch(m){await ready;await passeDiffReveil;   /* T21d : une pa
  if(action==='relecture-arreter')return relectureArreter();
  if(action==='relecture-acquitter')return relectureAcquitter(args);
  if(action==='relecture-pause')return relectureMettreEnPause();
- if(action==='relecture-reprendre')return relectureReprendre();
+ if(action==='relecture-reprendre')return relectureReprendre(args);
  if(action==='relecture-pause-reglage')return relectureRepriseReglageChoisir(args);
  if(action==='goto-cut-cancel'){const r=retourCutEnCours;if(!r)return {cancelRequested:false,reason:'aucun-retour'};
   await adapter.cancel({operationId:r.operationId,reason:'goto-cut-cancel'}).catch(()=>{});return {cancelRequested:true,operationId:r.operationId};}
@@ -4879,7 +4925,7 @@ async function dispatch(m){await ready;await passeDiffReveil;   /* T21d : une pa
  if(native.active()&&!['cloud','native-download','native-health','native-export-advice','native-export-manifest','native-export-cles','journal-index-repli','native-export-plan','native-export-ack','native-discard','build'/* CH-097 : lecture du nom du paquet, demandée à chaque ouverture du panneau */].includes(action))throw Error('Écho est actif. Termine-le avant d’utiliser Mes corrections, l’assisté ou le pilote.');
  if(manual.active()&&!['cloud','journal','dataset'].includes(action))throw Error('Une session est active dans Mes corrections. Termine-la avant de piloter un lot ou d’utiliser l’assisté.');
  if(action==='goto-cut')return allerAuCut(args);
- if(action==='relecture-lancer')return relectureLancer({auto:false});
+ if(action==='relecture-lancer')return relectureLancer({auto:false,bornes:args});
  if(action==='pause')return coordinateurLot.transition('pause',async()=>{await engine.pause();return engine.view();});
  if(action==='stop')return coordinateurLot.transition('arret',async()=>{const b=engine.s.batch,ouvert=!!b&&!OBS_CLOS.includes(b.state),fin=engine.stop();
   if(ouvert&&engine.s.batch===b)marquerFinLot(b,'arret-manuel');await fin;return engine.view();});
