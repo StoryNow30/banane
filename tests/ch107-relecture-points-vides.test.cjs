@@ -30,7 +30,7 @@ test('la série recommence après le rechargement : la relecture reste en pause 
  await evenement(b,'relecture-pause',e=>e.raison==='points'&&H.evenements(b,'relecture-pause').length===2,20000);
  const p=await attendreEtat(b,'en-pause');
  assert.equal(p.pauseRaison,'points');assert.equal(p.cut,113);
- assert.match(p.message,/ESV n’affiche plus les points/);assert.match(p.message,/Recharge ESV \(F5\) puis reprends la relecture/);
+ assert.match(p.message,/ESV n’affiche plus les points/);assert.match(p.message,/Recharge ESV \(F5\) puis reprends, ou reprends après la série \(cut 116\)/);   /* CH-133 : le message dit l’issue */
  await H.attendre(300);assert.equal(adapter.rechargements,1,'une fois par série au plus');assert.equal(b.get('relecture').passe.etat,'en-pause');
  assert.deepEqual(adapter.majEspace.map(x=>x.cut),[109],'aucune correction sur un cut vide');
  const etat=await b.api('relecture-etat');assert.equal(etat.passe.pauseRaison,'points');
