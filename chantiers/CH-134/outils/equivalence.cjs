@@ -11,7 +11,8 @@ const navigateur = require(R + '/tests/esv-maquette/navigateur.cjs'), { ouvrirPa
 const { SCENES, preparer } = require('./scenes.cjs');
 const REV = process.argv[2] || 'integration/cloture-50';
 const REF = execFileSync('git', ['show', `${REV}:panel-signal.css`], { cwd: R, encoding: 'utf8', maxBuffer: 64e6 }) + '\n' + fs.readFileSync(R + '/chantiers/CH-132/directions/instrument.css', 'utf8');
-const CAND = fs.readFileSync(R + '/panel-signal.css', 'utf8');
+/* NEUTRE=1 : le bouton de vue est retiré du candidat (et « Partie N » rendue à sa marge d'avant) : ce qui reste n'est que l'intégration de A. */
+const CAND = fs.readFileSync(R + '/panel-signal.css', 'utf8') + (process.env.NEUTRE ? '\n#ui5 .sg-vue-b{display:none!important}#ui5 .sg-haut .sg-partie{margin-left:0!important}' : '');
 const LARGEURS = (process.env.LARGEURS || '360,600,720').split(',').map(Number), PALETTES = (process.env.PALETTES || 'glacier,sarcelle,signal').split(','), THEMES = (process.env.THEMES || 'sombre,clair').split(',');
 const RELEVE = () => { const out = {}, ex = new Set(document.querySelectorAll('#ui5 .sg-vue-b, #ui5 .sg-vue-b *'));
   const chemin = e => { const p = []; for (let x = e; x && x.id !== 'ui5'; x = x.parentElement) p.unshift(x.tagName + '.' + [...x.classList].join('.') + ':' + [...x.parentElement.children].indexOf(x)); return p.join('>'); };
