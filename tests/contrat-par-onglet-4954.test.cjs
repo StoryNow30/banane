@@ -128,3 +128,15 @@ test('l\'empreinte reste en lecture seule : aucune commande à ESV autre que les
  for(const id of [1,2,1]) await connecter(id);
  assert.deepEqual(b.commands.filter(x=>!['ping','state','nativeSnapshot'].includes(x.action)),[]);
 });
+
+/* Vision 19, terrain du 17/11 : entre deux parties, la page d'ESV n'a encore ni boutons de cut ni rails (empreinte « vide ») ; comparée à la vraie, elle donnait
+ * deux faux avis « ESV n'a plus le même contrat » (boutons et rails « bougés »), à l'aller puis au retour. Une empreinte vide n'est ni gardée ni comparée. */
+test('page d’ESV pas encore prête (aucun bouton de cut, aucun rail) : ni avis à l’aller, ni avis au retour, l’empreinte gardée reste la vraie',async()=>{
+ const {b,etat,connecter}=deuxOnglets();
+ await connecter(1);
+ etat[1]={hash:'dddddddd',detail:DETAIL({boutons:[],rails:[null,null]})};await connecter(1);
+ etat[1]={hash:'aaaaaaaa',detail:DETAIL()};await connecter(1);
+ assert.equal(stored(b,'avis-contrat-esv').length,0,'aucun avis');
+ const c=stored(b,'contrat-esv');assert.equal(c[1].incomplet,true,'l’empreinte vide est consignée comme incomplète');
+ assert.deepEqual([c.at(-1).precedent,c.at(-1).change],['aaaaaaaa',false],'la vraie empreinte est comparée à la vraie');
+});

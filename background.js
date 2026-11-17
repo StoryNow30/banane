@@ -401,6 +401,10 @@ async function contratNoter(c,tabId){try{
  /* Audit P-5 (H14) : la forme 2 ne hache plus la sélection du rail ; une empreinte d'une autre forme n'est jamais comparée (ni avis, ni
   * « différente de la dernière connue » au premier « Connecter » après l'installation). Sans forme dite : forme 1. */
  const forme=Number.isInteger(c.forme)?c.forme:1,memeForme=x=>(Number.isInteger(x?.forme)?x.forme:1)===forme;
+ /* Vision 19 (terrain du 17/11) : entre deux parties la page d'ESV n'a ni boutons de cut ni rails ; cette empreinte « vide » n'est pas un contrat : consignée
+  * comme incomplète, jamais gardée ni comparée (elle donnait deux faux avis, à l'aller et au retour). */
+ if(Array.isArray(detail?.boutons)&&!detail.boutons.length&&Array.isArray(detail?.rails)&&detail.rails.every(x=>x==null)){
+  journalerSimple('contrat-esv',{hash:c.hash,forme,incomplet:true,detail,etat,onglet:Number.isInteger(tabId)?tabId:null});return;}
  const tous=await contratsLire(S),prev=tous[cle]&&memeForme(tous[cle])?tous[cle]:null;
  const change=!!prev&&typeof prev.hash==='string'&&prev.hash!==c.hash;
  const diff=(x,y)=>{const a=aplatirContrat(x||{}),b=aplatirContrat(y||{});return [...new Set([...Object.keys(a),...Object.keys(b)])].filter(k=>JSON.stringify(a[k])!==JSON.stringify(b[k])).slice(0,12);};
