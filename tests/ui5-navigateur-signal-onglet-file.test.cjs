@@ -33,6 +33,10 @@ test('onglet « File » : prête, en cours, arrêtée avec alerte, finie ; 360 �
    vus[nom]=await page.evaluate(()=>{const h=document.getElementById('ui5');return {onglet:h.querySelector('.sg-fen')?.dataset.activite,choisi:h.querySelector('.sg-bascule [aria-selected="true"]')?.textContent,
     titres:[...h.querySelectorAll('.sg-of-t')].map(e=>(e.firstElementChild||e).textContent),boutons:[...h.querySelectorAll('.sg-onglet-file button[data-act],.sg-actions button[data-act]')].map(b=>b.textContent.trim()+'|'+b.dataset.act),molette:h.querySelector('.sg-onglet-file [role="slider"]')?.getAttribute('aria-valuenow')??null,nombres:[...h.querySelectorAll('.sg-onglet-file .sg-mol-n[data-act]')].map(b=>b.textContent.trim()+'|'+b.dataset.act),
     departs:[...h.querySelectorAll('.sg-of-departs [role="row"]')].map(r=>[...r.querySelectorAll('[role="cell"]')].map(c=>c.textContent.trim())),bilan:h.querySelectorAll('.sg-file-bilan li,.sg-reg-partie:not([data-etat="en-cours"]):not([data-etat="interrompue"])').length,etoiles:[...h.querySelectorAll('.sg-chaine li')].map(e=>e.dataset.etat+':'+e.dataset.partie),tiroir:!!h.querySelector('.sg-tiroir')};});
+   /* CH-129 (D-362) : les titres, départs et bilan se lisent sur l'écran des statistiques (bouton à icône de l'en-tête), qu'on referme ensuite */
+   await page.click('#ui5 .sg-barre .sg-stats-b');await page.waitForTimeout(250);
+   Object.assign(vus[nom],await page.evaluate(()=>{const h=document.getElementById('ui5');return {titres:[...h.querySelectorAll('.sg-of-t')].map(e=>(e.firstElementChild||e).textContent),departs:[...h.querySelectorAll('.sg-of-departs [role="row"]')].map(r=>[...r.querySelectorAll('[role="cell"]')].map(c=>c.textContent.trim())),bilan:h.querySelectorAll('.sg-file-bilan li,.sg-reg-partie:not([data-etat="en-cours"]):not([data-etat="interrompue"])').length};}));
+   await page.click('#ui5 .sg-barre .sg-stats-b');await page.waitForTimeout(250);
   }
   assert.deepEqual(erreurs,[]);
  }finally{await nav.close();}
