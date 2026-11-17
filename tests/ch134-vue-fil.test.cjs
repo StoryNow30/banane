@@ -58,8 +58,13 @@ test('pas de bouton de vue au repos, dans Écho, la Constellation ni l’Aurore'
  assert.equal(bouton(S.rendre(snap(),ui({onglet:'correction'}))),'','Aurore');
 });
 
-test('télécommande : « sg:vue-lot » est une navigation locale, gardée par le filtre, jamais un ordre',()=>{
- assert.ok(I.NAVIGATION.includes('sg:vue-lot'));
+test('télécommande : la vue réduite ne porte pas le fil des cuts ; le bouton de vue est retiré du téléphone, jamais un ordre, et le rendu y suit l’allure A',()=>{
+ assert.ok(!I.NAVIGATION.includes('sg:vue-lot'));
  assert.equal(I.ordreDe('sg:vue-lot',{boutons:{}}),null);
- const h=S.rendre(snap(),ui());assert.ok(bouton(I.filtrer(h,{boutons:{}})),'le bouton reste sur le téléphone');
+ const h=S.rendre(snap(),ui());assert.ok(bouton(h));assert.equal(bouton(I.filtrer(h,{boutons:{}})),'','retiré sur le téléphone');
+ /* le téléphone dessine par le même rendu : un lot en cours, vu du téléphone, porte l'anneau et la tuile d'état de la vue instrument */
+ const v={schema:2,connexion:'prete',lot:{etat:'cours',partie:13,cut:4812,traites:31,poses:27,differes:4},boutons:{'lot-pause':true,'lot-arreter':true},detail:{esv:{partie:13,cut:4812}}};
+ const t=I.filtrer(S.rendre(I.instantane(v),{onglet:null,vue:null,couche:null,tiroir:false,details:false,stats:false,note:''}),v);   /* l'objet `ui` de telecommande/telephone.html */
+ assert.doesNotMatch(require('node:fs').readFileSync(require('node:path').join(__dirname,'..','telecommande/telephone.html'),'utf8'),/vueLot|sg:vue-lot/,'le téléphone ne choisit pas de vue');
+ assert.match(t,/class="sg-anneau"/);assert.doesNotMatch(t,/data-vue="fil"/,'pas de vue fil vide sur le téléphone');
 });

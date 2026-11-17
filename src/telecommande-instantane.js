@@ -24,8 +24,9 @@
     'legacy:file-secondaire': 'constellation-arreter' });
   /* Navigation locale du téléphone : ne part jamais vers Ariane. */
   /* `sg:stats` : le bilan et les départs des parties, derrière l'icône d'en-tête de la Constellation (CH-129, D-362). */
-  /* `sg:vue-lot` : la vue « fil » du lot dans Orbite (CH-134, D-368), choisie sur le téléphone même. */
-  const NAVIGATION = Object.freeze(['mode:automatic', 'mode:native', 'sg:onglet-file', 'sg:onglet-correction', 'sg:tiroir', 'sg:details', 'sg:fermer', 'sg:menu', 'sg:stats', 'sg:vue-lot']);
+  /* CH-134 : `sg:vue-lot` (la vue « fil » du lot) n'y est pas : la vue réduite ne porte pas la liste des derniers cuts (`fil: []` ci-dessous), le
+   * téléphone n'aurait qu'un fil vide à montrer ; le bouton est donc retiré par `filtrer` et le téléphone garde la vue instrument. */
+  const NAVIGATION = Object.freeze(['mode:automatic', 'mode:native', 'sg:onglet-file', 'sg:onglet-correction', 'sg:tiroir', 'sg:details', 'sg:fermer', 'sg:menu', 'sg:stats']);
   const ordreDe = (act, vue) => { const o = Object.hasOwn(ACTES, act) ? ACTES[act] : null; return o && vue?.boutons?.[o] === true ? o : null; };
   const permis = (act, vue) => NAVIGATION.includes(act) || ordreDe(act, vue) !== null;
   /* Le HTML du rendu, sans les actions non permises : bouton retiré, autre élément privé de son action. */
