@@ -22,7 +22,9 @@ const RELEVE = () => { const out = {}, ex = new Set(document.querySelectorAll('#
 (async () => {
   const { chromium } = require(navigateur.modulePlaywright()); const nav = await chromium.launch({ executablePath: navigateur.executable() });
   const res = {}; let n = 0, diffs = 0;
-  for (const th of THEMES) for (const pal of PALETTES) for (const w of LARGEURS) for (const [nom, sc] of Object.entries(SCENES).filter(([k]) => !process.env.SCENES || process.env.SCENES.split(',').includes(k))) {
+  const travaux = []; for (const th of THEMES) for (const pal of PALETTES) for (const w of LARGEURS) for (const [nom, sc] of Object.entries(SCENES).filter(([k]) => !process.env.SCENES || process.env.SCENES.split(',').includes(k))) travaux.push({ th, pal, w, nom, sc });
+  let i = 0;
+  await Promise.all(Array.from({ length: Number(process.env.PARALLELE || 4) }, async () => { while (i < travaux.length) { const { th, pal, w, nom, sc } = travaux[i++];
     const rel = [];
     for (const css of [REF, CAND]) {
       const ctx = await nav.newContext({ viewport: { width: w, height: 760 } }), page = await ctx.newPage();
@@ -40,7 +42,7 @@ const RELEVE = () => { const out = {}, ex = new Set(document.querySelectorAll('#
       if (a[k].__rendu === 'false' && b[k].__rendu === 'false') continue;   /* ni l'un ni l'autre n'est rendu (sous un display:none) : rien à voir */
       for (const p of Object.keys(a[k])) if (a[k][p] !== b[k][p]) d.push(`${k} { ${p}: ${a[k][p]} → ${b[k][p]} }`); }
     res[`${th}-${pal}-${w}-${nom}`] = d; n++; diffs += d.length;
-  }
+  } }));
   await nav.close();
   if (process.argv[3]) fs.writeFileSync(process.argv[3], JSON.stringify(res, null, 1));
   for (const [k, v] of Object.entries(res)) if (v.length) console.log(k, '|', v.slice(0, 12).join(' | '), v.length > 12 ? `| … (${v.length})` : '');
