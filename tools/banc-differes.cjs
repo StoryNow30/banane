@@ -435,7 +435,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
       }
     } finally { L1.reglerLeviers(avant); passeMs = arrondi(horloge() - tP, 1); }
     /* CH-116 (fidélité de la passe, D-259) : BANC_PASSE_PLAFOND=N rejoue l'écriture du service worker (passeDiffEcrire) : les poses de la passe, décidées en ombre,
-     * sont écrites dans l'ordre de leur décision, N au plus ; à la première pose non écrite la passe s'arrête. Seul refus que le banc sait voir : une cible hors de la
+     * sont tentées dans l'ordre de leur décision, les N premières ; D-363 : un refus ne l'arrête plus. Seul refus que le banc sait voir : une cible hors de la
      * vue (« cette passe ne déplace pas la vue »). Les poses non écrites redeviennent des différés (`passe2.nonEcrite` : plafond ou arret). Absente : rien ne change. */
     const plafond = process.env.BANC_PASSE_PLAFOND ? Number(process.env.BANC_PASSE_PLAFOND) : null;
     if (Number.isInteger(plafond) && plafond >= 0) {
@@ -443,13 +443,13 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
       const rang = (x, i) => [x.passe2.passe, x.passe2.passe % 2 || !leviers.passesAlternees ? i : -i];
       const posees = restes.map((r, i) => ({ x: r.ligne.profils['L1-se'], i })).filter(o => o.x && o.x.etat === 'pose' && o.x.passe2)
         .sort((a, b) => { const p = rang(a.x, a.i), q = rang(b.x, b.i); return p[0] - q[0] || p[1] - q[1]; }).map(o => o.x);
-      let arret = false, ecrites = 0;
-      for (const x of posees) {
-        const motif = arret ? 'arret' : ecrites >= plafond ? 'plafond' : x.vue === 'deplacee' ? 'refus-vue' : null;
-        if (!motif) { ecrites++; continue; }
-        if (motif !== 'plafond') arret = true;
-        x.passe2.nonEcrite = motif === 'refus-vue' ? 'refus-vue' : motif; x.passe2.decalOmbre = x.decal; x.etat = 'differe'; x.decal = null;
-      }
+      /* D-363 (17/11) : comme le service worker, les N premières poses décidées sont tentées ; un refus « cible hors de la vue » (avant toute pose) n'arrête plus
+       * la passe, la pose suivante est tentée ; il prend sa place parmi les N (avant : arrêt au premier refus, D-237). */
+      posees.forEach((x, i) => {
+        const motif = i >= plafond ? 'plafond' : x.vue === 'deplacee' ? 'refus-vue' : null;
+        if (!motif) return;
+        x.passe2.nonEcrite = motif; x.passe2.decalOmbre = x.decal; x.etat = 'differe'; x.decal = null;
+      });
     }
   }
   const entete = { type: 'entete', format: FORMAT, version: VERSION, partie: `${projet}:${partie}`, projet, lot: lot.id.slice(0, 8), version_lot: lot.version, reprise: R.seeds.length,

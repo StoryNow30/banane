@@ -2390,11 +2390,12 @@ async function passeDiffEcrire(b,poses,rg,vue,aReprendre=null){
  if(aReprendre){aEcrire=aReprendre;if(!aEcrire.length&&!E?.ecriture)return;}
  else{aEcrire=poses.slice(0,Math.max(0,rg.max-vue.ecrites));if(!aEcrire.length)return;
   vue.etat='ecriture';vue.message=null;vue.demandees=vue.ecrites+aEcrire.length;
-  if(E){E.phase='ecriture';E.ecriture={liste:aEcrire.map(p=>p.cut),faits:0,enVol:null,prouves:[]};E.vue=vueComptes(vue);await passeDiffSauver(E);}}
+  if(E){E.phase='ecriture';E.ecriture={liste:aEcrire.map(p=>p.cut),faits:0,refuses:[],enVol:null,prouves:[]};E.vue=vueComptes(vue);await passeDiffSauver(E);}}
  const demandees=E?.ecriture?.liste?.length??aEcrire.length;
  for(let i=0;i<200&&engine.task;i++)await engine.task.catch(()=>{});
  /* T21d : reprise où tout était déjà écrit (redémarrage juste avant la fin) : rien à contrôler, la fin est seulement notée. */
  const raison0=!aEcrire.length?null:['en-cours','en-pause'].includes(relecture.passe?.etat)?'une relecture est en cours ou en pause':await lotCloRefus(b,true,null);let issue=raison0?'refus-depart':'fin',raison=raison0;
+ let refusees=0;
  if(!raison0){const EC=passeDiff.ecriture={arret:false,attente:null,etat:E};
   try{
    for(const [ip,p] of aEcrire.entries()){
@@ -2406,14 +2407,17 @@ async function passeDiffEcrire(b,poses,rg,vue,aReprendre=null){
     if(E){E.ecriture.enVol={cut:p.cut,depuis:new Date().toISOString()};await passeDiffSauver(E);}
     try{r=await passeDiffPoser(b,p,EC);}catch(e){r={resultat:'incertain',raison:String(e?.message||e).slice(0,300)};}
     /* Un cut incertain reste « en vol » : au réveil, son intention le dit incertain, jamais réécrit. */
-    if(E){if(r.resultat==='ecrit'){E.ecriture.faits++;E.vue.ecrites=vue.ecrites+1;}if(r.resultat!=='incertain')E.ecriture.enVol=null;await passeDiffSauver(E);}
+    /* D-363 : un cut refusé avant la pose est gardé (`refuses`) : au réveil, la reprise repart après lui, jamais sur lui. */
+    if(E){if(r.resultat==='ecrit'){E.ecriture.faits++;E.vue.ecrites=vue.ecrites+1;}else if(r.resultat==='refuse'&&r.avantPose===true)(E.ecriture.refuses||(E.ecriture.refuses=[])).push(p.cut);if(r.resultat!=='incertain')E.ecriture.enVol=null;await passeDiffSauver(E);}
     journalerSimple('passe-differes-ecriture',{identity:{part:b.scope.part,cut:p.cut},passe:p.passe,decal:p.decal,...r});
+    /* D-363 (opérateur, 17/11) : un refus avant toute pose dans ESV n'arrête plus la passe, elle passe au cut suivant ; tout le reste l'arrête (D-237). */
+    if(r.resultat==='refuse'&&r.avantPose===true){refusees++;continue;}
     if(r.resultat!=='ecrit'){issue=r.resultat;raison=r.raison;break;}
     l1ResteOter(p.r.identity);vue.ecrites++;}
   }finally{passeDiff.ecriture=null;vue.cut=null;}}
  vue.etat=issue==='fin'?'finie':'arretee';vue.message=raison;
  if(E){E.phase='finie';E.vue=vueComptes(vue);await passeDiffSauver(E);}
- journalerSimple('passe-differes-ecriture-fin',{lotId:b.id,issue,raison,ecrites:vue.ecrites,demandees,decidees:poses.length,...(aReprendre?{reprise:'sw-redemarre'}:{})});}
+ journalerSimple('passe-differes-ecriture-fin',{lotId:b.id,issue,raison,ecrites:vue.ecrites,demandees,decidees:poses.length,refusees,...(aReprendre?{reprise:'sw-redemarre'}:{})});}
 /* Action du panneau : relance la passe, avec les mêmes refus qu'au départ automatique. Les décisions sont REFAITES (ombre) : depuis la première, une relecture ou un Écho
  * a pu changer les voisins ; les cuts déjà écrits par la passe ne sont plus des différés pour elle. */
 async function passeDiffEcrireDemande(){
@@ -2439,12 +2443,14 @@ function cibleLoinListe(de,cuts){const L=globalThis.BananeSettings?.lot?.chargem
  return null;}
 async function passeDiffPoser(b,p,E){
  const K=globalThis.BananeCore3,G=globalThis.BananeGcv2L1,L=globalThis.BananeLotDecision,VR=globalThis.BananeVoieRecentree,S=globalThis.BananeSettings?.lot||{},r=p.r,cut=r.identity.cut,part=b.scope.part,t0=Date.now();
- const refuse=raison=>({resultat:'refuse',raison});
+ /* D-363 : `avantPose` dit qu'ESV n'a encore rien reçu (ni pose ni validation) : la passe passe alors au cut suivant. Une anomalie (lecture impossible, nuage absent)
+  * ou un refus après la pose arrête la passe, comme avant (D-237). */
+ const refuse=(raison,avantPose=true)=>({resultat:'refuse',raison,avantPose});
  let now,cg;
  /* Lectures seulement : rien n'est encore écrit. */
  try{
   /* T21d : après un redémarrage, le nuage du cut est relu du magasin (calcul du premier tour) pour la garde « pose inchangée » et la commande. */
-  if(!r.capture&&!await passeDiffCharger(r))return refuse('nuage du cut absent du magasin au réveil : la pose décidée ne peut pas être commandée');
+  if(!r.capture&&!await passeDiffCharger(r))return refuse('nuage du cut absent du magasin au réveil : la pose décidée ne peut pas être commandée',false);
   /* Test 18 : comme une correction de la relecture, le cut n'est posé qu'atteint par les boutons d'ESV : saut au cut d'avant (d'après, pour le cut 0), puis un pas. */
   const avant=cut>0?cut-1:cut+1,aller=(c,chemin)=>call('goToCut',{part,cut:c},{chemin,borneConnue:null},K.uid()),nonConfirme=(c,nav)=>refuse(`passage au cut ${c} non confirmé (${String(nav?.refusal?.message||nav?.resultat||'résultat inconnu').slice(0,160)})`);
   let nav=await aller(avant,'auto');if(nav?.resultat!=='confirme')return nonConfirme(avant,nav);
@@ -2459,15 +2465,15 @@ async function passeDiffPoser(b,p,E){
   const ligne=await relectureLigneListe(cut,now);
   if(ligne?.statut!=='invalid'||ligne.operateur)return refuse(`statut lu dans ESV : ${ligne?ligne.statut+(ligne.operateur?', traité par un opérateur':''):'illisible'} ; ce n’est pas un cut rouge, rien n’est écrasé`);
   cg=G.commander({positions:p.positions,runtimeRails:r.runtimeRails,before:now.rails,expectedPoses:K.expectedPoses,cameras:L.viewCameras(capture),camerasLarges:VR.camerasLarges(capture),valider:true});
- }catch(e){return refuse(`lecture impossible : ${String(e?.message||e).slice(0,200)}`);}
+ }catch(e){return refuse(`lecture impossible : ${String(e?.message||e).slice(0,200)}`,false);}
  if(cg.action!=='lot')return refuse(`commande refusée (${cg.reason})`);
  if(cg.vue==='deplacer')return refuse('cible hors de la vue : cette passe ne déplace pas la vue');
- const pose=await poserPuisVerifier(b,now,cg.rails,K.expectedPoses(now,cg.rails),'passe');if(pose)return refuse(pose);
+ const pose=await poserPuisVerifier(b,now,cg.rails,K.expectedPoses(now,cg.rails),'passe');if(pose)return refuse(pose,false);
  /* Ctrl+Entrée : si la preuve manque APRÈS l'envoi, la pose reste, l'intention aussi : le cut est à contrôler dans ESV. */
  const a=E.attente={cut,depuisMs:Date.now(),ok:false,refus:null},envoi=ecritureNoterValidation(now.identity,'passe'),incertain=m=>Error(`cut ${cut} : validation incertaine (${m}). Contrôle ce cut dans ESV.`);
  let ev;
  try{ev=await validateInPlaceInESV(now.identity,{part,pageId:b.scope.pageId??null},{commande:S.validationDernierCut==='bouton'?'bouton':'ctrl-entree',boutonId:S.boutonValiderSansSuivant??null});}
- catch(e){E.attente=null;if(/rien n.a été envoyé/.test(e?.message||''))return refuse(await remettrePose(b,now,`validation refusée avant l’envoi : ${String(e.message).slice(0,160)}`));throw incertain(String(e?.message||e).slice(0,200));}
+ catch(e){E.attente=null;if(/rien n.a été envoyé/.test(e?.message||''))return refuse(await remettrePose(b,now,`validation refusée avant l’envoi : ${String(e.message).slice(0,160)}`),false);throw incertain(String(e?.message||e).slice(0,200));}
  finally{if(envoi)envoi.retourMs=Date.now();}
  if(!enPlaceProuvee(ev,now.identity)){E.attente=null;throw incertain('compteur ou cut affiché inattendus');}
  const fin=Date.now()+reglageRelecture().attenteEcritureMs;while(!a.ok&&a.refus==null&&Date.now()<fin)await attendreMs(100);
@@ -2516,7 +2522,8 @@ async function passeDiffApresRedemarrage(){let st;try{st=await chrome.storage.lo
   else journalerSimple('passe-differes-ecriture-fin',{lotId:E.lotId??null,issue,motif:'sw-redemarre',raison,ecrites:vue.ecrites,demandees:E.ecriture?.liste?.length??0,decidees:posees.length});};
  /* Mémoire du lot rendue (restes non écrits, transport du lot) : « Relancer la deuxième passe » refait ses décisions comme avant le redémarrage. */
  const rendreMemoire=()=>{if(!memeLot||!Array.isArray(E.restes)||!entree||entree.id!==E.id||!Array.isArray(entree.transport))return;
-  const ecrits=new Set(E.ecriture?(E.ecriture.liste||[]).slice(0,E.ecriture.faits):[]);
+  /* D-363 : les places parcourues sont les cuts écrits plus les cuts refusés avant la pose ; seuls les écrits quittent les restes. */
+  const refusesAvant=E.ecriture?.refuses||[],ecrits=new Set(E.ecriture?(E.ecriture.liste||[]).slice(0,E.ecriture.faits+refusesAvant.length).filter(c=>!refusesAvant.includes(c)):[]);
   if(l1Restes.cle!==l1ResteCle(b)){l1Restes={cle:l1ResteCle(b),m:new Map()};for(const x of E.restes)if(x?.identity&&!ecrits.has(x.identity.cut))l1Restes.m.set(`${x.identity.part}|${x.identity.frameId??null}|${x.identity.cut}`,{identity:x.identity,zone:x.zone,adv:x.adv,regle:false});}
   if(l1eTransport.cle!==E.cleT)l1eTransport={cle:E.cleT,poses:entree.transport.slice()};
   passeDiff.reprise={b,rg,vue};};
@@ -2561,7 +2568,7 @@ async function passeDiffApresRedemarrage(){let st;try{st=await chrome.storage.lo
   if(!enEcriture)travail=passeDiffOmbre(b,rg,vue,{E,restes,transport,anchors:Array.isArray(entree.anchors)?entree.anchors:[],poses})
    .then(ps=>ps&&rg.mode==='ecriture'?passeDiffEcrire(b,ps,rg,vue):null);
   else if(E.phase==='ombre-finie')travail=rg.mode==='ecriture'?passeDiffEcrire(b,poses,rg,vue):Promise.resolve(null);
-  else{const faits=E.ecriture.faits,aReprendre=(E.ecriture.liste||[]).slice(faits).map(c=>poses.find(p=>p.cut===c)).filter(Boolean);
+  else{const faits=E.ecriture.faits+(E.ecriture.refuses||[]).length,aReprendre=(E.ecriture.liste||[]).slice(faits).map(c=>poses.find(p=>p.cut===c)).filter(Boolean);
    travail=passeDiffEcrire(b,poses,rg,vue,aReprendre);}
   passeDiffSuivre(vue,travail);
   relancerRelecture();
