@@ -206,6 +206,11 @@ body.ui5:has(#ui5.u-cadran[data-theme="clair"]){background:#E6E8E7}
 #ui5.u-cadran .sg-tag{font:500 11px/1 var(--mono);font-style:normal;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;color:var(--encre2)}
 #ui5.u-cadran .sg-tag.sg-attn{color:var(--differe)}
 #ui5.u-cadran .sg-tag.sg-crit{color:var(--incident)}
+/* Détails ouverts : comme l'instrument, le fil montre ce qui tient (les plus récents en haut) et s'estompe ; les étapes passent devant lui */
+#ui5.u-cadran[data-details] .sg-fen[data-activite="orbite"] .sg-duo{flex:1 1 auto;min-height:0}
+#ui5.u-cadran[data-details] .sg-fen[data-activite="orbite"] .sg-duo>.sg-tu-etapes{order:-1;flex:none}
+#ui5.u-cadran[data-details] .sg-fen[data-activite="orbite"] .sg-duo>.sg-tu-fil{flex:1 1 auto;min-height:0;overflow:hidden}
+#ui5.u-cadran[data-details] .sg-fen[data-activite="orbite"] .sg-tu-fil .sg-fil{flex:1;min-height:0;overflow:hidden;-webkit-mask:linear-gradient(#000 70%,transparent);mask:linear-gradient(#000 70%,transparent)}
 /* les étapes du lot (Détails) */
 #ui5.u-cadran .sg-etapes{list-style:none;display:flex;flex-direction:column}
 #ui5.u-cadran .sg-etapes li{display:grid;grid-template-columns:14px auto minmax(0,1fr);gap:12px;align-items:center;padding:7px 0;color:var(--encre2);font-size:12.5px;border-top:1px solid var(--filet)}
