@@ -3711,7 +3711,7 @@ async function relectureEtat(){const p=relecture.passe,intentions=await relectur
   passe:p?{lotId:p.lotId,mode:p.mode,modeEffectif:p.modeEffectif,etat:p.etat,auto:p.auto===true,total:p.total,faits:p.faits,corriges:p.corriges,refusees:p.refusees,
    vus:p.vus,cutsNeufs:p.cutsNeufs,cutsNeufsAnnonces:p.cutsNeufsAnnonces,cut:p.cut,plage:p.plage,message:p.message,debut:p.debut,fin:p.fin,arretDemande:p.arret===true,reglages:p.reglages??null,pauseDemandee:p.pauseDemandee===true,pauseRaison:p.pauseRaison??null,reprise:p.reprise===true,
    expire:p.etat==='en-pause'&&p.point?.savedAt?Date.parse(p.point.savedAt)+REPRISE_DUREE_MS:null,
-   horsBornes:p.horsBornes||0,bornes:p.bornes??null,bornesProposees:relectureBornesProposees(p)}:null,
+   horsBornes:p.horsBornes||0,bornes:p.bornes??null,bornesProposees:relectureBornesProposees(p),totalPartie:Number.isInteger(p.totalPartie)?p.totalPartie:null}:null,
   correctionInterrompue:intentions.length&&!passeVivante()?intentions[0]:null,correctionsInterrompues:passeVivante()?[]:intentions,
   repriseReglage:await relectureRepriseReglage()};}
 function relectureVue(){const p=relecture.passe;return p?{etat:p.etat,mode:p.modeEffectif||p.mode,faits:p.faits,total:p.total,corriges:p.corriges,vus:p.vus,cut:p.cut,message:p.message,...(p.reprise?{pauseDemandee:p.pauseDemandee===true,pauseRaison:p.pauseRaison??null}:{})}:null;}
