@@ -97,8 +97,8 @@ body.ui5:has(#ui5.u-cadran[data-theme="clair"]){background:#E6E8E7}
 #ui5.u-cadran .sg-barre-note{font-size:12px;color:var(--encre2)}
 
 /* ───────────────────────────── la tête : glyphe, MOT ESPACÉ, cut n/N ; la phrase ; la voie ; les compteurs */
-#ui5.u-cadran :is(.sg-tu-etat,.sg-constel){flex:none;position:relative;display:flex;flex-direction:column;padding:28px var(--marge) 16px}
-#ui5.u-cadran[data-taille="compact"] :is(.sg-tu-etat,.sg-constel){padding:14px var(--marge) 8px}
+#ui5.u-cadran .sg-tu:is(.sg-tu-etat,.sg-constel){flex:none;position:relative;display:flex;flex-direction:column;gap:0;padding:28px var(--marge) 16px;border-top:0}
+#ui5.u-cadran[data-taille="compact"] .sg-tu:is(.sg-tu-etat,.sg-constel){padding:14px var(--marge) 8px}
 #ui5.u-cadran .sg-haut{display:flex;align-items:center;gap:14px;min-height:30px}
 #ui5.u-cadran .sg-etat{display:inline-flex;align-items:center;gap:16px;min-width:0}
 #ui5.u-cadran .cd-glyphe{flex:none;display:block;width:32px;height:24px}
@@ -228,7 +228,7 @@ body.ui5:has(#ui5.u-cadran[data-theme="clair"]){background:#E6E8E7}
 #ui5.u-cadran .sg-fin dd b{font:500 13px/1.4 var(--mono)}
 /* bornes du prochain lot, bornes de la relecture */
 #ui5.u-cadran .sg-bornes{display:flex;flex-direction:column}
-#ui5.u-cadran .sg-rang{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:40px;border-top:1px solid var(--filet);font-size:13px;color:var(--encre2)}
+#ui5.u-cadran .sg-rang{display:flex;flex-direction:row;text-align:left;justify-content:space-between;align-items:center;gap:10px;min-height:40px;border-top:1px solid var(--filet);font-size:13px;color:var(--encre2)}
 #ui5.u-cadran .sg-rang:first-child{border-top:0}
 #ui5.u-cadran .sg-bornes input[type="number"]{width:min(170px,55%);height:32px;padding:0 10px;border-radius:var(--angle);border:1px solid var(--filet-fort);background:var(--surface);color:var(--encre);font:500 13px/1 var(--mono);text-align:right;appearance:textfield;-moz-appearance:textfield}
 #ui5.u-cadran .sg-bornes input::-webkit-outer-spin-button,#ui5.u-cadran .sg-bornes input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
@@ -262,7 +262,8 @@ body.ui5:has(#ui5.u-cadran[data-theme="clair"]){background:#E6E8E7}
 #ui5.u-cadran .sg-secondaire:not(:disabled):hover{background:var(--creux)}
 /* « ne lance rien », « Préparer un autre lot » : un lien sobre, comme la maquette */
 #ui5.u-cadran .sg-secondaire.sg-discret{box-shadow:none;justify-content:flex-start;padding-inline:0;min-height:36px;color:var(--encre)}
-#ui5.u-cadran .sg-principal.sg-danger{background:var(--incident);color:#fff}
+/* rouge = incident seulement : un arrêt demandé reste à l'encre (la palette garde sa seconde Entrée) */
+#ui5.u-cadran .sg-principal.sg-danger{background:var(--plein);color:var(--sur-plein)}
 #ui5.u-cadran .sg-tourne{width:14px;height:14px;border-radius:50%;box-shadow:inset 0 0 0 2px currentColor;opacity:.6}
 #ui5.u-cadran .sg-raison{flex-basis:100%;font-size:12px;line-height:1.4;color:var(--encre2)}
 #ui5.u-cadran .sg-verrou-ligne{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--encre2)}
@@ -442,7 +443,9 @@ body.ui5:has(#ui5.u-cadran[data-theme="clair"]){background:#E6E8E7}
 #ui5.u-cadran .sg-corr-partie .sg-n,#ui5.u-cadran .sg-corr-partie .sg-d{font-size:12px;color:var(--encre2)}
 #ui5.u-cadran .sg-corr-partie .sg-d{margin-left:auto}
 #ui5.u-cadran .sg-corr-partie[data-etat="en-cours"] .sg-mono{color:var(--cours)}
-#ui5.u-cadran .sg-ligne.sg-corr{grid-template-columns:auto minmax(0,1fr) auto}
+#ui5.u-cadran .sg-ligne.sg-corr{grid-template-columns:auto minmax(0,1fr) auto auto}
+#ui5.u-cadran .sg-corr .sg-motif{display:flex;flex-direction:column}
+#ui5.u-cadran .sg-corr-bilan{font-size:12.5px;color:var(--encre2);padding:2px 0 8px}
 #ui5.u-cadran .sg-statut{font:500 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--encre2);white-space:nowrap}
 #ui5.u-cadran .sg-statut[data-statut="en-cours"]{color:var(--cours)}
 #ui5.u-cadran .sg-statut:is([data-statut="corrige"],[data-statut="valide"]){color:var(--encre)}

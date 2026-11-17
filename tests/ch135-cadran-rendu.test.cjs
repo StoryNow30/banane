@@ -104,6 +104,11 @@ test('CH-135 : l’en-tête dit le cut n sur N quand le total est connu (le cut 
  assert.doesNotMatch(C.rendre(SCENES.sansTotal,ui()),/cd-cut/);
 });
 
+test('CH-135 : compteurs de la maquette (Posés, À poser, Reste) quand le reste est connu ; sinon ceux de l’instrument',()=>{
+ assert.match(C.rendre(SCENES.cours,ui()),/<dl class="sg-trio"><div><dt>Posés<\/dt><dd class="sg-n">18<\/dd><\/div><div><dt>À poser<\/dt><dd class="sg-n sg-dif">2<\/dd><\/div><div><dt>Reste<\/dt><dd class="sg-n cd-reste">19<\/dd><\/div><\/dl>/);
+ assert.match(C.rendre(SCENES.sansTotal,ui()),/<dt>Traités<\/dt>/);
+});
+
 test('CH-135 : Réglages, « Interface : Instrument / Cadran » ; l’instrument reste celui d’avant',()=>{
  for(const v of ['signal','cadran']){
   const h=S.rendre(snap({variante:v}),ui({couche:'reglages'}));

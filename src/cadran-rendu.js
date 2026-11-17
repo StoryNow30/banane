@@ -143,6 +143,9 @@
       const n = a.etat === 'fini' ? Math.min(N, a.traites || 0) : Math.min(N, (a.traites || 0) + 1);
       h = h.replace(/(<section class="sg-instrument[^"]*"[^>]*><div class="sg-haut">[\s\S]*?)(<\/div><div class="sg-milieu">)/, `$1<span class="cd-cut sg-mono">cut ${n}/${N}</span>$2`);
     }
+    /* les compteurs de la maquette : Posés · À poser · Reste, quand le reste est connu (sinon ceux de l'instrument : Traités · Posés · À poser) */
+    if (activite === 'orbite' && Number.isInteger(a.restants)) h = h.replace(/<dl class="sg-trio"><div><dt>Traités<\/dt><dd class="sg-n">[^<]*<\/dd><\/div>(<div><dt>Posés<\/dt><dd class="sg-n">[^<]*<\/dd><\/div><div><dt>À poser<\/dt><dd class="sg-n[^"]*">[^<]*<\/dd><\/div>)<\/dl>/,
+      (t, deux) => `<dl class="sg-trio">${deux}<div><dt>Reste</dt><dd class="sg-n cd-reste">${esc(a.restants)}</dd></div></dl>`);
     return h;
   }
 
