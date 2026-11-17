@@ -1,4 +1,5 @@
 'use strict';
+/* Coupé en deux fichiers à la clôture de la 5.0 : 16 s seul, plus de 20 s sous le verify. */
 /* CH-124 — LA LISTE DE L'ANCRE AU DÉPART DU LOT (service worker). Mesuré sur les journaux des 24 lots-parties du corpus : l'instantané de la liste d'ESV s'écrit
  * pendant que le premier cut du lot se décide (fiche de départ 0,3 à 2,3 s après le départ du lot ; première pose de −0,2 à 9,4 s après la fiche, à moins d'une
  * seconde dans 5 lots). Le levier d'ancre, allumé, lit la liste dès la première pose du lot, donc plus tôt que la décision L1-e. Il ne doit :
@@ -42,15 +43,4 @@ test('instantané écrit juste après le premier cut, levier coupé : le livré 
   const x = await lot({ quand: 'apres-le-premier-cut', ancre: false });
   assert.equal(x.reference.mm, 1435, 'référence d’écartement du livré');
   assert.deepEqual(x.lectures, [true], 'une seule lecture de la liste, par la décision L1-e, après son écriture');
-});
-test('instantané écrit juste après le premier cut, levier allumé : la référence de la GCV2 reste celle du livré, et l’ancre retrouve la liste au cut suivant', async () => {
-  const x = await lot({ quand: 'apres-le-premier-cut', ancre: true });
-  assert.equal(x.lectures[0], false, 'première lecture, par l’ancre, avant l’écriture de l’instantané');
-  assert.ok(x.reference && x.reference.mm === 1435, 'la décision L1-e garde sa référence d’écartement (la lecture de l’ancre ne remplit pas sa mémoire)');
-  assert.ok(x.ancre.etat && x.ancre.etat.modele.ok, 'l’absence n’est pas gardée pour le lot : modèle calculé dès que la liste est là');
-});
-test('aucun instantané : l’ancre se tait sans erreur et relit à chaque cut ; la GCV2 n’a pas de référence, comme le livré', async () => {
-  const x = await lot({ quand: 'jamais', ancre: true });
-  assert.equal(x.reference, null); assert.equal(x.ancre.etat, null); assert.ok(x.lectures.every(v => v === false));
-  assert.ok(!x.ancres.includes('erreur'));
 });

@@ -93,7 +93,10 @@ const sansCH077Obs=t=>t.replace("if(Object.hasOwn(PRECH_CHAMPS,k)){if(enabled)re
 /* CH-110 : l'observateur relaie l'événement `potree-place-rendue` du patch de la page (place de chargement rendue à Potree, aucune pose) ; retiré pour comparer. */
 const sansCH110Obs=t=>t.replace(",'ligne-base-repli':null,'potree-place-rendue':null});   /* CH-062 : posté par le patch proposé de la page ; CH-110 : place de chargement rendue à Potree */",",'ligne-base-repli':null});   /* CH-062 : posté par le patch proposé de la page */")
  .replace(/\n    \/\* CH-110 : place de chargement rendue à Potree[\s\S]*?pageMs:finite\(x\.pageMs\)\?Math\.round\(x\.pageMs\*10\)\/10:null\}\);\}\}/,'}');
-const sansCH062Obs=t=>sansD305Obs(sansCH077Obs(sansCH080Obs(sansCH081Obs(sansCH088Obs(sansCH110Obs(t)))))).replace(",'diag-compteur-bloque':null,'ligne-base-repli':null});   /* CH-062 : posté par le patch proposé de la page */",",'diag-compteur-bloque':null});")
+/* Vision 19.1 (terrain du 17/11, cut 2475) : la page note le DÉPART d'une écriture de validation (`write-start`), relevé seulement ; retiré ici avant la comparaison. */
+const sansV191Obs=t=>t.replace(/\n    \/\* Vision 19\.1 \(terrain du 17\/11, cut 2475\)[\s\S]*?catch\{\}\}/,'');
+const sansCH062Obs=t=>sansCH062ObsBase(sansV191Obs(t));
+const sansCH062ObsBase=t=>sansD305Obs(sansCH077Obs(sansCH080Obs(sansCH081Obs(sansCH088Obs(sansCH110Obs(t)))))).replace(",'diag-compteur-bloque':null,'ligne-base-repli':null});   /* CH-062 : posté par le patch proposé de la page */",",'diag-compteur-bloque':null});")
  .replace(/\n    \/\* CH-062 : ligne de base du compteur abandonnée[\s\S]*?pageMs:finite\(x\.pageMs\)\?Math\.round\(x\.pageMs\*10\)\/10:null\}\);\}/,'}');
 const sansPatchs=texte=>sansPatchCH018(sansCH062(texte).replace(/\n \/\* CH-017 \(T27a, PROPOSÉ[\s\S]*?return \{ok:true,\.\.\.base,demandeA:Date\.now\(\)\};\}/,'').replace("capacites:['changerPartie',...MODES_PARTIE.filter(m=>m!=='lien').map(m=>'changerPartie:'+m)],",'').replace('nativeSnapshot,changerPartie,capture','nativeSnapshot,capture'));
 /* Test 27 (CH-026) : `changerPartie` gagne trois modes (lien, invalide-suivant, suivant-dernier : clic sur le bouton d'ESV qui porte la commande, jamais de touche, de pose, de validation ni de SKIP) ; l'ajout (chantiers/CH-026/adaptateur-changement-partie.patch) fait partie du même retrait que celui de la test 25.
