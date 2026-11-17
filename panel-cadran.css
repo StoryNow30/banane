@@ -75,10 +75,14 @@ body.ui5:has(#ui5.u-cadran[data-theme="clair"]){background:#E6E8E7}
 #ui5.u-cadran .sg-bascule>button{display:inline-flex;align-items:center;gap:6px;padding:0 9px;font:500 13.5px/1 var(--sans);color:var(--encre2);border-radius:0;white-space:nowrap}
 #ui5.u-cadran[data-taille="compact"] .sg-bascule>button{padding:0 6px;font-size:12.5px}
 #ui5.u-cadran .sg-bascule>button svg{width:15px;height:15px}
+/* barre étroite (quatre onglets, bouton du bilan, puce, menu) : les onglets se serrent, la puce ne garde que son trait quand ESV va bien */
+@media (max-width:540px){#ui5.u-cadran[data-taille] .sg-barre{gap:2px;padding:0 4px}#ui5.u-cadran[data-taille] .sg-bascule>button{padding:0 4px;font-size:12px}#ui5.u-cadran[data-taille] .sg-ico{width:30px}#ui5.u-cadran[data-taille] .sg-puce{padding:0 6px;gap:5px}#ui5.u-cadran[data-taille] .sg-puce:is([data-etat="ok"],[data-etat="verrou"]) .sg-tx{display:none}}
+@media (max-width:400px){#ui5.u-cadran[data-taille] .sg-bascule>button{padding:0 2px;font-size:11px}#ui5.u-cadran[data-taille] .sg-ico{width:28px}#ui5.u-cadran[data-taille] .sg-stats-b{margin-left:0}#ui5.u-cadran[data-taille] .sg-puce .sg-fl{display:none}#ui5.u-cadran[data-taille] .sg-puce .sg-tx{display:none}}
 #ui5.u-cadran .sg-bascule>button:hover{color:var(--encre)}
 #ui5.u-cadran .sg-bascule>button[aria-selected="true"]{color:var(--encre)}
 #ui5.u-cadran .sg-bascule:not([data-pouce])>button[aria-selected="true"]{box-shadow:inset 0 -2px 0 var(--encre)}
-#ui5.u-cadran .sg-puce{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 9px;border-radius:var(--angle);font:400 12px/1 var(--mono);color:var(--encre2);min-width:0;max-width:220px}
+#ui5.u-cadran .sg-espace{min-width:0}
+#ui5.u-cadran .sg-puce{flex:0 1 auto;display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 9px;border-radius:var(--angle);font:400 12px/1 var(--mono);color:var(--encre2);min-width:0;max-width:220px}
 #ui5.u-cadran .sg-puce:hover{background:var(--creux);color:var(--encre)}
 #ui5.u-cadran .sg-puce i{flex:none;width:3px;height:13px;background:var(--encre)}
 #ui5.u-cadran .sg-puce:is([data-etat="ko"]) i{background:var(--incident)}
@@ -86,7 +90,7 @@ body.ui5:has(#ui5.u-cadran[data-theme="clair"]){background:#E6E8E7}
 #ui5.u-cadran .sg-puce[data-etat="ko"]{color:var(--incident)}
 #ui5.u-cadran .sg-puce .sg-tx{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #ui5.u-cadran .sg-puce .sg-fl{width:13px;height:13px}
-#ui5.u-cadran .sg-ico{display:inline-grid;place-items:center;width:34px;height:30px;border-radius:var(--angle);color:var(--encre2);box-shadow:inset 0 0 0 1px var(--filet-fort)}
+#ui5.u-cadran .sg-ico{flex:none;display:inline-grid;place-items:center;width:34px;height:30px;border-radius:var(--angle);color:var(--encre2);box-shadow:inset 0 0 0 1px var(--filet-fort)}
 #ui5.u-cadran .sg-ico:hover{color:var(--encre);background:var(--creux)}
 #ui5.u-cadran .sg-ico svg{width:16px;height:16px}
 #ui5.u-cadran .sg-menu-b{font:500 14px/1 var(--mono);letter-spacing:.08em}
@@ -225,7 +229,9 @@ body.ui5:has(#ui5.u-cadran[data-theme="clair"]){background:#E6E8E7}
 /* avis, incident, verrou */
 #ui5.u-cadran .sg-tu-avis{flex-direction:row;align-items:flex-start;gap:12px;padding:12px 14px;margin:6px 0 4px;border-top:0;background:var(--surface);border-left:2px solid var(--encre2)}
 #ui5.u-cadran :is(.sg-incident,.sg-alerte,.sg-refus){border-left-color:var(--incident)}
-#ui5.u-cadran .sg-fen:not([data-teinte="toi"]):not([data-teinte="panne"]) .sg-avis-seul{border-left-color:var(--incident)}
+/* un avis seul (refus d'une action) n'est pas une alarme : filet à l'encre (CH-129) */
+#ui5.u-cadran .sg-tu-avis.sg-avis-seul{border-left-color:var(--encre2)}
+#ui5.u-cadran .sg-avis-seul .sg-ic{color:var(--encre);box-shadow:inset 0 0 0 1px var(--encre2)}
 #ui5.u-cadran .sg-tu-avis .sg-ic{flex:none;display:grid;place-items:center;width:20px;height:20px;border-radius:var(--angle);font:600 12px/1 var(--mono);color:var(--incident);box-shadow:inset 0 0 0 1px var(--incident)}
 #ui5.u-cadran .sg-tu-avis .sg-ic svg{width:14px;height:14px}
 #ui5.u-cadran .sg-tu-avis>div{min-width:0;display:flex;flex-direction:column;gap:4px}
@@ -420,8 +426,12 @@ body.ui5:has(#ui5.u-cadran[data-theme="clair"]){background:#E6E8E7}
 #ui5.u-cadran .sg-chaine li[data-etat="interrompue"] i{background:var(--differe)}
 #ui5.u-cadran .sg-chaine li:not([data-etat="a-venir"]){color:var(--encre)}
 #ui5.u-cadran .sg-chaine li[data-etat="en-cours"]{color:var(--cours)}
-#ui5.u-cadran .sg-chaine-dense li .sg-mono{font-size:11px}
-#ui5.u-cadran .sg-chaine-dense li:not([data-num]) .sg-mono{visibility:hidden}
+/* chaîne dense (plus de 8 parties) : seuls les numéros repères (`data-num`) sont écrits, hors du flux, le premier et le dernier calés aux bords */
+#ui5.u-cadran .sg-chaine-dense li{padding-bottom:18px}
+#ui5.u-cadran .sg-chaine-dense li .sg-mono{position:absolute;top:32px;left:50%;transform:translateX(-50%);font-size:11px;white-space:nowrap}
+#ui5.u-cadran .sg-chaine-dense li:first-child .sg-mono{left:0;transform:none}
+#ui5.u-cadran .sg-chaine-dense li:last-child .sg-mono{left:auto;right:0;transform:none}
+#ui5.u-cadran .sg-chaine-dense li:not([data-num]) .sg-mono{display:none}
 #ui5.u-cadran .sg-temps{list-style:none;display:flex;gap:4px 16px;flex-wrap:wrap;margin-top:12px}
 #ui5.u-cadran .sg-temps li{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:6px 0;color:var(--encre2)}
 #ui5.u-cadran .sg-temps li[data-temps="fait"]{color:var(--encre)}
