@@ -303,7 +303,7 @@
       reconnecter: (() => { const e = $('reconnect'); return e && !e.hidden ? { actif: !e.disabled } : null; })(),
       mode, boutons: boutons(mode), boutonsOrbite: boutons('automatic'), boutonsEcho: boutons('native'),
       lot: { etat: txt('lot-etat'), finPartie: visible('lot-fin-partie') ? txt('lot-fin-partie') : '' },
-      relPause: (() => { try { const P = root.ArianeRelecturePause; return P ? P.vue(P.etat(), { esvMuet: s?.connection?.status === 'unavailable' }) : null; } catch { return null; } })(),
+      relPause: (() => { try { const P = root.ArianeRelecturePause; return P ? P.vue(P.etat(), { esvMuet: s?.connection?.status === 'unavailable', saisie: P.saisie?.() || null }) : null; } catch { return null; } })(),
       /* CH-104 : les chiffres de la relecture (dernier état lu par src/relecture-pause.js) : relus, à relire, corrigés ; `lot` : c'est la passe du lot affiché. */
       relChiffres: (() => { try { const p = root.ArianeRelecturePause?.etat?.()?.passe; return p && Number.isInteger(p.faits) && Number.isInteger(p.total) ? { faits: p.faits, total: p.total, corriges: Number.isInteger(p.corriges) ? p.corriges : null, lot: !!s?.batch && p.lotId === s.batch.id, etat: typeof p.etat === 'string' ? p.etat : null } : null; } catch { return null; } })(),
       relecture: { ligne: visible('relecture-ligne') ? txt('relecture-ligne') : '', actif: visible('relecture-arreter'), interrompue: visible('relecture-interrompue') ? txt('relecture-interrompue') : '' },

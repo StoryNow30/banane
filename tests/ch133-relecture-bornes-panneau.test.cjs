@@ -69,6 +69,8 @@ test('Signal, lot terminé et relecture arrêtée : la ligne de l’arrêt, les 
  assert.match(h,/data-act="legacy:relecture-bornes"[^>]*><span>Relancer du cut 116 au cut 116<\/span>/);
  assert.match(h,/class="sg-principal"[^>]*data-act="legacy:relecture-bornes"/,'arrêt après un défaut : la relance passe devant');
  const fin=S.rendre(snap({ar:ar('fini'),relPause:js(P.vue(ARRET({etat:'finie',message:'Relecture finie.',bornesProposees:{debut:108,fin:116}}))),boutonsOrbite:[b('export-tout','Tout télécharger','primary')]}),ui());
+ /* Lot avec des cuts à poser : « Voir ce qui reste » ne repousse pas la relance après un arrêt. */
+ assert.match(S.rendre(snap({ar:ar('fini',{differes:6}),relPause:js(P.vue(ARRET())),boutonsOrbite:[b('export-tout','Tout télécharger','primary')]}),ui()),/class="sg-principal"[^>]*data-act="legacy:relecture-bornes"/);
  assert.match(fin,/data-act="legacy:relecture-bornes"/);assert.doesNotMatch(fin,/class="sg-principal"[^>]*data-act="legacy:relecture-bornes"/,'relecture finie : la relance reste au second rang');
  assert.doesNotMatch(S.rendre(snap({ar:ar('cours'),relPause:js(P.vue(ARRET()))}),ui()),/relecture-bornes/);
 });

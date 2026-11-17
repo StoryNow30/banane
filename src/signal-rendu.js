@@ -152,6 +152,8 @@
         Object.assign(m, { glyphe: enPause ? 'relpause' : 'relecture', ton: enPause ? 'attention' : 'vivant', mot: enPause ? 'Relecture en pause' : 'Relecture', phrase: esc(r.ligne || s.relecture?.ligne || 'Relecture après le lot') });
         const b = [];
         if (r.reprendre) b.push({ texte: r.reprendre.texte, act: 'legacy:relecture-reprendre', ic: 'play', inactif: !r.reprendre.actif });
+        /* CH-133 (D-366) : reprendre entre deux bornes ; après une série de cuts sans point, c'est l'issue (préremplie après la série) : elle passe devant. */
+        if (r.bornes?.action === 'reprendre') { const bo = { texte: r.bornes.texte, act: 'legacy:relecture-bornes', ic: 'play', inactif: !r.bornes.actif }; if (r.raisonPause === 'points') b.unshift(bo); else b.push(bo); }
         if (r.pause) b.push({ texte: r.pause.texte, act: 'legacy:relecture-pause', ic: 'pause', inactif: !r.pause.actif });
         if (r.arreter) b.push({ texte: 'Arrêter la relecture', act: 'legacy:relecture-arreter-pause', danger: true });
         /* Revue T21 (D6) : une correction interrompue bloque tout jusqu'à son acquittement : « J'ai contrôlé le cut N » passe devant. */
@@ -180,6 +182,10 @@
         if (nDif(a) + (a.vertsNombre || 0) > 0) { const ex = (s.boutonsOrbite || []).find(b => b.id === 'export-tout'); m.secondaires = [ex ? versAction(ex) : null, ...m.secondaires.filter(b => b.act !== 'legacy:export-tout'), ...(m.principal && m.principal.act !== 'legacy:export-tout' ? [m.principal] : [])].filter(Boolean); m.principal = { texte: 'Voir ce qui reste', act: 'sg:tiroir', ic: 'liste' }; }
         /* CH-036 (décision du 01/11) : « Ouvrir l'Aurore · N cuts » est l'action pleine ; « Voir ce qui reste » passe en second. */
         if (m.corrigerBouton) { if (m.corrigerBouton.act === 'sg:onglet-correction' && !/en cours/.test(m.corrigerBouton.texte)) { if (m.principal) m.secondaires.unshift(m.principal); m.principal = { ...m.corrigerBouton, ic: 'aurore' }; } else m.secondaires.unshift(m.corrigerBouton); }
+        /* CH-133 (D-367) : relecture du lot arrêtée (défaut, arrêt) ou finie : « Relancer du cut A au cut B » ; après un arrêt, elle passe devant
+         * (posée en dernier : rien ne la repousse) ; après une fin, elle suit le bouton principal. */
+        { const rb = s.relPause?.bornes; if (rb?.action === 'relancer') { const bo = { texte: rb.texte, act: 'legacy:relecture-bornes', ic: 'play', inactif: !rb.actif };
+          if (rb.etat === 'finie') m.secondaires.unshift(bo); else { if (m.principal) m.secondaires.unshift(m.principal); m.principal = bo; } } }
         break;
       }
       default:
@@ -405,6 +411,14 @@
     const a = snap.ar || {}, B = a.bornesProchain, r = a.reprise;
     if (!B || m.activite !== 'orbite' || a.lotOuvert || m.glyphe === 'hors' || m.file || m.fileBilan) return '';
     return `<section class="sg-tu sg-large sg-tu-bornes" data-k="bornes"><h4>Nouveau lot</h4><div class="sg-bornes"><label class="sg-rang"><span>Premier cut</span><input type="number" min="0" data-borne="start" placeholder="cut affiché dans ESV" value="${esc(B.debut ?? '')}"></label><label class="sg-rang"><span>Dernier cut</span><input type="number" min="0" data-borne="end" placeholder="fin de partie" value="${esc(B.fin ?? '')}"></label>${B.note ? `<small>${esc(B.note)}</small>` : ''}${r ? `<label class="sg-reprise"><input type="checkbox" data-act="legacy:lot-reprise"${r.coche ? ' checked' : ''}><span>Reprise des cuts à poser : repartir des cuts posés par le lot précédent</span>${r.note ? `<small>${esc(r.note)}</small>` : ''}</label>` : ''}</div></section>`;
+  }
+  /* CH-133 (D-366, D-367) : les bornes de la relecture, en pause (Orbite `rel`) et après un arrêt ou une fin (écran de fin) : deux champs recopiés dans
+   * `#relecture-du` / `#relecture-au` (src/ui5.js, comme les bornes du lot), lus par « Reprendre / Relancer du cut A au cut B » (`#relecture-bornes`). */
+  function relBornesHtml(snap, m) {
+    const B = snap.relPause?.bornes;
+    if (!B || m.activite !== 'orbite' || !(m.etat === 'rel' && B.action === 'reprendre' || m.objet === 'fin' && B.action === 'relancer')) return '';
+    const v = x => esc(x ?? '');
+    return `<section class="sg-tu sg-large sg-tu-bornes" data-k="relecture-bornes"><h4>${B.action === 'reprendre' ? 'Reprendre entre deux cuts' : 'Relancer la relecture'}</h4>${B.ligne || snap.relPause.raisonPause === 'points' ? `<p class="sg-meta">${esc(B.ligne || snap.relPause.ligne)}</p>` : ''}<div class="sg-bornes"><label class="sg-rang"><span>Du cut</span><input type="number" min="0" data-borne="relecture-du" value="${v(B.debut)}"></label><label class="sg-rang"><span>Au cut</span><input type="number" min="0" data-borne="relecture-au" value="${v(B.fin)}"></label><small>${esc(B.raison || B.note)}</small></div></section>`;
   }
   /* CH-025 : la Constellation dite dans Orbite (pendant la file, ou arrêtée pendant que le lot garde l'écran) et le bilan par partie (écran de fin de
    * la file). Ses boutons (`#file-principal`, `#file-secondaire`) sont en pied, avec ceux du lot. */
@@ -907,6 +921,7 @@
     if (m.objet === 'fin') { const L = m.fin.filter(x => !(ligneLot && x[0] === 'Lot'));
       z += `<section class="sg-tu sg-tu-fin sg-large" data-k="fin-${esc(a.etat)}">${a.etat === 'fini' ? COCHE : ARRET}<div><h3>${a.etat === 'fini' ? 'Lot terminé' : 'Lot arrêté'}</h3><dl class="sg-fin">${L.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl></div></section>`; large = true; }
     const B = bornesHtml(s, m); if (B) { z += B; large = true; }
+    const RB = relBornesHtml(s, m); if (RB) { z += RB; large = true; }
     /* CH-129 : pendant une Constellation, détails fermés, la ligne « Constellation · partie k sur n » porte la trace des derniers cuts (une seule tuile) */
     const traceFile = m.file && !u.details && lot && m.glyphe !== 'hors' && !m.fileBilan ? ((tuileFil(s, m, '').match(/<ul class="sg-fil">[\s\S]*<\/ul>/) || [])[0] || '') : '';
     const F = fileHtml(m, 'sg-large', traceFile); if (F) z += F;

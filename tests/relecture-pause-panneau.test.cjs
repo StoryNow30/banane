@@ -25,7 +25,7 @@ const ETAT=(p,actif=true,f5='pause')=>({choix:'ombre',lot:null,passe:p,repriseRe
 
 test('ce que le panneau montre : Pause pendant la passe (réglage allumé seulement), « Pause demandée… » grisée, Reprendre et Arrêter pendant la pause',async()=>{
  const m=await monter({etat:ETAT(passe())}),{P}=m;
- assert.deepEqual(js(P.vue(ETAT(null))),{pause:null,reprendre:null,arreter:false,ligne:''});
+ assert.deepEqual(js(P.vue(ETAT(null))),{pause:null,reprendre:null,arreter:false,ligne:'',bornes:null,raisonPause:null});   /* CH-133 : bornes de la relecture */
  assert.deepEqual(js(P.vue(ETAT(passe()))).pause,{texte:'Pause',actif:true});
  assert.deepEqual(js(P.vue(ETAT(passe({pauseDemandee:true})))).pause,{texte:'Pause demandée…',actif:false});
  assert.equal(P.vue(ETAT(passe(),false)).pause,null,'réglage éteint : pas de Pause');
