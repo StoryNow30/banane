@@ -619,7 +619,6 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#F5F6F8}
 #ui5.u-signal:not([data-details]) .sg-fen[data-activite="file"] .sg-constel{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center}
 #ui5.u-signal:not([data-details]) .sg-fen[data-activite="file"] .sg-constel .sg-haut{position:absolute;top:14px;left:14px;right:14px}
 #ui5.u-signal:not([data-details]) .sg-fen[data-activite="file"] .sg-onglet-file{flex:0 1 auto}
-#ui5.u-signal .sg-tu-etat,#ui5.u-signal .sg-constel{transition:flex-grow .5s var(--doux)}
 #ui5.u-signal{
   --fond:#252930;--flottant:#30353E;--tx:#ECEEF2;--tx2:#AEB4BF;--tx3:#A2A8B4;
   --trait:rgba(255,255,255,.07);--trait-fort:rgba(255,255,255,.14);--creux:rgba(255,255,255,.05);--piste:rgba(255,255,255,.12);--pouce:rgba(255,255,255,.12);
