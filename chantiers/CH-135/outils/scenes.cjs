@@ -22,25 +22,25 @@ const SCENES = {
   details: A('cours', ['sg:details']), tiroir: A('tiroir', []), menu: A('menu', []), palette: A('palette', []), reglages: A('reglages', []), esv: A('esv', []),
   'boite-file': A('boite-file', []), tech: A('tech', []),
 };
-async function ouvrirScene(nav, sc, { largeur = 600, hauteur = 760, variante = 'cadran', theme = 'sombre', echelle = 1 } = {}) {
+async function ouvrirScene(nav, sc, { largeur = 600, hauteur = 760, variante = 'cadran', theme = 'sombre', echelle = 1, stockage = {} } = {}) {
   const ctx = await nav.newContext({ viewport: { width: largeur, height: hauteur }, deviceScaleFactor: echelle }), page = await ctx.newPage(), erreurs = [];
   page.on('pageerror', x => erreurs.push(x.message));
   page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource|net::ERR_FILE_NOT_FOUND/.test(m.text())) erreurs.push('console: ' + m.text()); });
   const state = JSON.parse(JSON.stringify({ connection: sc.connexion || { status: 'ready', observedAt: 't', message: null, tabId: 1 }, ...sc.state, fileParties: sc.state.fileParties ?? null })
     .replace(/"MAINTENANT-(\d+)"/g, (_, s) => JSON.stringify(new Date(Date.now() - s * 1000).toISOString())));
   const onglets = sc.onglets || [{ id: 1, title: 'ESV', pret: true, utilise: true, index: 0, windowId: 1, active: true }];
-  await page.addInitScript(({ state, rel, fiches, onglets, file }) => {
+  await page.addInitScript(({ state, rel, fiches, onglets, file, stockage }) => {
     const rep = { view: state, 'list-tabs': onglets, 'choix-lot-etat': { clicHumain: 'tel-quel', regleGrappeDifferes: false }, 'raison-choix-etat': { actif: false, touches: 'chiffres' },
-      'relecture-choix-etat': { mode: 'corriger' }, 'relecture-etat': rel, 'bandeau-etat': { on: false }, 'fiches-depart': { fiches } }, st = {};
-    window.__appels = [];
+      'relecture-choix-etat': { mode: 'corriger' }, 'relecture-etat': rel, 'bandeau-etat': { on: false }, 'fiches-depart': { fiches } }, st = { ...stockage };
+    window.__appels = []; window.__ecrits = []; window.__marque = Math.random();
     window.fetch = async () => ({ json: async () => ({ totaux: { tous: { corriges: 2731 } }, creeLe: '2026-10-20T08:00:00Z' }) });
     window.chrome = { runtime: { id: 'essai', getURL: p => new URL(p, location.href).href, connect: () => ({ onMessage: { addListener() {} }, onDisconnect: { addListener() {} } }),
       sendMessage: async m => { window.__appels.push(m.action || m.kind); return { result: m.action in rep ? rep[m.action] : {} }; } },
-      storage: { local: { get: async () => ({ ...st }), set: async o => { Object.assign(st, o); } } }, windows: { getCurrent: async () => ({ id: 1, type: 'normal', width: 600, height: 760 }), update: async () => ({}) } };
+      storage: { local: { get: async () => ({ ...st }), set: async o => { Object.assign(st, o); window.__ecrits.push(o); } } }, windows: { getCurrent: async () => ({ id: 1, type: 'normal', width: 600, height: 760 }), update: async () => ({}) } };
     if (file) window.__file = file;
-  }, { state, rel: sc.rel || { choix: 'corriger', lot: null, passe: null }, fiches: sc.fiches || [], onglets, file: sc.file ?? null });
+  }, { state, rel: sc.rel || { choix: 'corriger', lot: null, passe: null }, fiches: sc.fiches || [], onglets, file: sc.file ?? null, stockage });
   await ouvrirPanneau(page, sc.hash || '#automatic'); await page.waitForTimeout(700);
-  if (variante !== 'signal') await page.evaluate(v => window.ArianeUi5.agir('sg:choix:variante:' + v), variante);
+  if (variante !== 'signal' && !stockage.banane51Interface) await page.evaluate(v => window.ArianeUi5.agir('sg:choix:variante:' + v), variante);
   if (theme === 'clair') await page.evaluate(() => window.ArianeUi5.agir('sg:choix:theme:clair'));
   for (const g of sc.gestes || []) { await page.evaluate(g => window.ArianeUi5.agir(g), g); await page.waitForTimeout(150); }
   await page.addStyleTag({ content: '*,*::before,*::after{animation:none!important;transition:none!important}' }); await page.waitForTimeout(450);
