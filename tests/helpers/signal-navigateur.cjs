@@ -1,6 +1,7 @@
 'use strict';
 /* UI 5.0 « Signal » (D-250) : montage commun des essais de navigateur de Signal (tests/ui5-navigateur-signal-*.test.cjs). panel.html est chargé avec une
  * API Chrome simulée (comme tools/ui5-navigateur.cjs) ; rien n'est envoyé à ESV. Données fabriquées. */
+/* CH-135 : UI5_VARIANTE=cadran rejoue ces essais avec l'interface Cadran gardée (`banane51Interface`) ; sans elle, rien ne change. */
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const navigateur=require('../esv-maquette/navigateur.cjs'),{ouvrirPanneau}=require('./panneau-local.cjs');
 const CHROMIUM=navigateur.executable(),PW=navigateur.modulePlaywright(),absent=navigateur.indisponible()||false;
@@ -15,15 +16,15 @@ async function ouvrir(nav,state,vue,hash='#automatic'){
  const page=await nav.newPage({viewport:vue}),erreurs=[];
  page.on('pageerror',e=>erreurs.push(e.message));
  page.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource|net::ERR_FILE_NOT_FOUND/.test(m.text()))erreurs.push('console: '+m.text());});
- await page.addInitScript(({state,racine})=>{
+ await page.addInitScript(({state,racine,variante})=>{
   const reponses={view:state,'list-tabs':[{id:1,title:'ESV',pret:true,utilise:true,index:0,windowId:1,active:true}],'choix-lot-etat':{clicHumain:'tel-quel',regleGrappeDifferes:false},'raison-choix-etat':{actif:false,touches:'chiffres'},
    'relecture-choix-etat':{mode:'corriger'},'relecture-etat':{choix:'corriger',lot:null,passe:null},'bandeau-etat':{on:false},'fiches-depart':{fiches:[]}};
-  const stockage={};window.__appels=[];window.__ecrits=[];
+  const stockage=variante?{banane51Interface:variante}:{};window.__appels=[];window.__ecrits=[];
   window.fetch=async()=>({json:async()=>({totaux:{tous:{corriges:2731}},creeLe:'2026-10-20T08:00:00Z'})});
   window.chrome={runtime:{id:'essai',getURL:p=>new URL(p,location.href).href,connect:()=>({onMessage:{addListener(){}},onDisconnect:{addListener(){}}}),
    sendMessage:async m=>{window.__appels.push(m.action||m.kind);if(m.action==='view'&&window.__etat)return {result:window.__etat};return {result:m.action in reponses?reponses[m.action]:{}};}},
    storage:{local:{get:async()=>({...stockage}),set:async o=>{Object.assign(stockage,o);window.__ecrits.push(o);}}},windows:{getCurrent:async()=>({id:1,type:'normal',width:600,height:760}),update:async()=>({})}};
- },{state,racine:path.resolve(__dirname,'../..')});
+ },{state,racine:path.resolve(__dirname,'../..'),variante:process.env.UI5_VARIANTE||null});
  await ouvrirPanneau(page,hash);
  await page.waitForTimeout(600);
  return {page,erreurs};
