@@ -864,3 +864,8 @@ body.ui5:has(#ui5.u-signal[data-palette="signal"]:not([data-theme="clair"])){bac
 #ui5.u-signal:not([data-details]) .sg-fen[data-activite="file"] .sg-constel{flex:0 0 auto!important;justify-content:flex-start}
 #ui5.u-signal:not([data-details]) .sg-fen[data-activite="file"] .sg-constel::after{display:none}
 #ui5.u-signal:not([data-details]) .sg-fen[data-activite="file"] .sg-constel>.sg-haut{margin-bottom:18px}
+/* à 320 px, l'en-tête de la Constellation porte aussi le bouton des statistiques : il se fait plus étroit et la pastille ESV ne rétrécit plus */
+#ui5.u-signal[data-taille="compact"] .sg-stats-b{width:26px;height:26px}
+#ui5.u-signal[data-taille="compact"] .sg-fen[data-activite="file"] .sg-puce[data-etat="verrou"] svg{display:none}
+#ui5.u-signal[data-taille="compact"] .sg-fen[data-activite="file"] .sg-puce{flex:none;padding-inline:8px}
+#ui5.u-signal[data-taille="compact"] .sg-fen[data-activite="file"] .sg-puce .sg-tx{display:none}
