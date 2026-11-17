@@ -27,20 +27,30 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
   }
   const instr = []; for (const nom of ['cours', 'fin', 'constellation']) instr.push(`<figure><img loading="lazy" width="600" height="760" alt="" src="${await photo(nom, { variante: 'signal' })}"><figcaption>Instrument (par défaut) · ${esc(NOMS[nom])}</figcaption></figure>`);
   await nav.close();
-  const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cadran, interface alternative</title>
-<style>:root{--f:#0F1112;--s:#16181A;--t:#E8EAEB;--t2:#A9AEB3;--l:#2A2D30;--b:#5CB3FF}
-@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--f:#E6E8E7;--s:#F2F4F3;--t:#121415;--t2:#454A4F;--l:#C9CDCB;--b:#0A5BB0}}
-:root[data-theme="light"]{--f:#E6E8E7;--s:#F2F4F3;--t:#121415;--t2:#454A4F;--l:#C9CDCB;--b:#0A5BB0}
-body{margin:0;background:var(--f);color:var(--t);font:15px/1.5 system-ui,sans-serif}main{max-width:1320px;margin:0 auto;padding:24px 16px 64px}
-h1{font:600 26px/1.2 ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase}h2{font:600 13px/1.3 ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--t2);border-top:1px solid var(--l);padding-top:20px;margin-top:40px}
-p{max-width:72ch;color:var(--t2)}.grille{display:flex;flex-wrap:wrap;gap:24px}figure{margin:0;max-width:100%}figure img{display:block;max-width:100%;height:auto;outline:1px solid var(--l)}figcaption{font:12px/1.4 ui-monospace,monospace;color:var(--t2);margin-top:6px}
-.paire{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:28px}nav a{color:var(--b);margin-right:16px}</style></head><body><main>
-<h1>Cadran</h1><p>Interface alternative du panneau d’Ariane (CH-135, D-368), tirée du prototype Figma « Direction A — Cadran ». On la choisit dans les Réglages : « Interface : Instrument / Cadran ». Mêmes boutons, mêmes ordres, mêmes gardes que l’instrument : seule la présentation change. Chaque image est une photo du vrai panneau (panel.html, données fabriquées), à l’échelle 1.</p>
-<nav><a href="#comp">Comparaison Figma</a><a href="#sombre">Toutes les scènes · sombre</a><a href="#clair">Toutes les scènes · clair</a><a href="#instr">L’instrument</a></nav>
-<h2 id="comp">À taille égale : Figma (à gauche) et le vrai panneau (à droite), 420 × 800</h2><p>Les chiffres diffèrent : la maquette montre un lot de 40 cuts inventé ; le panneau montre les données fabriquées des essais (le lot ne dit son total que s’il le connaît).</p>${comp.join('')}
+  const html = `<title>Cadran, interface alternative</title><meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* une planche d'instrument : bandeau de tête, puis des rangées de photos du vrai panneau, filets fins */
+:root{--fond:#E6E8E7;--surface:#F2F4F3;--encre:#121415;--encre2:#454A4F;--filet:#C9CDCB;--coupe:#0A5BB0;--mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;--sans:"IBM Plex Sans",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--fond:#0F1112;--surface:#16181A;--encre:#E8EAEB;--encre2:#A9AEB3;--filet:#2A2D30;--coupe:#5CB3FF;color-scheme:dark}}
+:root[data-theme="dark"]{--fond:#0F1112;--surface:#16181A;--encre:#E8EAEB;--encre2:#A9AEB3;--filet:#2A2D30;--coupe:#5CB3FF;color-scheme:dark}
+body{background:var(--fond);color:var(--encre);font:15px/1.5 var(--sans)}
+main{max-width:1320px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{font:500 26px/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase;margin:0 0 10px;text-wrap:balance}
+h2{font:500 12px/1.3 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--encre2);border-top:1px solid var(--filet);padding-top:20px;margin-top:44px;text-wrap:balance}
+p{max-width:68ch;color:var(--encre2)}
+nav{display:flex;flex-wrap:wrap;gap:8px 18px;font:13px var(--mono)}nav a{color:var(--coupe)}
+.grille{display:flex;flex-wrap:wrap;gap:24px}figure{margin:0;max-width:100%;min-width:0}
+figure img{display:block;max-width:100%;height:auto;outline:1px solid var(--filet)}
+figcaption{font:12px/1.4 var(--mono);color:var(--encre2);margin-top:6px}
+.paire{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:28px;padding-bottom:28px;border-bottom:1px solid var(--filet)}
+</style><main>
+<h1>Cadran</h1><p>Interface alternative du panneau d’Ariane (CH-135, D-368), tirée du prototype Figma « Direction A — Cadran ». On la choisit dans les Réglages : « Interface : Instrument / Cadran ». Mêmes boutons, mêmes ordres, mêmes gardes que l’instrument : seule la présentation change. Chaque image est une photo du vrai panneau (panel.html, données fabriquées des essais), à l’échelle 1.</p>
+<nav><a href="#comp">Comparaison Figma</a><a href="#sombre">Scènes · sombre</a><a href="#clair">Scènes · clair</a><a href="#instr">L’instrument</a></nav>
+<h2 id="comp">À taille égale, 420 × 800 : Figma à gauche, vrai panneau à droite</h2><p>Les chiffres diffèrent : la maquette montre un lot inventé de 40 cuts ; le panneau montre les données fabriquées des essais, et la voie ne dit le total que s’il est connu.</p>${comp.join('')}
 <h2 id="sombre">Toutes les scènes, thème sombre, 600 × 760</h2><div class="grille">${cartes.sombre.join('')}</div>
 <h2 id="clair">Toutes les scènes, thème clair, 600 × 760</h2><div class="grille">${cartes.clair.join('')}</div>
 <h2 id="instr">Pour mémoire : l’instrument, interface par défaut</h2><div class="grille">${instr.join('')}</div>
-</main></body></html>`;
+</main>`;
   fs.writeFileSync(sortie, html); console.log('page :', sortie, Math.round(html.length / 1024), 'Ko');
 })().catch(e => { console.error(e); process.exit(1); });
