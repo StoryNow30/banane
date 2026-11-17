@@ -245,7 +245,7 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#F5F6F8}
 #ui5.u-signal .sg-lot-bornes{color:var(--tx3)}
 #ui5.u-signal .sg-trio{display:flex;flex-wrap:wrap;gap:4px 28px;margin-top:14px}
 #ui5.u-signal[data-taille="compact"] .sg-trio{gap:4px 16px;margin-top:6px}
-#ui5.u-signal .sg-trio dt{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);white-space:nowrap}
+#ui5.u-signal .sg-trio dt{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);white-space:nowrap}
 #ui5.u-signal .sg-trio dd{margin-top:1px;font:300 24px/1 var(--f);letter-spacing:-.035em;display:inline-block}
 #ui5.u-signal[data-taille="compact"] .sg-trio dd{font-size:18px}
 #ui5.u-signal .sg-trio dd.sg-mono{color:inherit}
@@ -857,5 +857,12 @@ body.ui5:has(#ui5.u-signal[data-palette="signal"]:not([data-theme="clair"])){bac
 #ui5.u-signal:is(:not([data-details]),[data-details]) .sg-fen[data-activite="orbite"][data-vue="fil"] .sg-zone .sg-tu-fil{display:flex;flex:1 1 0;min-height:0;padding:6px 2px 0}
 #ui5.u-signal:is(:not([data-details]),[data-details]) .sg-fen[data-activite="orbite"][data-vue="fil"] .sg-fil li{height:38px}
 #ui5.u-signal:is(:not([data-details]),[data-details]) .sg-fen[data-activite="orbite"][data-vue="fil"] .sg-fil li .sg-cut{font-weight:600}
+/* le grand repère cède la place quand le détail est ouvert, ou quand les bornes de la relecture (CH-133) sont à l'écran : rien ne défile */
+#ui5.u-signal:is([data-details],:has(.sg-zone .sg-tu-bornes)){--anneau:124px}
+#ui5.u-signal[data-taille="compact"]:is([data-details],:has(.sg-zone .sg-tu-bornes)){--anneau:96px}
+#ui5.u-signal:is([data-details],:has(.sg-zone .sg-tu-bornes)) .sg-anneau .sg-chiffre{font-size:40px}
+#ui5.u-signal[data-taille="compact"]:is([data-details],:has(.sg-zone .sg-tu-bornes)) .sg-anneau .sg-chiffre{font-size:32px}
+/* à moins de 340 px, la phrase de la tête passe à 17 px (une alerte longue tient sur ses deux lignes) */
+@media (max-width:339px){#ui5.u-signal .sg-fen .sg-tu-etat .sg-phrase{font-size:17px}}
 /* les actions : une bande collée en bas */
 #ui5.u-signal .sg-fen[data-activite="orbite"][data-vue="fil"] .sg-actions{border-top:1px solid var(--trait)}

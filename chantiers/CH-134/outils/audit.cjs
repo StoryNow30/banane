@@ -14,6 +14,8 @@ const { SCENES, preparer } = require('./scenes.cjs');
 const liste = (v, d) => (process.env[v] ? process.env[v].split(',') : d);
 const LARGEURS = liste('LARGEURS', Array.from({ length: 11 }, (_, i) => String(320 + 40 * i))).map(Number), PALETTES = liste('PALETTES', ['glacier', 'sarcelle', 'signal']);
 const THEMES = liste('THEMES', ['sombre', 'clair']), VUES = liste('VUES', ['instrument', 'fil']), NOMS = liste('SCENES', Object.keys(SCENES));
+/* REF=<révision> : la feuille de cette révision + la direction A de CH-132 par-dessus (pour dire si un défaut existait avant CH-134) */
+const REF = process.env.REF ? require('node:child_process').execFileSync('git', ['show', `${process.env.REF}:panel-signal.css`], { cwd: R, encoding: 'utf8', maxBuffer: 64e6 }) + '\n' + fs.readFileSync(R + '/chantiers/CH-132/directions/instrument.css', 'utf8') : null;
 const PETITS = () => [...new Set([...document.querySelectorAll('#ui5 .sg-fen *')].filter(e => [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()) && e.getClientRects().length && getComputedStyle(e).visibility !== 'hidden' && !e.closest('[aria-hidden="true"],.sg-mol-fen') && parseFloat(getComputedStyle(e).fontSize) < 11).map(e => `POLICE ${parseFloat(getComputedStyle(e).fontSize)}px « ${e.textContent.trim().slice(0, 20)} »`))];
 const ANNEAUX = () => { const o = [];
   for (const a of document.querySelectorAll('#ui5 .sg-anneau')) { if (!a.getClientRects().length || getComputedStyle(a).display === 'none') continue;
@@ -33,6 +35,7 @@ async function vue(nav, nom, sc, w, pal, th, v) {
   const ctx = await nav.newContext({ viewport: { width: w, height: 760 } }), page = await ctx.newPage(), erreurs = [];
   page.on('pageerror', x => erreurs.push(x.message));
   try {
+    if (REF) await page.route('**/panel-signal.css', r => r.fulfill({ status: 200, contentType: 'text/css', body: REF }));
     await preparer(page, sc, { vue: v === 'fil' ? 'fil' : null }); await ouvrirPanneau(page, '#automatic'); await page.waitForTimeout(800);
     await page.evaluate(([p, t]) => { window.ArianeUi5.agir('sg:choix:palette:' + p); window.ArianeUi5.agir('sg:choix:theme:' + t); }, [pal, th]);
     if (sc.onglet === 'file') await page.evaluate(() => window.ArianeUi5.agir('sg:onglet-file'));
