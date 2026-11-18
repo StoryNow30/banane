@@ -121,6 +121,9 @@
     h = h.replace(/(<button type="button" class="sg-poignee"[^>]*><span class="sg-txt">)/, `$1<b class="mx-t">${activite === 'echo' ? 'Visites' : 'Ce qui reste'}</b><span class="mx-sep"> · </span>`);
     /* le rail des parties de la Constellation n'écrit que des numéros de partie connus : ni « +1 » ni « ? » (aucun numéro inventé) */
     h = h.replace(/(<li data-etat="[^"]*" data-partie=")(\+\d+|\?)("[^>]*><i aria-hidden="true"><\/i><span class="sg-mono">)(?:\+\d+|\?)(<\/span>)/g, '$1$2$3$4');
+    /* D-374 : la planche a une action pleine par état ; dans la Constellation en cours ou en passage, aucune ne l'est : « Suivre dans Orbite » le devient
+     * (même bouton, même `data-act`, même place ; « Arrêter la Constellation » reste en texte) */
+    h = h.replace(/<footer class="sg-actions"[^>]*>[\s\S]*?<\/footer>/, f => /class="sg-principal/.test(f) ? f : f.replace(/class="sg-secondaire" data-act="mode:automatic"/, 'class="sg-principal" data-act="mode:automatic"'));
     /* la palette ne vaut que pour Glacier */
     h = h.replace(/<div class="sg-reg"><span class="sg-lib"><span>Palette<\/span>[\s\S]*?<\/button><\/span><\/div>/, '');
     /* le pied « Cache des exports » : le bouton du menu de Glacier, avec sa garde */

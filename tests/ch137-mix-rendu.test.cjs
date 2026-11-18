@@ -144,3 +144,14 @@ test('CH-137 (retour de la mère) : le bouton de vue dit « Vue du lot » / « V
   assert.match(f,/aria-label="Vue du lot" title="Vue du lot"/);assert.doesNotMatch(f,/Vue instrument/);
  }
 });
+test('CH-137 (D-374) : Constellation en cours et en passage : « Suivre dans Orbite » est l’action pleine en Mix, même data-act, même ordre ; « Arrêter » reste en texte',()=>{
+ for(const etat of ['lot','changement']){
+  const s=snap({ar:ar('cours'),file:{etat,actif:true,n:5,rang:1,etatTexte:'en cours',phrase:'',bilan:[],plan:[13,14,15,16,17],secondaire:{texte:'Arrêter la file',actif:true},vers:15}});
+  const pied=h=>(h.match(/<footer class="sg-actions"[\s\S]*?<\/footer>/)||[''])[0];
+  const g=pied(S.rendre(s,ui({onglet:'file'}))),m=pied(M.rendre(s,ui({onglet:'file'})));
+  assert.match(g,/class="sg-secondaire" data-act="mode:automatic"/,etat+' : Glacier inchangé');
+  assert.match(m,/class="sg-principal" data-act="mode:automatic"/,etat);
+  assert.match(m,/class="sg-secondaire sg-discret sg-danger" data-act="legacy:file-secondaire"/,etat);
+  assert.deepEqual(acts(m),acts(g),etat+' : même ordre');assert.equal((m.match(/sg-principal/g)||[]).length,1);
+ }
+});
