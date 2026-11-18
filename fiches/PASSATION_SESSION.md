@@ -6,7 +6,8 @@ Pour toute nouvelle session Claude Code (cloud ou local) qui rejoint le projet A
 - La Vision 20 clôt la 5.0 (interface validée par l'opérateur). Contenu et preuves : `CHANGELOG.md` (Vision 20) ; état : `LIRE_EN_PREMIER.md`.
 - Nuit du 17 au 18/11 : CH-134 (Instrument et vue fil), CH-135 (Cadran), CH-136 (recette) relancés au modèle le plus fort disponible après l'épuisement, à 21:34, des crédits du modèle choisi pour la nuit ; intégrés dans `integration/cloture-50` (CH-136 en fusion écrasée). Dessin Figma de l'interface réelle (D-369) : fichier de la maquette Cadran, page « Ariane 5.0 — interface réelle (Glacier) », 23 écrans, prototype à 88 interactions.
 - `main` : la 5.0 y est (D-370, « Fusion, la 5.0 l'emporte ») ; `main`, le tronc `claude/50-test17` et l'étiquette `v5.0` sont au même commit.
-- En attente de l'opérateur : réglages d'un poste à l'autre (`chrome.storage.sync` ou export et import) ; relais à redéployer ; branche `chantier/CH-136` à supprimer ou non. Ariane 6 : règle « branche » (D-368), OpenCode (D-364, suspendu).
+- En attente de l'opérateur : réglages d'un poste à l'autre (`chrome.storage.sync` ou export et import) ; relais à redéployer ; branche `chantier/CH-136` à supprimer ou non. Ariane 6 : plan proposé (`fiches/PLAN_ARIANE_6.md`, D-373) ; OpenCode : passation complète prête (`fiches/PASSATION_OPENCODE.md`), étape 1 = CH-131 dès le VPS prêt.
+- 18/11 après-midi : D-371 puis D-372 (interface alternative « Mix », planche Q4 sombre, exportée dans `banane-data/maquettes/figma-signal-mix-q4/`), CH-137 et CH-138 lancés, Vision 21 à suivre.
 
 ## 0. État au 14/11/2026 (10 h 45 UTC) : à lire d'abord
 Tout ce qui suit est poussé. Tronc `claude/50-test17` à `5fb6f5c` ou plus récent (le calcul de la Vision 18 y est depuis le 14/11 à 15 h 35 UTC) ; `banane-data` à `1375cd9`. Rien n'est en cours de fusion.
