@@ -1,6 +1,6 @@
 'use strict';
 /* CH-136 — SCÉNARIO DE TERRAIN « relecture bornée » (D-366, D-367), extension réelle dans Chromium, ESV = maquette (outils : ch109-outils.cjs).
- * Constellation d'une partie (23, 12 cuts) : dès qu'un cut de la relecture est relu, l'opérateur met la relecture en PAUSE (bouton du panneau), puis
+ * Constellation d'une partie (23, 12 cuts) : dès que la relecture part, l'opérateur la met en PAUSE (bouton du panneau), puis
  * la reprend du cut proposé au même cut (« Reprendre du cut A au cut A »). Ce qui est prouvé sur la maquette : la pause tient, la reprise bornée part,
  * les cuts hors des bornes ne sont ni relus ni écrits (aucune validation, jamais SKIP), le journal les liste (`relecture-bornes`) et la fin les compte.
  * Ne prouve rien sur le vrai ESV.
@@ -11,14 +11,14 @@ const raison = N.indisponible(), opts = raison ? { skip: raison } : {};
 
 test('CH-136 · relecture en pause puis reprise bornée : hors des bornes ni relu ni écrit, compté « non relu », jamais SKIP', opts, async () => {
   const geste = async c => { const r = c.vb?.relecture;
-    if (!c.fait.pauseDemandee && r?.etat === 'en-cours' && r.faits >= 1) { c.fait.pauseDemandee = { s: c.sec(), cut: r.cut }; await c.api('relecture-pause').catch(e => { c.fait.erreurPause = e.message; }); }
+    if (!c.fait.pauseDemandee && r?.etat === 'en-cours') {   /* dès le début : la maquette n'a que 2 cuts à relire, une pause demandée après le premier arrive après la fin (essai de l'intégrateur, 18/11) */ c.fait.pauseDemandee = { s: c.sec(), cut: r.cut }; await c.api('relecture-pause').catch(e => { c.fait.erreurPause = e.message; }); }
     if (c.fait.pauseDemandee && !c.fait.reprise && r?.etat === 'en-pause') {
       const e = await c.api('relecture-etat'), B = e?.passe?.bornesProposees;
       c.fait.pause = { cut: r.cut, faits: r.faits, total: r.total, bornes: B };
       if (!B) { c.fait.reprise = { erreur: 'aucune borne proposée' }; return; }
       c.fait.ecritsAvant = c.serveur.journal.ecritures.length;
       try { await c.api('relecture-reprendre', { debut: B.debut, fin: B.debut }); c.fait.reprise = { debut: B.debut, fin: B.debut, s: c.sec() }; } catch (x) { c.fait.reprise = { erreur: x.message }; } } };
-  const r = await constellation({ n: 1, parties: 3, cuts: 12, toursMax: 400, pendant: geste,
+  const r = await constellation({ n: 1, parties: 3, cuts: 40, toursMax: 900, pendant: geste,
     finSi: c => { if (c.fait.reprise && Number.isInteger(c.fait.ecritsAvant)) c.fait.ecritsApres = c.serveur.journal.ecritures.slice(c.fait.ecritsAvant).map(e => e.body?.ExtractionStatus ?? null);
       return c.fait.reprise && ['finie', 'arretee', 'erreur'].includes(c.vb?.relecture?.etat); } });
   assert.ok(r.fait.pause, 'pause tenue : ' + JSON.stringify(r.trace.slice(-6)));
