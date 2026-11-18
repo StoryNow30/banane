@@ -18,5 +18,5 @@ async function monter(depart,finMs){
 test('départ vu mais aucune réponse dans le délai long : arrêt, rien n’est relâché',async()=>{
  const {b}=await monter(true,2600);
  const p=await H.finPasse(b);
- assert.equal(p.etat,'erreur');assert.match(p.message,/cut 109 : Maj\+Espace envoyé, aucune écriture de validation vue/);
+ assert.equal(p.etat,'erreur');assert.match(p.message,/cut 109 : Maj\+Espace envoyé, écriture de validation partie mais sans réponse en 2 s/);   /* CH-136 : le texte dit le délai long */
 });

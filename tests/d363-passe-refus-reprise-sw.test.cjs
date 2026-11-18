@@ -13,5 +13,7 @@ test('112 refusé avant la pose, arrêt au début du 113 : reprise sur le 113, 1
   await M.reveil(); const B = bilan(M);
   assert.deepEqual(B.enPlace, { 113: 1, 114: 1 }); assert.deepEqual(ecrits(B), [113, 114]);
   const refus = M.ev('passe-differes-ecriture').filter(e => e.resultat === 'refuse').map(e => e.identity.cut); assert.deepEqual(refus, [112], 'le 112 n’est pas revisité au réveil');
-  assert.equal(M.ev('passe-differes-ecriture-fin').at(-1).issue, 'fin', 'la reprise ne revoit pas le 112 : rien de refusé pendant elle');
+  /* CH-136 (intégrateur, 17/11) : les refus d'avant le redémarrage comptent (D-363) : la passe se dit arrêtée sur le dernier refus, « Relancer » offert. */
+  const fin = M.ev('passe-differes-ecriture-fin').at(-1);
+  assert.equal(fin.issue, 'refuse', 'la passe a parcouru sa liste avec un refus : arrêtée sur lui'); assert.equal(fin.refusees, 1); assert.match(String(fin.raison), /112/);
 });

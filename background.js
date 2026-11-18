@@ -2403,7 +2403,9 @@ async function passeDiffEcrire(b,poses,rg,vue,aReprendre=null){
  for(let i=0;i<200&&engine.task;i++)await engine.task.catch(()=>{});
  /* T21d : reprise où tout était déjà écrit (redémarrage juste avant la fin) : rien à contrôler, la fin est seulement notée. */
  const raison0=!aEcrire.length?null:['en-cours','en-pause'].includes(relecture.passe?.etat)?'une relecture est en cours ou en pause':await lotCloRefus(b,true,null);let issue=raison0?'refus-depart':'fin',raison=raison0;
- let refusees=0,dernierRefus=null;
+ /* CH-136 (D-363) : à la reprise après un redémarrage, les refus d'avant comptent : la passe se dira arrêtée sur le dernier refus. */
+ const refusAvant=aReprendre&&Array.isArray(E?.ecriture?.refuses)?E.ecriture.refuses:[];
+ let refusees=refusAvant.length,dernierRefus=refusAvant.length?`cut ${refusAvant.at(-1)} refusé avant la pose (avant le redémarrage d’Ariane)`:null;
  if(!raison0){const EC=passeDiff.ecriture={arret:false,attente:null,etat:E};
   try{
    for(const [ip,p] of aEcrire.entries()){
@@ -2488,7 +2490,7 @@ async function passeDiffPoser(b,p,E){
  if(!enPlaceProuvee(ev,now.identity)){E.attente=null;throw incertain('compteur ou cut affiché inattendus');}
  await attendreEcriture(a);
  E.attente=null;
- if(!a.ok)throw incertain(a.refus!=null?`ESV a refusé d’enregistrer la validation, statut ${a.refus}`:`aucune écriture de validation vue en ${Math.round(reglageRelecture().attenteEcritureMs/1000)} s`);
+ if(!a.ok)throw incertain(a.refus!=null?`ESV a refusé d’enregistrer la validation, statut ${a.refus}`:ecritureSansPreuve(a));
  /* T21d : la preuve est gardée AVANT d'effacer l'intention : au réveil, un cut prouvé est compté écrit, jamais réécrit ni dit incertain. */
  if(E.etat?.ecriture){E.etat.ecriture.prouves.push(cut);await passeDiffSauver(E.etat);}
  await relectureEffacerIntention(cut,b.id);
@@ -4076,6 +4078,9 @@ function ecritureEnRoute(a,f){if(!a||f?.kind!=='write-start'||f.rowIndex!==a.cut
 /* Attente de la preuve d'écriture : `attenteEcritureMs`, allongée jusqu'à `attenteEcritureEnRouteMs` si le départ de l'écriture est vu. */
 async function attendreEcriture(a){const R=reglageRelecture(),t0=Date.now();
  while(!a.ok&&a.refus==null){const d=Date.now()-t0;if(d>=(a.enRoute?Math.max(R.attenteEcritureMs,R.attenteEcritureEnRouteMs??0):R.attenteEcritureMs))break;await attendreMs(100);}}
+/* CH-136 : le texte d'une attente sans preuve dit le délai réellement attendu (long si le départ de l'écriture a été vu) et que l'écriture était partie. */
+function ecritureSansPreuve(a){const R=reglageRelecture(),s=ms=>Math.round(ms/1000);
+ return a.enRoute?`écriture de validation partie mais sans réponse en ${s(Math.max(R.attenteEcritureMs,R.attenteEcritureEnRouteMs??0))} s`:`aucune écriture de validation vue en ${s(R.attenteEcritureMs)} s`;}
 /* Garde d'une correction (revue, corrections 1, 3, 4) : tout doit tenir, sinon le cut reste en ombre, avec la raison. */
 function relectureGarde({c,etat,ligne,par,total}){
  if(c.role!=='vert')return {ok:false,raison:`rôle « ${c.role} » : jamais corrigé`};
@@ -4144,7 +4149,7 @@ async function relectureCorriger(p,b,etat,calc){const K=globalThis.BananeCore3,G
  await attendreEcriture(a);
  lacher();
  if(!a.ok)throw Error(a.refus!=null?`cut ${cut} : ESV a refusé d’enregistrer la validation (statut ${a.refus}). Contrôle ce cut dans ESV.`
-  :`cut ${cut} : Maj+Espace envoyé, aucune écriture de validation vue en ${Math.round(reglageRelecture().attenteEcritureMs/1000)} s. Contrôle ce cut dans ESV.`);
+  :`cut ${cut} : Maj+Espace envoyé, ${ecritureSansPreuve(a)}. Contrôle ce cut dans ESV.`);
  await effacer();
  /* D-179 : la preuve est l'écriture ET le même cut toujours affiché. La page dit si elle a vu un autre cut ; sinon, une lecture du libellé
   * « Cut N of part P » (aucune commande) le confirme. Un autre cut, ou un libellé illisible : la passe s'arrête, rien n'est réécrit. */
@@ -4376,9 +4381,9 @@ async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=glob
  if(p.reprise){p.pauseDemandee=false;await relectureRepriseEffacer();}
  const vu=p.vus?` ; ESV a marqué ${pluriel(p.vus,'cut')} « vu »`:'';
  if(issue==='fin'&&p.etat==='en-cours')p.message=`Relecture finie : ${pluriel(p.faits,'cut')} relu${p.faits>1?'s':''}${p.modeEffectif==='corriger'?`, ${pluriel(p.corriges,'corrigé')}${p.refusees?`, ${pluriel(p.refusees,'correction')} refusée${p.refusees>1?'s':''} par la page`:''}`:', rien de modifié'}${vu}.${p.noteMode?` ${p.noteMode}`:''}`;
- /* CH-133 : les cuts écartés par les bornes ne sont pas relus, et c'est dit. */
+ if(issue!=='fin'&&vu&&p.message&&!p.message.includes('« vu »'))p.message=p.message.replace(/\.?$/,`${vu}.`);
+ /* CH-133 : les cuts écartés par les bornes ne sont pas relus, et c'est dit. CH-136 : indépendant de la mention « vu » (avant : un `else` la retirait). */
  if(p.horsBornes&&relecture.passe===p&&p.message&&!/hors des bornes/.test(p.message))p.message+=` ${pluriel(p.horsBornes,'cut')} non relu${p.horsBornes>1?'s':''} (hors des bornes) : relecture du cut ${p.bornes?.debut} au cut ${p.bornes?.fin}.`;
- else if(issue!=='fin'&&vu&&p.message&&!p.message.includes('« vu »'))p.message=p.message.replace(/\.?$/,`${vu}.`);
  if(relecture.passe===p){p.etat=issue==='fin'?'finie':issue==='arret'?'arretee':'erreur';p.fin=new Date().toISOString();p.cut=null;}
  relectureJournal('relecture-fin',{mode:p.mode,modeEffectif:p.modeEffectif,issue,raison:p.message,faits:p.faits,total:p.total,corriges:p.corriges,refusees:p.refusees,
   vus:p.vus,cutsNeufs:p.cutsNeufs,cutsNeufsAnnonces:p.cutsNeufsAnnonces,dureeMs:Date.parse(p.fin||new Date().toISOString())-Date.parse(p.debut),...(p.horsBornes?{horsBornes:p.horsBornes,bornes:p.bornes??null}:{})},p);

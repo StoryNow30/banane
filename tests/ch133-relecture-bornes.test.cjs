@@ -5,6 +5,7 @@
  * par les bornes n'est ni visité ni écrit (jamais SKIP) ; il est compté « non relu » et listé au journal (`relecture-bornes`). Données synthétiques. */
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {H,lotVide,attendreEtat,cutsAllees,evenement}=require('./helpers/relecture-points-vides.cjs');
+/* CH-136 : fichier découpé (le fichier d'origine durait 26 s, au-delà des 20 s par fichier du verify). */
 const J=x=>JSON.parse(JSON.stringify(x));   /* objets du service worker (autre contexte vm) */
 
 /* Relecture gardée en pause sur la série vide (après le rechargement unique de la série). */
@@ -20,7 +21,6 @@ test('pause sur une vraie série vide : le message dit l’issue, les bornes pro
  const e=await b.api('relecture-etat');
  assert.deepEqual(J(e.passe.bornesProposees),{debut:116,fin:116});
 });
-
 test('reprise du cut 116 au cut 116 : la passe sort de la série et finit ; 113 à 115 ne sont plus relus, rien n’y est écrit',async()=>{
  const {b,adapter}=await pauseSurSerie();
  const allees0=cutsAllees(adapter).length,maj0=adapter.majEspace.length,pose0=adapter.applyArgs.length,ev0=H.evenements(b,'relecture-ombre').length;
@@ -38,62 +38,4 @@ test('reprise du cut 116 au cut 116 : la passe sort de la série et finit ; 113 
  assert.equal(fin.horsBornes,3);assert.match(fin.message,/3 cuts non relus \(hors des bornes\)/,fin.message);
  const r=H.evenements(b,'relecture-fin').at(-1);assert.equal(r.horsBornes,3);
  assert.ok(!b.commands.some(c=>/skip/i.test(c.type||c.command||'')),'jamais SKIP');
-});
-
-test('bornes refusées en clair : inversées, hors partie, non entières, sans cut à relire ; la passe reste en pause',async()=>{
- const {b}=await pauseSurSerie();
- await assert.rejects(b.api('relecture-reprendre',{debut:116,fin:113}),/le cut de départ \(116\) est après le cut de fin \(113\)/);
- await assert.rejects(b.api('relecture-reprendre',{debut:113,fin:999}),/hors de la partie/);
- await assert.rejects(b.api('relecture-reprendre',{debut:-1,fin:116}),/hors de la partie|entiers/);
- await assert.rejects(b.api('relecture-reprendre',{debut:113.5,fin:116}),/entiers/);
- await assert.rejects(b.api('relecture-reprendre',{debut:117,fin:150}),/aucun cut de la relecture entre le cut 117 et le cut 150/);
- assert.equal(b.get('relecture').passe.etat,'en-pause');assert.equal(H.evenements(b,'relecture-bornes').length,0);
-});
-
-test('reprise sans bornes : comme avant (repart au cut gardé)',async()=>{
- const {b,adapter}=await pauseSurSerie();const a0=cutsAllees(adapter).length;
- await b.api('relecture-reprendre',{});
- await evenement(b,'relecture-pause',e=>e.raison==='points'&&H.evenements(b,'relecture-pause').length===3,20000);
- assert.equal(cutsAllees(adapter).slice(a0)[0],113);
-});
-
-test('relecture arrêtée sur la série (pause éteinte) : bornes proposées après la série, relance bornée qui finit',async()=>{
- const {b,adapter}=await lotVide({vides:[113,114,115],persiste:true,actif:false});
- const fin=await H.finPasse(b,60000);assert.equal(fin.etat,'erreur');
- const e=await b.api('relecture-etat');assert.deepEqual(J(e.passe.bornesProposees),{debut:116,fin:116});
- const a0=cutsAllees(adapter).length;
- await b.api('relecture-lancer',{debut:116,fin:116});
- const f2=await H.finPasse(b,60000);
- assert.equal(f2.etat,'finie',f2.message);assert.equal(f2.horsBornes,6);
- assert.deepEqual([...new Set(cutsAllees(adapter).slice(a0))].filter(c=>c!==115),[116],'seul 116 est relu (115 : le cut d’avant, pour l’atteindre par les boutons)');
- const bo=H.evenements(b,'relecture-bornes').at(-1);assert.equal(bo.quand,'lancement');assert.deepEqual(J(bo.cuts),[108,109,110,113,114,115]);
-});
-
-test('relance bornée après une relecture finie ; bornes refusées au lancement',async()=>{
- const {b,adapter}=await lotVide({vides:[]});
- const fin=await H.finPasse(b,60000);assert.equal(fin.etat,'finie',fin.message);
- const e=await b.api('relecture-etat');assert.deepEqual(J(e.passe.bornesProposees),{debut:108,fin:116});
- await assert.rejects(b.api('relecture-lancer',{debut:110,fin:109}),/le cut de départ \(110\) est après le cut de fin \(109\)/);
- const a0=cutsAllees(adapter).length,maj0=adapter.majEspace.length;
- await b.api('relecture-lancer',{debut:113,fin:114});
- const f2=await H.finPasse(b,60000);
- assert.equal(f2.etat,'finie',f2.message);assert.equal(f2.faits,2);assert.equal(f2.horsBornes,5);
- const vus=cutsAllees(adapter).slice(a0);assert.ok(vus.every(c=>c>=112&&c<=114),vus.join(','));
- assert.ok(adapter.majEspace.slice(maj0).every(x=>x.cut>=113&&x.cut<=114));
-});
-
-test('une correction interrompue non acquittée bloque la reprise et la relance, avec ou sans bornes ; acquittée, la reprise bornée part',async()=>{
- const {b,local}=await pauseSurSerie();
- const lotId=b.get('relecture').passe.lotId;
- local.m.banane50RelectureIntention=[{cut:110,part:23,lotId,origine:'relecture'}];
- for(const args of [{},{debut:116,fin:116}])
-  await assert.rejects(b.api('relecture-reprendre',args),/Une correction de la relecture a été interrompue au cut 110.*J’ai contrôlé le cut 110/s);
- assert.equal(b.get('relecture').passe.etat,'en-pause');assert.equal(H.evenements(b,'relecture-bornes').length,0);
- await b.api('relecture-arreter');assert.equal(b.get('relecture').passe.etat,'arretee');
- const e=await b.api('relecture-etat');assert.equal(e.correctionInterrompue?.cut,110);
- for(const args of [{},{debut:116,fin:116}])
-  await assert.rejects(b.api('relecture-lancer',args),/Une correction de la relecture a été interrompue au cut 110/);
- await b.api('relecture-acquitter',{cut:110});
- await b.api('relecture-lancer',{debut:116,fin:116});
- const f=await H.finPasse(b,60000);assert.equal(f.etat,'finie',f.message);assert.equal(f.faits,1);
 });
