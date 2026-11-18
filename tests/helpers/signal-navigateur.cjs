@@ -1,7 +1,7 @@
 'use strict';
 /* UI 5.0 « Signal » (D-250) : montage commun des essais de navigateur de Signal (tests/ui5-navigateur-signal-*.test.cjs). panel.html est chargé avec une
  * API Chrome simulée (comme tools/ui5-navigateur.cjs) ; rien n'est envoyé à ESV. Données fabriquées. */
-/* CH-135 : UI5_VARIANTE=cadran rejoue ces essais avec l'interface Cadran gardée (`banane51Interface`) ; sans elle, rien ne change. */
+/* CH-135, CH-137 : UI5_VARIANTE=mix rejoue ces essais avec l'interface alternative gardée (`banane51Interface`) ; sans elle, rien ne change. */
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const navigateur=require('../esv-maquette/navigateur.cjs'),{ouvrirPanneau}=require('./panneau-local.cjs');
 const CHROMIUM=navigateur.executable(),PW=navigateur.modulePlaywright(),absent=navigateur.indisponible()||false;

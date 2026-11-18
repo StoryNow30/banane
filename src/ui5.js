@@ -19,10 +19,12 @@
   const D = root.document, S5 = root.ArianeSignalRendu, CLE = 'banane51Interface', CLE_EX = 'banane51Examines', CLE_PALETTE = 'banane51Palette', CLE_VUE = 'banane51VueLot';
   if (!D || !S5 || !root.ArianePanel) return;
   /* Test 23 : les présentations d'essai « ariane2 » et « palette » sont retirées (opérateur, après la test 21) ; Signal est la seule présentation. */
-  /* CH-135 (D-368) : « cadran », l'interface alternative (src/cadran-rendu.js, panel-cadran.css), choisie dans les Réglages ; mêmes boutons, mêmes gardes. */
-  const VARIANTES = ['signal', 'cadran'], defaut = 'signal';
-  const TAILLE = { signal: [600, 760], cadran: [600, 760] };
-  const rendu = () => variante === 'cadran' && root.ArianeCadranRendu ? root.ArianeCadranRendu : S5;
+  /* CH-137 (D-371) : « signal » est l'interface Glacier (par défaut) ; « mix », l'interface alternative choisie dans les Réglages (mêmes boutons, mêmes
+   * gardes), remplace le Cadran de CH-135 (retiré) : un choix gardé « cadran » ouvre en « mix ». En attendant son dessin, « mix » garde le rendu Glacier. */
+  const VARIANTES = ['signal', 'mix'], defaut = 'signal';
+  const TAILLE = { signal: [600, 760], mix: [600, 760] };
+  const lireVariante = v => v === 'cadran' ? 'mix' : v;
+  const rendu = () => S5;
   const ui = { last: '', pauseLot: null, q: '', pi: 0, focusQ: false, tiroir: false, couche: null, sel: null, note: '', onglet: null, details: false, stats: false, palette: 'glacier', vueLot: 'instrument' };
   const examines = { lot: null, cles: new Set() };
   let variante = defaut, hote = null, gcv2Base = null, secours = false;
@@ -333,7 +335,7 @@
       /* CH-025 : la boîte de la file ne vaut qu'au repos ; la file lancée (ou arrêtée, finie), elle se ferme. */
       if (ui.couche === 'file' && snap.file?.etat !== 'repos') ui.couche = null;
       if (ui.onglet !== 'file') ui.stats = false;
-      html = rendu().rendre(snap, ui); /* CH-135 : Signal ou Cadran */ hote.dataset.theme = snap.sig.theme; hote.dataset.taille = snap.sig.taille; hote.dataset.palette = snap.sig.palette;
+      html = rendu().rendre(snap, ui); /* CH-137 : Glacier ou Mix */ hote.dataset.theme = snap.sig.theme; hote.dataset.taille = snap.sig.taille; hote.dataset.palette = snap.sig.palette;
       /* CH-115 : détails repliés par défaut (panel-signal.css lit `data-details`) */
       if (ui.details) hote.dataset.details = '1'; else delete hote.dataset.details;
       /* CH-129 : les détails techniques (couche hors de #ui5) suivent le thème et la palette du panneau */
@@ -452,7 +454,7 @@
    * service worker après l'export) n'est ni ouverte ni à terminer : le panneau s'ouvre sur Orbite. */
   let entre = false;
   function entrer(s) {
-    if (entre || !VARIANTES.includes(variante) || secours) return;   /* CH-135 : Signal et Cadran */
+    if (entre || !VARIANTES.includes(variante) || secours) return;   /* CH-137 : Glacier et Mix */
     entre = true;
     if ((D.body?.dataset?.window || 'home') !== 'home') return;
     const n = s?.native, echo = !!n && (['RUNNING', 'PAUSED', 'STARTING', 'PAUSED_ADAPTER_UNRESPONSIVE'].includes(n.status) || (n.status !== 'FINISHED' && !!n.visits?.length));
@@ -466,7 +468,7 @@
   }
   /* Entre deux rendus du panneau : l'anneau « en cours » (temps passé sur le cut ÷ médiane) et « en pause depuis ». Le DOM seulement. */
   function vivant() {
-    if (!hote || !VARIANTES.includes(variante) || hote.hidden || !hote.querySelector) return;   /* CH-135 : Signal et Cadran */
+    if (!hote || !VARIANTES.includes(variante) || hote.hidden || !hote.querySelector) return;   /* CH-137 : Glacier et Mix */
     /* Revue T21 (R6) : l'écran n'est plus réécrit chaque seconde : tous les anneaux (instrument et poignée du tiroir) avancent ici. */
     const t = Date.now();
     const p = hote.querySelector('.sg-pause-depuis[data-debut]');
@@ -643,7 +645,7 @@
        * tel clic, le pied n'accepte aucun clic (la feuille « Ce qui reste », elle, répond tout de suite : « Ouvrir » y est attendu aussitôt). Leur aspect et leurs ordres ne changent pas ; les changements venus du lot non plus. */
       const t = Date.now(), act = a.dataset.act;
       if (molette.sansClic > t && a.closest?.('.sg-molette')) return;   /* CH-105 : la fin d'un glisser n'est pas un clic sur un voisin */
-      if (ui.gardePied && t < ui.gardePied && a.closest?.(variante === 'cadran' ? '.sg-actions,.sg-poignee' : '.sg-actions')) return;   /* CH-135 : en Cadran seulement, « Ce qui reste » est sous le pied */
+      if (ui.gardePied && t < ui.gardePied && a.closest?.('.sg-actions')) return;
       if (/^(mode:|sg:onglet-|sg:tiroir$)/.test(act)) ui.gardePied = t + GARDE_PIED_MS;
       agir(act, a);
     });
@@ -753,8 +755,8 @@
   function appliquer(v, redimensionner) {
     variante = v;
     D.body.classList.toggle('ui5', !secours);
-    /* CH-135 : Cadran a sa propre feuille (panel-cadran.css, sous `#ui5.u-cadran`) ; celle de l'instrument ne s'y applique pas. */
-    hote.className = v === 'cadran' ? 'u-cadran' : 'u-signal';
+    /* CH-137 : « mix » garde la feuille de Glacier (panel-signal.css, sous `#ui5.u-signal`) et porte en plus `u-mix`. */
+    hote.className = v === 'mix' ? 'u-signal u-mix' : 'u-signal';
     hote.hidden = secours;
     ui.focusQ = ui.couche === 'palette';
     ui.last = '';
@@ -762,6 +764,7 @@
     if (redimensionner) void taille();
   }
   async function setVariante(v) {
+    v = lireVariante(v);
     if (!VARIANTES.includes(v)) return;
     try { await root.chrome?.storage?.local?.set?.({ [CLE]: v }); } catch { /* le choix vaut pour cette fenêtre */ }
     ui.q = ''; ui.pi = 0;
@@ -774,7 +777,7 @@
     try { const o = await root.chrome?.storage?.local?.get?.([CLE, CLE_EX, CLE_PALETTE, CLE_VUE]), v = o?.[CLE], ex = o?.[CLE_EX];
       if (o?.[CLE_VUE] === 'fil') ui.vueLot = 'fil';
       if (['sarcelle', 'glacier', 'signal'].includes(o?.[CLE_PALETTE])) ui.palette = o[CLE_PALETTE];
-      if (VARIANTES.includes(v)) variante = v;
+      if (VARIANTES.includes(lireVariante(v))) variante = lireVariante(v);
       if (ex && typeof ex.lot === 'string' && Array.isArray(ex.cles)) { examines.lot = ex.lot; examines.cles = new Set(ex.cles.filter(c => typeof c === 'string').slice(0, 2000)); } } catch { /* défaut de la version */ }
     /* Compteur des exemples d'apprentissage (`ariane-compteur-gcv2-v1`, fiches/COMPTEUR_GCV2.md) : les cuts corrigés, tous projets. */
     try { const j = await (await fetch(root.chrome.runtime.getURL('datasets/compteur-gcv2.json'))).json();

@@ -126,8 +126,7 @@ const SKIP_OMBRE=['deplacement-vue.js'];
 const TELECOMMANDE=['qr.js','telecommande-instantane.js','telecommande-panneau.js','telecommande.js'];
 /* CH-136 : l'avis « réglages neufs sur ce poste » du panneau (lit chrome.storage.local, n'écrit que sa marque) ; ni pose, ni validation, ni lot. */
 const STOCKAGE_NEUF=['stockage-neuf.js'];
-/* CH-135 (D-368) : le rendu « Cadran » du panneau (interface alternative choisie dans les Réglages) ; même modèle et mêmes ordres que Signal ; ni pose, ni validation, ni lot. */
-const CADRAN=['cadran-rendu.js'];
+/* CH-135 (D-368) : le rendu « Cadran » (src/cadran-rendu.js) a été retiré par CH-137 (D-371). */
 /* CH-017 : la file de parties (machine à états pure), lue par le service worker seulement quand `file.actif` est allumé (éteinte à la livraison) ;
  * elle ne lit ni ne commande la pose ; le lot qu'elle démarre est le lot ordinaire. */
 const FILE_PARTIES=['file-parties.js'];
@@ -247,7 +246,7 @@ test('la pose et le lot lisent la test 8 : octets identiques, ou AST identique p
  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);
  assert.ok(fs.existsSync(path.join(racine,'src/raison-correction.js')),'le seul fichier de src/ en plus');
- const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE,...HISTORIQUE,...GARDE_PASSE,...SKIP_OMBRE,...FILE_PARTIES,...GARDE_APRES_DIFFERE,...CORRECTION,...RECHERCHE_LARGE,...SERIE_VIDES,...FILE_PRIORITAIRE,...RECONSTRUCTION,...VOIE_B1_ECART,...CH079,...CH114,...ETAT_MORCEAUX,...JOURNAL_INDEX,...SIGNAL_RELECTURE,...RUST_LIDAR,...PRECHAUFFAGE,...TELECOMMANDE,...ANCRE_TRAJECTOIRE,...STOCKAGE_NEUF,...CADRAN].sort());
+ const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE,...HISTORIQUE,...GARDE_PASSE,...SKIP_OMBRE,...FILE_PARTIES,...GARDE_APRES_DIFFERE,...CORRECTION,...RECHERCHE_LARGE,...SERIE_VIDES,...FILE_PRIORITAIRE,...RECONSTRUCTION,...VOIE_B1_ECART,...CH079,...CH114,...ETAT_MORCEAUX,...JOURNAL_INDEX,...SIGNAL_RELECTURE,...RUST_LIDAR,...PRECHAUFFAGE,...TELECOMMANDE,...ANCRE_TRAJECTOIRE,...STOCKAGE_NEUF].sort());
 });
 test('le moteur est celui de la baseline V4.6.0 (src/engine.js intact)',()=>{
  const base=require('../audit/v4.6.0-engine-baseline.json');
