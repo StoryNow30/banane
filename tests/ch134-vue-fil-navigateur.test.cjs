@@ -4,7 +4,7 @@
  *    discrets ; pas de carte sous la tuile d'état ; la trace des cuts derrière « Détails » ;
  *  - le bouton « Vue fil » bascule sans recharger : `data-vue="fil"` sur la fenêtre, le fil des cuts à l'écran (le plus récent en haut), les
  *    actions collées en bas ; le choix est gardé dans chrome.storage.local (`banane51VueLot`), relu à l'ouverture ; aucun message nouveau ;
- *  - retour à « Vue instrument ».
+ *  - retour à « Vue du lot » (CH-137).
  * Montage : tests/helpers/signal-navigateur.cjs. Données fabriquées. */
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {CHROMIUM,PW,absent,SC,ouvrir}=require('./helpers/signal-navigateur.cjs');
@@ -13,6 +13,13 @@ test('allure A par défaut à 600 px : grand anneau centré, une action pleine, 
  const {chromium}=require(PW),nav=await chromium.launch({executablePath:CHROMIUM});
  try{
   const {page,erreurs}=await ouvrir(nav,SC.lot,{width:600,height:760});await page.waitForTimeout(400);
+  /* CH-137 : rejoué en Mix (UI5_VARIANTE=mix), l'essai vérifie l'équivalent de la planche : pas d'anneau mais le gros chiffre, une action pleine de 44 px,
+   * les autres en texte, la trace derrière « Détails » ; l'anneau centré et le lien souligné sont propres à Glacier. */
+  if(process.env.UI5_VARIANTE==='mix'){
+   const m=await page.evaluate(()=>{const q=s=>document.querySelector(s);return {anneau:!!q('#ui5 .sg-anneau'),chiffre:!!q('#ui5 .mx-chiffre'),pleines:document.querySelectorAll('#ui5 .sg-actions>.sg-principal').length,
+    pleine:Math.round(q('#ui5 .sg-actions>.sg-principal').getBoundingClientRect().height),trace:getComputedStyle(q('#ui5 .sg-tu-fil .sg-fil')).display,vue:q('#ui5 .sg-fen').dataset.vue||''};});
+   assert.deepEqual(m,{anneau:false,chiffre:true,pleines:1,pleine:44,trace:'none',vue:''});assert.deepEqual(erreurs,[]);return;
+  }
   const r=await page.evaluate(()=>{const q=s=>document.querySelector(s),cs=e=>getComputedStyle(e),an=q('#ui5 .sg-tu-etat .sg-anneau'),t=q('#ui5 .sg-tu-etat'),A=q('#ui5 .sg-actions'),p=q('#ui5 .sg-actions>.sg-principal'),s2=q('#ui5 .sg-actions>.sg-secondaire');
    const ra=an.getBoundingClientRect(),rt=t.getBoundingClientRect(),rp=p.getBoundingClientRect(),rA=A.getBoundingClientRect(),fil=q('#ui5 .sg-tu-fil');
    return {anneau:Math.round(ra.width),centre:Math.abs((ra.left+ra.right)/2-(rt.left+rt.right)/2),fond:cs(t).backgroundColor,ombre:cs(t).boxShadow,
@@ -26,7 +33,7 @@ test('allure A par défaut à 600 px : grand anneau centré, une action pleine, 
  }finally{await nav.close();}
 });
 
-test('« Vue fil » : bascule sans recharger, fil à l’écran, actions en bas, choix gardé et relu, aucun message nouveau ; retour « Vue instrument »',{skip:absent,timeout:30000},async()=>{
+test('« Vue fil » : bascule sans recharger, fil à l’écran, actions en bas, choix gardé et relu, aucun message nouveau ; retour « Vue du lot » (CH-137)',{skip:absent,timeout:30000},async()=>{
  const {chromium}=require(PW),nav=await chromium.launch({executablePath:CHROMIUM});
  try{
   const {page,erreurs}=await ouvrir(nav,SC.lot,{width:600,height:760});await page.waitForTimeout(400);
@@ -36,10 +43,10 @@ test('« Vue fil » : bascule sans recharger, fil à l’écran, actions en bas,
   await page.evaluate(()=>{window.__marque=1;});await b.click();await page.waitForTimeout(400);
   const r=await page.evaluate(()=>{const q=s=>document.querySelector(s),fen=q('#ui5 .sg-fen'),fil=q('#ui5 .sg-tu-fil'),li=[...document.querySelectorAll('#ui5 .sg-tu-fil .sg-fil li')],A=q('#ui5 .sg-actions').getBoundingClientRect();
    return {vue:fen.dataset.vue,marque:window.__marque,fil:fil?getComputedStyle(fil).display:'absente',lignes:li.filter(x=>x.getBoundingClientRect().height>=20).length,cuts:li.map(x=>+x.dataset.k.slice(1)),
-    bas:Math.round(innerHeight-A.bottom),label:q('#ui5 [data-act="sg:vue-lot"]').getAttribute('aria-label'),garde:window.__ecrits.some(o=>o.banane51VueLot==='fil')};});
+    bas:Math.round(innerHeight-A.bottom),sousActions:A.bottom<=(q('#ui5 .sg-poignee')||q('#ui5 .mx-pied')).getBoundingClientRect().top+1,label:q('#ui5 [data-act="sg:vue-lot"]').getAttribute('aria-label'),garde:window.__ecrits.some(o=>o.banane51VueLot==='fil')};});
   assert.equal(r.vue,'fil');assert.equal(r.marque,1,'sans recharger');assert.notEqual(r.fil,'none');assert.ok(r.lignes>=5,`des lignes lisibles (${r.lignes})`);
-  assert.deepEqual(r.cuts,[...r.cuts].sort((x,y)=>y-x),'le plus récent en haut');assert.ok(r.bas<=1,`actions collées en bas (${r.bas})`);
-  assert.equal(r.label,'Vue instrument');assert.ok(r.garde,'gardé dans chrome.storage.local');
+  assert.deepEqual(r.cuts,[...r.cuts].sort((x,y)=>y-x),'le plus récent en haut');if(process.env.UI5_VARIANTE==='mix')assert.ok(r.sousActions,`Mix : les actions restent au-dessus de « Ce qui reste » et du pied (${r.bas})`);else assert.ok(r.bas<=1,`actions collées en bas (${r.bas})`);
+  assert.equal(r.label,'Vue du lot');assert.ok(r.garde,'gardé dans chrome.storage.local');
   assert.deepEqual(await page.evaluate(a=>[...new Set(window.__appels)].filter(x=>!a.includes(x)),appels),[],'aucune sorte de message nouvelle');
   /* relu à l'ouverture : le stockage simulé est vidé au rechargement, on le remplit avant */
   await page.addInitScript(()=>{const g=window.chrome.storage.local.get;window.chrome.storage.local.get=async k=>({...(await g(k)),banane51VueLot:'fil'});});

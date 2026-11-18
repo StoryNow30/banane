@@ -7,6 +7,10 @@
  *  - Un chiffre qui change roule : sa copie figée n'entre jamais dans le texte du chiffre.
  * Montage : tests/helpers/signal-navigateur.cjs ; états fabriqués de chantiers/CH-104/outils/capturer.cjs. */
 const {test}=require('node:test'),assert=require('node:assert/strict');
+/* CH-137 : ce fichier décrit la tuile, la palette et l'anneau de Glacier. Il ne suit pas `UI5_VARIANTE` : en Mix la ligne « Palette » des Réglages
+ * n'existe pas (D-371 : la palette ne vaut que pour Glacier) et le chiffre n'est pas dans un anneau. Les essais propres à Mix sont dans
+ * tests/ch137-mix-*.test.cjs. */
+delete process.env.UI5_VARIANTE;
 const {CHROMIUM,PW,absent,ouvrir}=require('./helpers/signal-navigateur.cjs');
 const {E,lot}=require('../chantiers/CH-104/outils/capturer.cjs');
 const js=x=>JSON.parse(JSON.stringify(x));

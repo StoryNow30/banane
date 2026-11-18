@@ -369,7 +369,8 @@
   /* CH-134 (D-368) : dans Orbite, lot ouvert ou fini, un bouton d'icône bascule la vue du lot : « instrument » (défaut : l'anneau, le détail replié)
    * ou « fil » (en-tête d'état en haut, fil des derniers cuts et des événements, le plus récent en haut, actions en bas). Navigation locale
    * (`sg:vue-lot`, src/ui5.js) : rien n'est envoyé au service worker. */
-  const vueB = fil => `<button type="button" class="sg-vue-b" data-act="sg:vue-lot" aria-pressed="${fil}" aria-label="${fil ? 'Vue instrument' : 'Vue fil'}" title="${fil ? 'Vue instrument' : 'Vue fil'}">${ic(fil ? 'vue-instrument' : 'vue-fil')}</button>`;
+  /* CH-137 (D-371) : « Instrument » quitte l'écran ; la vue de l'anneau s'appelle « Vue du lot » (juste aussi en Mix, qui n'a pas d'anneau). */
+  const vueB = fil => `<button type="button" class="sg-vue-b" data-act="sg:vue-lot" aria-pressed="${fil}" aria-label="${fil ? 'Vue du lot' : 'Vue fil'}" title="${fil ? 'Vue du lot' : 'Vue fil'}">${ic(fil ? 'vue-instrument' : 'vue-fil')}</button>`;
   const maj1 = t => t.replace(/^(\s*(?:<[^>]+>)*\s*)(\p{Ll})/u, (x, a, c) => a + c.toUpperCase());
   /* La partie est dite en haut à droite de la tuile : la phrase ne la répète pas. */
   const sansPartie = (phrase, partie) => !partie ? phrase : phrase === partie ? '' : phrase.startsWith(partie + ' · ') ? maj1(phrase.slice(partie.length + 3)) : phrase;
@@ -623,7 +624,7 @@
  ${ligne('Télécommande (iPhone)', 'Suivre et piloter Ariane depuis le téléphone, par ton relais chiffré', '<button type="button" class="sg-annuler" data-act="sg:telecommande">Ouvrir</button>')}
  ${ligne('Thème', '', seg('theme', [['sombre', 'Sombre'], ['clair', 'Clair']], g.theme === 'clair' ? 'clair' : 'sombre', 'Thème'))}
  ${ligne('Palette', 'Thème sombre · gardée pour la prochaine ouverture', seg('palette', [['glacier', 'Glacier'], ['sarcelle', 'Sarcelle'], ['signal', 'Signal']], ['sarcelle', 'signal'].includes(g.palette) ? g.palette : 'glacier', 'Palette'))}
- ${/* CH-135 (D-368) : le choix d'interface, `sg:choix:variante:*` (src/ui5.js, setVariante) */ ''}${ligne('Interface', 'Instrument, ou Cadran (la voie vue de côté) · mêmes boutons · gardée pour la prochaine ouverture', seg('variante', [['signal', 'Instrument'], ['cadran', 'Cadran']], snap.variante === 'cadran' ? 'cadran' : 'signal', 'Interface'))}
+ ${/* CH-137 (D-371) : le choix d'interface, `sg:choix:variante:*` (src/ui5.js, setVariante) : « Glacier » (valeur `signal`, inchangée) ou l'interface alternative « Mix » ; un ancien choix « cadran » ou « riche » vaut « mix » */ ''}${ligne('Interface', 'Glacier, ou Mix · mêmes boutons · gardée pour la prochaine ouverture', seg('variante', [['signal', 'Glacier'], ['mix', 'Mix']], ['mix', 'cadran', 'riche'].includes(snap.variante) ? 'mix' : 'signal', 'Interface'))}
  ${r.ajustement === null || r.ajustement === undefined ? '' : ligne('Hauteur des poses', 'Ajuster la hauteur des poses sur le dessus du rail · allumé par défaut (D-367), vaut dès le cut suivant', seg('ajustement', [['non', 'Coupé'], ['oui', 'Allumé']], r.ajustement ? 'oui' : 'non', 'À l’essai : ajuster la hauteur des poses sur le dessus du rail'))}
  ${snap.gcv2 ? `<div class="sg-reg"><span class="sg-lib"><span>Exemples d’apprentissage</span><small>cuts corrigés dans les Échos archivées, tous projets · au ${esc(snap.gcv2.date)} · ne mesure aucune qualité</small></span><span class="sg-mono">${esc(snap.gcv2.total)}</span></div>` : ''}
  ${historiqueHtml(g.historique)}

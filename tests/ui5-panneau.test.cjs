@@ -150,12 +150,12 @@ test('un clic sur l’habillage est un clic sur l’élément d’origine (jamai
 
 test('l’habillage : chargé après panel.js, dans la page du panneau seulement, aucun message au service worker, aucune API Chrome hors son choix, la taille de la fenêtre et une ressource',()=>{
  const html=lire('panel.html'),manifeste=require('../manifest.json');
- assert.ok(html.includes('<script src="panel.js"></script><script src="src/ui5-variante.js"></script><script src="src/signal-rendu.js"></script><script src="src/cadran-rendu.js"></script><script src="src/ui5.js"></script></body>'),'CH-135 : le rendu Cadran entre signal-rendu et ui5');
+ assert.ok(html.includes('<script src="panel.js"></script><script src="src/ui5-variante.js"></script><script src="src/signal-rendu.js"></script><script src="src/mix-rendu.js"></script><script src="src/ui5.js"></script></body>'),'CH-137 : le rendu Mix entre signal-rendu et ui5');
  assert.ok(html.includes('<link rel="stylesheet" href="panel.css"><link rel="stylesheet" href="panel-ui5.css"><link rel="stylesheet" href="panel-signal.css">'));
- for(const f of ['src/ui5.js','src/signal-rendu.js','src/cadran-rendu.js','src/ui5-variante.js','src/relecture-pause.js'])assert.ok(!manifeste.content_scripts.some(c=>c.js.includes(f)),f+' : jamais injecté dans ESV');
+ for(const f of ['src/ui5.js','src/signal-rendu.js','src/mix-rendu.js','src/ui5-variante.js','src/relecture-pause.js'])assert.ok(!manifeste.content_scripts.some(c=>c.js.includes(f)),f+' : jamais injecté dans ESV');
  assert.ok(!/ui5/.test(lire('background.js').replace(/\/\*[\s\S]*?\*\//g,'')),'le service worker ne connaît pas l’habillage');
  assert.equal(lire('src/ui5-variante.js').match(/defaut: '([a-z0-9]+)'/)[1],'signal','Signal au départ (D-250)');
- for(const f of ['src/ui5.js','src/signal-rendu.js','src/cadran-rendu.js','src/ui5-variante.js']){
+ for(const f of ['src/ui5.js','src/signal-rendu.js','src/mix-rendu.js','src/ui5-variante.js']){
   const s=lire(f).replace(/\/\*[\s\S]*?\*\//g,'');
   assert.ok(!/sendMessage|runtime\.connect|exportToutZip|exportComplet|saveBlob|downloads|BananeZip|api\(/.test(s),f);
   const apis=[...s.matchAll(/chrome\??\.[a-zA-Z]+(?:\??\.[a-zA-Z]+)*/g)].map(m=>m[0].replace(/\?/g,''));

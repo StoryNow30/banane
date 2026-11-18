@@ -1,7 +1,7 @@
 'use strict';
 /* CH-134 (D-368) — LA VUE « FIL » DU LOT DANS ORBITE (src/signal-rendu.js, partie pure ; télécommande : src/telecommande-instantane.js).
  *  - Orbite, lot ouvert : un bouton d'icône (`sg:vue-lot`) dans la ligne d'état, libellé accessible « Vue fil » (vue instrument, par défaut) ou
- *    « Vue instrument » (vue fil), `aria-pressed` dit la vue fil ;
+ *    « Vue du lot » (vue fil, CH-137), `aria-pressed` dit la vue fil ;
  *  - vue fil : la fenêtre porte `data-vue="fil"`, la tuile du fil des cuts est rendue en entier (le plus récent en haut), même pendant une
  *    Constellation (pas la trace réduite de la ligne « Constellation ») ;
  *  - pas de bouton au repos, ni dans Écho, la Constellation, l'Aurore ;
@@ -32,10 +32,10 @@ test('Orbite, lot en cours, vue instrument (défaut) : bouton « Vue fil », non
  const haut=(h.match(/<div class="sg-haut">[\s\S]*?<\/div><div class="sg-milieu">/)||[])[0]||'';assert.ok(haut.includes('sg:vue-lot'),'dans la ligne d’état');
 });
 
-test('vue fil : data-vue="fil", bouton « Vue instrument » pressé, fil complet du plus récent au plus ancien',()=>{
+test('vue fil : data-vue="fil", bouton « Vue du lot » (CH-137) pressé, fil complet du plus récent au plus ancien',()=>{
  const h=S.rendre(snap(),ui({vueLot:'fil'})),B=bouton(h);
  assert.match(h,/class="sg-fen" data-activite="orbite"[^>]*data-vue="fil"/);
- assert.match(B,/aria-label="Vue instrument"/);assert.match(B,/aria-pressed="true"/);
+ assert.match(B,/aria-label="Vue du lot"/);assert.match(B,/aria-pressed="true"/);
  const cuts=[...h.matchAll(/<li data-k="f(\d+)"/g)].map(m=>+m[1]);
  assert.deepEqual(cuts,[4811,4810,4809,4808,4807],'tous les cuts du fil, le plus récent en haut');
  assert.match(h,/class="sg-tu sg-tu-fil[^"]*" data-k="fil"/);
