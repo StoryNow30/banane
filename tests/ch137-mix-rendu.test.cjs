@@ -130,3 +130,17 @@ test('CH-137 : aucun message au service worker, rien d’un serveur, tout sous #
  /* jetons exacts de la planche */
  for(const c of ['#121314','#1a1b1d','#222427','#ecedee','#a6a9ad','#f2b65a','#f2806f'])assert.ok(css.toLowerCase().includes(c),c);
 });
+test('CH-137 (retour de la mère) : le rail de la Constellation n’écrit que des numéros de partie connus : ni « +1 », ni « ? »',()=>{
+ const s=snap({ar:ar('pret',{lotOuvert:false}),file:{etat:'repos',actif:false,n:3,rang:0,etatTexte:'prête',phrase:'',bilan:[],plan:null}});
+ const chaine=h=>(h.match(/<ol class="sg-chaine[\s\S]*?<\/ol>/)||[''])[0];
+ assert.match(chaine(S.rendre(s,ui({onglet:'file'}))),/>\+1</,'Glacier écrit « +1 » (la scène prouve quelque chose)');
+ const m=chaine(M.rendre(s,ui({onglet:'file'})));
+ assert.ok(m);assert.doesNotMatch(m,/>\+\d+<|>\?</);
+});
+test('CH-137 (retour de la mère) : le bouton de vue dit « Vue du lot » / « Vue fil », jamais « Vue instrument »',()=>{
+ for(const r of [S,M]){
+  assert.match(r.rendre(SCENES.cours,ui()),/aria-label="Vue fil" title="Vue fil"/);
+  const f=r.rendre(SCENES.cours,ui({vueLot:'fil'}));
+  assert.match(f,/aria-label="Vue du lot" title="Vue du lot"/);assert.doesNotMatch(f,/Vue instrument/);
+ }
+});

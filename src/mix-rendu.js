@@ -119,6 +119,8 @@
     h = h.replace(/(<button type="button" class="sg-ico sg-menu-b"[^>]*>)···(<\/button>)/, `<button type="button" class="sg-ico mx-cmd" data-mx-extra="1" data-act="sg:palette" aria-label="Commandes (Ctrl K)" title="Commandes (Ctrl K)">${IC_CMD}</button>$1${IC_REG}$2`);
     /* « Ce qui reste » (« Visites » dans Écho) nomme la ligne qui ouvre le tiroir */
     h = h.replace(/(<button type="button" class="sg-poignee"[^>]*><span class="sg-txt">)/, `$1<b class="mx-t">${activite === 'echo' ? 'Visites' : 'Ce qui reste'}</b><span class="mx-sep"> · </span>`);
+    /* le rail des parties de la Constellation n'écrit que des numéros de partie connus : ni « +1 » ni « ? » (aucun numéro inventé) */
+    h = h.replace(/(<li data-etat="[^"]*" data-partie=")(\+\d+|\?)("[^>]*><i aria-hidden="true"><\/i><span class="sg-mono">)(?:\+\d+|\?)(<\/span>)/g, '$1$2$3$4');
     /* la palette ne vaut que pour Glacier */
     h = h.replace(/<div class="sg-reg"><span class="sg-lib"><span>Palette<\/span>[\s\S]*?<\/button><\/span><\/div>/, '');
     /* le pied « Cache des exports » : le bouton du menu de Glacier, avec sa garde */

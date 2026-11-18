@@ -369,7 +369,8 @@
   /* CH-134 (D-368) : dans Orbite, lot ouvert ou fini, un bouton d'icône bascule la vue du lot : « instrument » (défaut : l'anneau, le détail replié)
    * ou « fil » (en-tête d'état en haut, fil des derniers cuts et des événements, le plus récent en haut, actions en bas). Navigation locale
    * (`sg:vue-lot`, src/ui5.js) : rien n'est envoyé au service worker. */
-  const vueB = fil => `<button type="button" class="sg-vue-b" data-act="sg:vue-lot" aria-pressed="${fil}" aria-label="${fil ? 'Vue instrument' : 'Vue fil'}" title="${fil ? 'Vue instrument' : 'Vue fil'}">${ic(fil ? 'vue-instrument' : 'vue-fil')}</button>`;
+  /* CH-137 (D-371) : « Instrument » quitte l'écran ; la vue de l'anneau s'appelle « Vue du lot » (juste aussi en Mix, qui n'a pas d'anneau). */
+  const vueB = fil => `<button type="button" class="sg-vue-b" data-act="sg:vue-lot" aria-pressed="${fil}" aria-label="${fil ? 'Vue du lot' : 'Vue fil'}" title="${fil ? 'Vue du lot' : 'Vue fil'}">${ic(fil ? 'vue-instrument' : 'vue-fil')}</button>`;
   const maj1 = t => t.replace(/^(\s*(?:<[^>]+>)*\s*)(\p{Ll})/u, (x, a, c) => a + c.toUpperCase());
   /* La partie est dite en haut à droite de la tuile : la phrase ne la répète pas. */
   const sansPartie = (phrase, partie) => !partie ? phrase : phrase === partie ? '' : phrase.startsWith(partie + ' · ') ? maj1(phrase.slice(partie.length + 3)) : phrase;

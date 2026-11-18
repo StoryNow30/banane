@@ -19,9 +19,9 @@ test('Signal au départ, en compact 360 × 480 : aucune erreur, panneau d’avan
   }
  }finally{await nav.close();}
  for(const [k,r] of Object.entries(res)){
-  assert.deepEqual(r.erreurs,[],k);assert.equal(r.classe,'u-signal',k);assert.equal(r.main,'none',k+' : le panneau d’avant est caché');
+  assert.deepEqual(r.erreurs,[],k);assert.equal(r.classe,process.env.UI5_VARIANTE==='mix'?'u-mix':'u-signal',k); /* CH-137 : en Mix, la classe est u-mix (UI5_VARIANTE=mix) */assert.equal(r.main,'none',k+' : le panneau d’avant est caché');
   assert.equal(r.taille,k.split('/')[0],k);assert.equal(r.theme,'sombre',k+' : sombre par défaut');assert.equal(r.deborde,false,k+' : rien ne déborde');
-  assert.ok(r.principaux<=1,k+' : une action principale au plus');assert.match(r.police,/Inter/,k);
+  assert.ok(r.principaux<=1,k+' : une action principale au plus');assert.match(r.police,process.env.UI5_VARIANTE==='mix'?/IBM Plex Sans/:/Inter/,k);
  }
  assert.equal(res['compact/lot'].mot,'En cours');assert.equal(res['compact/fin'].mot,'Terminé');
 });
