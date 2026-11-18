@@ -73,3 +73,27 @@ test('aucun réglage n’est écrit par le module hors de sa marque',()=>{
  const ecrits=[...src.matchAll(/L\.set\(([a-z.]+(?:\(s\))?)\)/g)].map(m=>m[1]);
  assert.deepEqual(ecrits,['r.ecrire','acquitter(s)']);
 });
+
+/* Intégration de la clôture (audit du bandeau sur l'Instrument A, 18/11 : 48 vues sur 312 où l'écran du lot défilait de 2 à 16 px, scènes « à toi »,
+ * « panne », « erreur ») : l'avis parle du premier lot ; il ne s'affiche qu'hors lot (Prêt, Terminé, Arrêté) et se cache, sans être acquitté,
+ * pendant un lot ou une alerte (sa hauteur est alors rendue à l'écran). */
+test('l’avis ne se montre qu’hors lot (prêt, fini, arrêté) ; pendant un lot ou une alerte il se cache sans être acquitté',async()=>{
+ assert.equal(typeof SN.horsLot,'function');
+ const fen=e=>({querySelector:sel=>sel==='#ui5 .sg-fen'?(e===null?null:{dataset:{etat:e}}):null});
+ for(const e of ['pret','fini','arrete',null])assert.equal(SN.horsLot(fen(e)),true,String(e));
+ for(const e of ['cours','pause','alerte','rel','p2'])assert.equal(SN.horsLot(fen(e)),false,e);
+ const {D,els,body,vars}=faux(),{s,L}=stock();let etat='alerte';
+ D.querySelector=sel=>sel==='#ui5 .sg-fen'?{dataset:{etat}}:null;
+ await SN.brancher({L,D});
+ const b=els['avis-stockage-neuf'];assert.ok(b,'avis créé');assert.equal(b.hidden,true,'caché pendant une alerte');
+ assert.ok(!body.classList.contains('avis-sn'),'aucune hauteur réservée');assert.equal(vars['--avis-sn-h'],undefined);
+ assert.equal(s.banane5Poste.acquitte,false,'pas acquitté');
+ etat='pret';SN.suivreEtat(b,D);
+ assert.equal(b.hidden,false,'montré au repos');assert.ok(body.classList.contains('avis-sn'));assert.equal(vars['--avis-sn-h'],'82px');
+});
+test('caché, le bandeau n’est pas dessiné (son display:flex ne l’emporte pas sur hidden)',()=>{ assert.match(SN.STYLE,/#avis-stockage-neuf\[hidden\]\{display:none\}/); });
+test('suivreEtat n’écrit `hidden` que s’il change (l’observateur de la page suit cet attribut : sinon boucle sans fin)',()=>{
+ let ecritures=0,h=false;const b={offsetHeight:58,get hidden(){return h;},set hidden(v){ecritures++;h=v;}};
+ const {D}=faux();D.querySelector=sel=>sel==='#ui5 .sg-fen'?{dataset:{etat:'alerte'}}:null;
+ SN.suivreEtat(b,D);SN.suivreEtat(b,D);SN.suivreEtat(b,D);assert.equal(ecritures,1);
+});

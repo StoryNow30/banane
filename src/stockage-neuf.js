@@ -33,6 +33,7 @@
    * l'interface, sans toucher aux écrans de CH-134 et CH-135. Couleurs propres (contraste ≥ 4,5:1 dans les deux thèmes), thème lu sur #ui5. */
   const STYLE = '#avis-stockage-neuf{position:fixed;left:12px;right:12px;bottom:12px;z-index:2147482000;display:flex;gap:12px;align-items:center;flex-wrap:wrap;'
     + 'padding:12px 14px;border-radius:10px;border:1px solid #6B5A1E;background:#1E1A0E;color:#F5EBC8;font:400 13px/1.45 "Inter",system-ui,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.45)}'
+    + '#avis-stockage-neuf[hidden]{display:none}'
     + '#avis-stockage-neuf p{margin:0;flex:1 1 220px;min-width:0;overflow-wrap:anywhere}'
     + '#avis-stockage-neuf button{flex:0 0 auto;font:600 13px/1 "Inter",system-ui,sans-serif;padding:8px 14px;border-radius:8px;border:1px solid #F5EBC8;background:#F5EBC8;color:#1E1A0E;cursor:pointer}'
     + '#avis-stockage-neuf[data-theme="clair"]{background:#FFF6D6;color:#3A2E05;border-color:#C9A93A}'
@@ -45,6 +46,13 @@
   const COUCHES = '.sg-tiroir[data-ouvert="1"],#ui5 [role="dialog"],#ui5-tech';
   function suivreCouches(boite, D) { let c = false; try { c = !!D.querySelector?.(COUCHES); } catch { /* rien */ }
     boite.inert = c; if (c) boite.setAttribute('aria-hidden', 'true'); else boite.removeAttribute?.('aria-hidden'); }
+  /* Clôture 5.0 (audit du bandeau sur l'Instrument A, 18/11 : l'écran du lot défilait de 2 à 16 px en « à toi », « panne », « erreur ») : l'avis parle
+   * du premier lot ; il ne se montre qu'hors lot (Prêt, Terminé, Arrêté, ou panneau sans Signal) et se cache, sans être acquitté, pendant un lot. */
+  const HORS_LOT = ['pret', 'fini', 'arrete'];
+  function horsLot(D) { let e = null; try { e = D?.querySelector?.('#ui5 .sg-fen')?.dataset?.etat ?? null; } catch { /* rien */ } return e === null || HORS_LOT.includes(e); }
+  function reserver(boite, D) { try { D.documentElement?.style?.setProperty?.('--avis-sn-h', (Math.ceil(boite.offsetHeight || 0) + ((root.innerWidth ?? 600) < 480 ? 16 : 24)) + 'px'); D.body.classList?.add?.('avis-sn'); } catch { /* rien */ } }
+  function rendre(D) { try { D.documentElement?.style?.removeProperty?.('--avis-sn-h'); D.body.classList?.remove?.('avis-sn'); } catch { /* rien */ } }
+  function suivreEtat(boite, D) { const montre = horsLot(D); if (boite.hidden !== !montre) boite.hidden = !montre; /* n'écrire que ce qui change : l'observateur suit `hidden` */ if (montre) reserver(boite, D); else rendre(D); }
   async function brancher({ L = root.chrome?.storage?.local, D = root.document } = {}) {
     if (!L?.get || !D) return { avis: false };
     let stock;
@@ -58,22 +66,19 @@
     const b = D.createElement('button'); b.type = 'button'; b.id = 'avis-stockage-neuf-ok'; b.textContent = 'Compris';
     b.addEventListener('click', async () => {
       try { const s = await L.get([MARQUE]); await L.set(acquitter(s)); } catch { /* acquitté pour cette fenêtre */ }
-      boite.remove(); rendre();
+      boite.remove(); rendre(D);
     });
     boite.append(p, b);
     if (D.head && !D.getElementById('avis-stockage-neuf-style')) { const st = D.createElement('style'); st.id = 'avis-stockage-neuf-style'; st.textContent = STYLE; D.head.append(st); }
     const theme = () => { try { return D.getElementById('ui5')?.dataset?.theme === 'clair' ? 'clair' : 'sombre'; } catch { return 'sombre'; } };
     boite.setAttribute('data-theme', theme());
     D.body.append(boite);
-    const R = D.documentElement?.style;
-    function reserver() { try { R?.setProperty?.('--avis-sn-h', (Math.ceil(boite.offsetHeight || 0) + (root.innerWidth < 480 ? 16 : 24)) + 'px'); D.body.classList?.add?.('avis-sn'); } catch { /* rien */ } }
-    function rendre() { try { R?.removeProperty?.('--avis-sn-h'); D.body.classList?.remove?.('avis-sn'); } catch { /* rien */ } }
-    reserver(); suivreCouches(boite, D);
+    suivreEtat(boite, D); suivreCouches(boite, D);
     /* Une couche s'ouvre sans délai : observée au fil des changements de la page, pas seulement chaque seconde. */
-    try { if (root.MutationObserver) { const mo = new root.MutationObserver(() => { if (!boite.parentNode) mo.disconnect(); else suivreCouches(boite, D); });
-      mo.observe(D.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['data-ouvert', 'role', 'hidden'] }); } } catch { /* l'intervalle suffit */ }
+    try { if (root.MutationObserver) { const mo = new root.MutationObserver(() => { if (!boite.parentNode) mo.disconnect(); else { suivreCouches(boite, D); suivreEtat(boite, D); } });
+      mo.observe(D.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['data-ouvert', 'role', 'hidden', 'data-etat'] }); } } catch { /* l'intervalle suffit */ }
     /* Le thème et la largeur (donc la hauteur du bandeau) peuvent changer après l'ouverture : relus tant que l'avis est là. */
-    const suivre = setInterval(() => { if (!boite.parentNode) { clearInterval(suivre); rendre(); } else { boite.setAttribute('data-theme', theme()); reserver(); suivreCouches(boite, D); } }, 1000);
+    const suivre = setInterval(() => { if (!boite.parentNode) { clearInterval(suivre); rendre(D); } else { boite.setAttribute('data-theme', theme()); suivreEtat(boite, D); suivreCouches(boite, D); } }, 1000);
     suivre?.unref?.();
     return { avis: true };
   }
@@ -81,5 +86,5 @@
     const go = () => { void brancher(); };
     if (root.document.readyState === 'loading') root.document.addEventListener('DOMContentLoaded', go); else go();
   }
-  return { MARQUE, CHOIX, TEXTE, STYLE, COUCHES, evaluer, acquitter, brancher, suivreCouches };
+  return { MARQUE, CHOIX, TEXTE, STYLE, COUCHES, HORS_LOT, evaluer, acquitter, brancher, suivreCouches, horsLot, suivreEtat };
 });
