@@ -5,7 +5,7 @@ Pour toute nouvelle session Claude Code (cloud ou local) qui rejoint le projet A
 ## 00. Au 18/11/2026 matin : la 5.0 est close (D-370) — à lire avant le § 0
 - La Vision 20 clôt la 5.0 (interface validée par l'opérateur). Contenu et preuves : `CHANGELOG.md` (Vision 20) ; état : `LIRE_EN_PREMIER.md`.
 - Nuit du 17 au 18/11 : CH-134 (Instrument et vue fil), CH-135 (Cadran), CH-136 (recette) relancés en Opus 5.5 après l'épuisement des crédits Fable 5.2 à 21:34 ; intégrés dans `integration/cloture-50` (CH-136 en fusion écrasée). Dessin Figma de l'interface réelle (D-369) : fichier de la maquette Cadran, page « Ariane 5.0 — interface réelle (Glacier) », 23 écrans, prototype à 88 interactions.
-- `main` : la 5.0 doit y aller (D-368, D-370) ; la manière est à confirmer par l'opérateur (`main` porte une retouche de documents de la 4.9 absente de l'histoire de la 5.0).
+- `main` : la 5.0 y est (D-370, « Fusion, la 5.0 l'emporte ») ; `main`, le tronc `claude/50-test17` et l'étiquette `v5.0` sont au même commit.
 - En attente de l'opérateur : réglages d'un poste à l'autre (`chrome.storage.sync` ou export et import) ; relais à redéployer ; branche `chantier/CH-136` à supprimer ou non. Ariane 6 : règle « branche » (D-368), OpenCode (D-364, suspendu).
 
 ## 0. État au 14/11/2026 (10 h 45 UTC) : à lire d'abord

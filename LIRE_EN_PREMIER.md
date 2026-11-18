@@ -5,7 +5,7 @@ cours, où en sont les mesures. Le plan est dans `PLAN_SUITE.md`, les règles
 dans `PASSATION_4.8.0.md`, les problèmes dans `KNOWN_ISSUES.md` (trié le
 29/09). `PROJECT_STATE.md` n'est plus que l'historique.
 
-## État au 18 novembre 2026 — « Vision 20 » : la 5.0 est close (D-370)
+## État au 18 novembre 2026 — « Vision 20 » : la 5.0 est close (D-370), sur `main`, étiquette `v5.0`
 
 - **« Vision 20 »** (18/11, dernier paquet, 5.0 close) = Vision 19.1 plus : l'**interface « Instrument » par défaut** (CH-134, direction A choisie par l'opérateur, D-368) avec dans Orbite un bouton **« Vue fil »** (derniers cuts, plus récent en haut) ; l'**interface « Cadran »** au choix dans Réglages › Interface (CH-135, tirée du prototype Figma de l'opérateur, mêmes boutons et mêmes ordres) ; les **bornes de la relecture** en pause et après un arrêt (CH-133, D-366) ; **aj5 allumé par défaut** (D-367) ; la **recette totale** (CH-136 : le réglage aj5 « perdu » venait d'un autre poste, donc d'un stockage local neuf ; bandeau « Réglages neufs sur ce poste », hors lot ; trois corrections du service worker). Interface validée par l'opérateur (D-370) sur le dessin Figma de l'interface réelle (D-369). Détail et preuves : `CHANGELOG.md`.
 - **En attente de l'opérateur** : garder les réglages d'un poste à l'autre (`chrome.storage.sync`, ou export et import) ; relais de la télécommande à redéployer ; suppression éventuelle de la branche `chantier/CH-136` (un commit y citait les caractéristiques de deux postes ; il n'est ni au tronc ni sur `main`). Ariane 6 : la règle « branche » de la deuxième passe (D-368), le passage à OpenCode (D-364, suspendu par D-365).
