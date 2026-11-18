@@ -1,0 +1,104 @@
+{
+ "format": "ch064-banc-temps-v1",
+ "navigateur": "Chrome/153.0.8010.12",
+ "nuages": 200,
+ "repetitions": 15,
+ "unite": "ms par appel (médiane des nuages de la médiane des répétitions)",
+ "mesures": {
+  "v46.js": {
+   "mediane": 58.2,
+   "p95": 93.7,
+   "n": 200
+  },
+  "v46.elague": {
+   "mediane": 12.5,
+   "p95": 20.1,
+   "n": 200
+  },
+  "v46.elagueIdentique": {
+   "mediane": 1,
+   "p95": 1,
+   "n": 200
+  },
+  "v46.facade": {
+   "mediane": 24.3,
+   "p95": 43.5,
+   "n": 200
+  },
+  "v46.encoder": {
+   "mediane": 0.7,
+   "p95": 3.7,
+   "n": 200
+  },
+  "v46.coeur": {
+   "mediane": 23.3,
+   "p95": 39,
+   "n": 200
+  },
+  "v46.decoder": {
+   "mediane": 0,
+   "p95": 0,
+   "n": 200
+  },
+  "v46.octetsEntree": {
+   "mediane": 172856,
+   "p95": 535931,
+   "n": 200
+  },
+  "v46.octetsSortie": {
+   "mediane": 2531,
+   "p95": 2619,
+   "n": 200
+  },
+  "gcv1.js": {
+   "mediane": 42.7,
+   "p95": 77.8,
+   "n": 200
+  },
+  "gcv1.facade": {
+   "mediane": 23.7,
+   "p95": 41.8,
+   "n": 200
+  },
+  "calibrate.js": {
+   "mediane": 0.5,
+   "p95": 0.9,
+   "n": 200
+  },
+  "calibrate.facade": {
+   "mediane": 1,
+   "p95": 4.4,
+   "n": 200
+  },
+  "capture.point.js.mille": {
+   "mediane": 0,
+   "p95": 0,
+   "n": 200
+  },
+  "capture.point.coeur.mille": {
+   "mediane": 26.3,
+   "p95": 30.5,
+   "n": 200
+  },
+  "points": {
+   "mediane": 5658,
+   "p95": 20181,
+   "n": 200
+  }
+ },
+ "memoireCoeur": {
+  "reinstanciations": 0,
+  "hauteEau": 0,
+  "memoire": 1114112
+ },
+ "tasJsAvantOctets": 7784867,
+ "tasJsApresOctets": 168131818,
+ "memoireA": {
+  "avantKo": 419892,
+  "wasmAvant": 4456448,
+  "wasmApres": 26345472,
+  "apresAppelKo": 572860,
+  "wasmApresReinstanciation": 1114112,
+  "apresReinstanciationKo": 543836
+ }
+}

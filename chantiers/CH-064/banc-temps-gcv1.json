@@ -1,0 +1,38 @@
+{
+ "format": "ch064-banc-temps-v1",
+ "navigateur": "Chrome/153.0.8010.12",
+ "nuages": 200,
+ "repetitions": 15,
+ "unite": "ms par appel (médiane des nuages de la médiane des répétitions)",
+ "mesures": {
+  "gcv1.elagueIdentique": {
+   "mediane": 1,
+   "p95": 1,
+   "n": 200,
+   "somme": 200
+  },
+  "gcv1.elague": {
+   "mediane": 13,
+   "p95": 21.6,
+   "n": 200
+  },
+  "gcv1.js": {
+   "mediane": 42.3,
+   "p95": 76.3,
+   "n": 200
+  },
+  "gcv1.facade": {
+   "mediane": 23.7,
+   "p95": 41.2,
+   "n": 200
+  }
+ },
+ "memoireCoeur": {
+  "reinstanciations": 0,
+  "hauteEau": 4456448,
+  "memoire": 4456448
+ },
+ "tasJsAvantOctets": 7909927,
+ "tasJsApresOctets": 589356209,
+ "memoireA": {}
+}

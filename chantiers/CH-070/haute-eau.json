@@ -1,0 +1,47 @@
+{
+ "format": "ch070-haute-eau-v1",
+ "plafondOctets": 268435456,
+ "res": [
+  {
+   "nom": "summarize (événements projetés, panneau)",
+   "trameEntreeOctets": 533269,
+   "arenePendantAppel": 7345789,
+   "memoireLineaire": 8912896,
+   "issue": "rendu"
+  },
+  {
+   "nom": "historique",
+   "trameEntreeOctets": 169504,
+   "arenePendantAppel": 842359,
+   "memoireLineaire": 2228224,
+   "issue": "rendu"
+  },
+  {
+   "nom": "classify (plus gros enregistrement)",
+   "trameEntreeOctets": 1008088,
+   "arenePendantAppel": 8263129,
+   "memoireLineaire": 17825792,
+   "issue": "rendu"
+  },
+  {
+   "nom": "reconstruireCut (plus gros enregistrement)",
+   "trameEntreeOctets": 1007920,
+   "arenePendantAppel": 38694009,
+   "memoireLineaire": 71303168,
+   "issue": "rendu"
+  },
+  {
+   "nom": "health (session entière)",
+   "trameEntreeOctets": 277938,
+   "arenePendantAppel": 672552,
+   "memoireLineaire": 2228224,
+   "issue": "rendu"
+  },
+  {
+   "nom": "summarize (bilan ENTIER brut, 94 000 événements)",
+   "trameEntreeOctets": 30003905,
+   "memoireLineaire": 268435456,
+   "issue": "trappe : unreachable"
+  }
+ ]
+}

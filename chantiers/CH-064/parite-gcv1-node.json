@@ -1,0 +1,34 @@
+{
+ "format": "ch064-parite-v1",
+ "moteur": "node v22.23.4",
+ "module": "gcv1",
+ "cas": 12556,
+ "identiques": 12556,
+ "ecarts": [],
+ "empreintes": {
+  "js": "2fd335f840283aafd2e0a36063cd33ce868c39da5db885544044c31023daf5fa",
+  "rs": "2fd335f840283aafd2e0a36063cd33ce868c39da5db885544044c31023daf5fa"
+ },
+ "temps": {
+  "jsMediane": 64.35341700003482,
+  "jsP95": 259.83211600000504,
+  "rsMediane": 9.49269300000742,
+  "rsP95": 34.88545099995099
+ },
+ "memoireCoeur": {
+  "reinstanciations": 0,
+  "hauteEau": 2752512,
+  "memoire": 2752512
+ },
+ "bilanAdaptateur": {
+  "coeur": 12556,
+  "repliHorsDomaine": 0,
+  "repliFormat": 0,
+  "rappelsRejoues": 7252
+ },
+ "sources": {
+  "src/geometry-candidate-v1.js": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+  "vendor/capture-core.js": "2bc4a70b7ce5d08990875804edea0a2097c0503a3d433a40b4eaeeb4ffd77054"
+ },
+ "verdict": "IDENTIQUE"
+}

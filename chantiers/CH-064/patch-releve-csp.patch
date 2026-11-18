@@ -1,0 +1,39 @@
+--- a/src/esv-observer.js	2026-11-06 12:28:32.419018591 +0000
++++ b/src/esv-observer.js	2026-11-06 12:28:32.434836637 +0000
+@@ -223,6 +223,27 @@
+    const readyState=typeof d.readyState==='string'?d.readyState:null,scripts=d.scripts&&Number.isInteger(d.scripts.length)?d.scripts.length:null;
+    return {readyState,scripts,before:readyState!==null&&scripts!==null?readyState==='loading'&&scripts===0:null};}catch{return {readyState:null,scripts:null,before:null};}})();
+ 
++  /* CH-064 (proposition, lecture seule) : RELEVÉ DE LA CSP DE LA PAGE, pour savoir si WebAssembly peut y tourner.
++   * Aucune requête, aucun essai de compilation (un essai refusé pourrait faire envoyer un rapport de violation à ESV),
++   * aucun en-tête lu : seulement (a) la balise <meta http-equiv="Content-Security-Policy">, lue une fois le document
++   * analysé ; (b) les violations que la page déclenche d'elle-même (événement passif `securitypolicyviolation`, qui
++   * porte la politique entière). Sont gardés : les mots-clés entre apostrophes de script-src (et default-src),
++   * le NOMBRE de sources d'hôtes (jamais les hôtes : pas d'adresse dans le journal), la présence de report-uri ou
++   * report-to, la disposition. Rendu dans la marque « observateur » de chaque séance (champ `csp`). */
++  const csp={meta:null,violations:0,politique:null};
++  function resumeCsp(texte){try{const dir={};for(const d of String(texte).split(';')){const t=d.trim().split(/\s+/).filter(Boolean);if(t.length)dir[t[0].toLowerCase()]=t.slice(1);}
++   const src=dir['script-src']||dir['default-src']||null;
++   return {scriptSrc:src?src.filter(x=>/^'.*'$/.test(x)).slice(0,12):null,sourcesHotes:src?src.filter(x=>!/^'.*'$/.test(x)).length:null,
++    directiveScript:dir['script-src']?'script-src':dir['default-src']?'default-src':null,
++    wasmUnsafeEval:src?src.includes("'wasm-unsafe-eval'"):null,unsafeEval:src?src.includes("'unsafe-eval'"):null,
++    rapport:!!(dir['report-uri']||dir['report-to'])};}catch{return null;}}
++  try{const d=win.document;
++   d.addEventListener('securitypolicyviolation',ev=>{try{csp.violations++;if(!csp.politique)csp.politique={...resumeCsp(ev.originalPolicy),disposition:String(ev.disposition||'').slice(0,12),
++    directive:String(ev.effectiveDirective||'').slice(0,24)};}catch{}},{passive:true});
++   const lireMeta=()=>{try{const m=[...d.querySelectorAll('meta[http-equiv]')].filter(x=>/^content-security-policy$/i.test(x.httpEquiv||''));
++    csp.meta=m.length?{n:m.length,...resumeCsp(m.map(x=>x.content||'').join(';'))}:{n:0};}catch{}};
++   if(d.readyState==='loading')d.addEventListener('DOMContentLoaded',lireMeta,{once:true,passive:true});else lireMeta();}catch{}
++
+   /* ------------------------------------------------ tampon et envoi */
+   function post(entry){try{win.postMessage({kind:'banane5:esv-observation',v:1,observer:observerId,entry},origin());}catch{}}
+   function record(entry){
+@@ -239,7 +260,7 @@
+    * l'installation, extension non rechargée) : sans marque dans une séance, l'observateur n'y était pas. */
+   function snapshot(afterDenial){
+    record({kind:'observer',version:OBSERVER_VERSION,world:'MAIN',installedBeforePageScripts:start.before,readyState:start.readyState,scriptsAtInstall:start.scripts,
+-    enabled,afterDenial:afterDenial===true,dropped,ignored});
++    enabled,afterDenial:afterDenial===true,dropped,ignored,csp:{meta:csp.meta,violations:csp.violations,politique:csp.politique}});
+    // Séance démarrée APRÈS le chargement des listes : leur résumé (comptes seulement), rien d'autre d'avant la séance.
+    if(afterDenial===true)postListSummaries();
+   }

@@ -1,0 +1,5 @@
+# CH-064 : plafond de la mémoire linéaire du cœur WASM (validé par l'intégrateur : 256 Mio, réinstanciation au-delà de
+# 64 Mio par la coquille). Au-delà, l'allocation échoue, le cœur trappe et la coquille rend un refus récupérable (repli
+# JS). Le banc du corpus VBA (documents de plus de 100 Mo) le relève explicitement : tools/ch064-construire.cjs.
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "link-arg=--max-memory=268435456"]

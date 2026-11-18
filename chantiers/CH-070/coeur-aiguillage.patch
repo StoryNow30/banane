@@ -1,0 +1,24 @@
+diff --git a/ariane-rs/crates/ariane-coeur/Cargo.toml b/ariane-rs/crates/ariane-coeur/Cargo.toml
+index 4a84a2c..b48e332 100644
+--- a/ariane-rs/crates/ariane-coeur/Cargo.toml
++++ b/ariane-rs/crates/ariane-coeur/Cargo.toml
+@@ -14,6 +14,7 @@ ariane-capture = { path = "../ariane-capture" }
+ ariane-geometrie = { path = "../ariane-geometrie" }
+ ariane-decision = { path = "../ariane-decision" }
+ ariane-etat = { path = "../ariane-etat" }
++ariane-session = { path = "../ariane-session" }
+ 
+ [lints]
+ workspace = true
+diff --git a/ariane-rs/crates/ariane-coeur/src/abi.rs b/ariane-rs/crates/ariane-coeur/src/abi.rs
+index c2ddba6..9885454 100644
+--- a/ariane-rs/crates/ariane-coeur/src/abi.rs
++++ b/ariane-rs/crates/ariane-coeur/src/abi.rs
+@@ -98,6 +98,7 @@ fn aiguiller(fonction: u32, entree: Valeur) -> Valeur {
+         // Blocs réservés aux sous-chantiers (fiche chantiers/CH-064-equipe.md) : un seul bras chacun.
+         50..=99 => ariane_decision::appeler(fonction, &entree),
+         100..=149 => ariane_etat::appeler(fonction, &entree),
++        250..=299 => ariane_session::appeler(fonction, &entree),
+         _ => Err(Echec::erreur(format!("Cœur : fonction inconnue {fonction}"))),
+     };
+     match r {

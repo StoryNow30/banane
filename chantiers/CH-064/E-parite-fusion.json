@@ -1,0 +1,56 @@
+{
+ "format": "ch064-e-parite-v1",
+ "cas": "synthese",
+ "ecarts": [],
+ "memoire": {
+  "reinstanciations": 15,
+  "hauteEau": 179306496,
+  "memoire": 9568256
+ },
+ "pics": [
+  {
+   "f": "vertsListe",
+   "hauteEau": 1245184
+  },
+  {
+   "f": "vertsSignaux",
+   "hauteEau": 1310720
+  },
+  {
+   "f": "listeDecompacter",
+   "hauteEau": 4980736
+  },
+  {
+   "f": "vertsLignes",
+   "hauteEau": 10878976
+  },
+  {
+   "f": "journal",
+   "hauteEau": 50659328,
+   "events": 36983,
+   "records": 377
+  },
+  {
+   "f": "journal",
+   "hauteEau": 112918528,
+   "events": 84156,
+   "records": 1059
+  },
+  {
+   "f": "journal",
+   "hauteEau": 179306496,
+   "events": 131377,
+   "records": 1809
+  }
+ ],
+ "appels": 227,
+ "rejeux": 0,
+ "rejeuxNoms": [],
+ "corpus": {
+  "journaux": 5,
+  "listes": 64,
+  "echos": 31,
+  "etats": 31
+ },
+ "verdict": "IDENTIQUE"
+}

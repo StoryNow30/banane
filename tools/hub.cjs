@@ -59,7 +59,7 @@ function heureParis(d=new Date()){
 function formater({de,a='tous',type,chantier,texte,date}){
  if(!TYPES.includes(type))throw new Error(`type inconnu « ${type} » ; attendus : ${TYPES.join(', ')}`);
  if(!EMETTEURS.includes(de))throw new Error(`émetteur inconnu « ${de} » ; attendus : ${EMETTEURS.join(', ')}`);
- if(!/^CH-\d{3}$|^T\d{2}$|^hub$/.test(chantier))throw new Error(`chantier « ${chantier} » : attendu CH-NNN, TNN ou hub`);
+ if(!/^CH-\d{3}(-[A-Z0-9]+)?$|^T\d{2}$|^hub$/.test(chantier))throw new Error(`chantier « ${chantier} » : attendu CH-NNN, CH-NNN-X, TNN ou hub`);
  /* Destinataire cursor : la mention « @cursor » en tête du commentaire lance (ou relance) l'agent infonuagique de Cursor sur cette PR. */
  const mention=a==='cursor'&&de!=='cursor'?'@cursor ':'';
  return `${mention}**[${de} → ${a}] ${type} · ${chantier} · ${heureParis(date)} Paris**\n\n${texte.trim()}\n\n---\n_hub Ariane · émetteur : ${de}_`;
