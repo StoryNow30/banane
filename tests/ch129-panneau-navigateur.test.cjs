@@ -23,14 +23,15 @@ test('relecture : « Relecture en cours » dans la tuile, la phrase complète da
  }finally{await nav.close();}
 });
 
-test('600 px : la trace des cuts sur une ligne en pleine largeur, les boutons du pied par paires',{skip:absent,timeout:20000},async()=>{
+/* CH-134 (D-368), essai mis à jour : la direction A remplace la disposition de CH-129 à 600 px (la trace en points passe derrière « Détails », les
+ * boutons du pied ne vont plus par paires : une action pleine sur toute la largeur, les autres en liens sur une ligne). */
+test('600 px (direction A) : la trace des cuts derrière « Détails », une action pleine sur toute la largeur, les secondaires en liens sur une ligne',{skip:absent,timeout:20000},async()=>{
  const {chromium}=require(PW),nav=await chromium.launch({executablePath:CHROMIUM});
  try{
   const {page,erreurs}=await ouvrir(nav,js(E.cours.state),{width:600,height:760});await page.waitForTimeout(400);
-  const r=await page.evaluate(()=>{const q=s=>document.querySelector(s).getBoundingClientRect();const z=q('#ui5 .sg-zone'),t=q('#ui5 .sg-tu-fil'),a=q('#ui5 .sg-actions'),b1=q('#ui5 .sg-actions>button:nth-child(1)'),b2=q('#ui5 .sg-actions>button:nth-child(2)');
-   return {trace:{w:t.width,zone:z.width,h:t.height},b1:b1.width,b2:b2.width,pied:a.width,memeLigne:Math.abs(b1.top-b2.top)<1};});
-  assert.ok(r.trace.w>=r.trace.zone-2,`trace pleine largeur (${r.trace.w} sur ${r.trace.zone})`);assert.ok(r.trace.h<=48,`trace sur une ligne (${r.trace.h} px)`);
-  assert.ok(r.memeLigne,'deux boutons sur la même ligne');assert.ok(r.b1+r.b2>=r.pied-60,`la paire prend la largeur du pied (${r.b1}+${r.b2} sur ${r.pied})`);
+  const r=await page.evaluate(()=>{const q=s=>document.querySelector(s),fil=q('#ui5 .sg-tu-fil'),A=q('#ui5 .sg-actions'),b=[...A.children].map(x=>x.getBoundingClientRect()),cs=getComputedStyle(A);
+   return {trace:fil?getComputedStyle(fil).display:'absente',plein:b[0].width/(A.getBoundingClientRect().width-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)),liens:b.slice(1).every(x=>Math.abs(x.top-b[1].top)<1)};});
+  assert.equal(r.trace,'none');assert.ok(r.plein>0.98,`action pleine (${r.plein})`);assert.ok(r.liens,'les liens sur une ligne');
   assert.deepEqual(erreurs,[]);
  }finally{await nav.close();}
 });

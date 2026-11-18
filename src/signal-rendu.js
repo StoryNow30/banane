@@ -69,6 +69,9 @@
     orbite: '<circle cx="12" cy="12" r="2.6"/><ellipse cx="12" cy="12" rx="9" ry="4.2" transform="rotate(-25 12 12)"/>',
     stats: '<path d="M5 19.5V12M10 19.5V6M15 19.5v-9M20 19.5v-5"/>',
     aurore: '<path d="M5 16.5a7 7 0 0 1 14 0"/><path d="M3 19.5h18"/><path d="M12 4.5v2.5M5.6 8.1l1.6 1.6M18.4 8.1l-1.6 1.6"/>',
+    /* CH-134 : les deux vues du lot dans Orbite (le bouton montre la vue où il mène) */
+    'vue-fil': '<path d="M9 6.5h11M9 12h11M9 17.5h7"/><circle cx="4.8" cy="6.5" r="1.3"/><circle cx="4.8" cy="12" r="1.3"/><circle cx="4.8" cy="17.5" r="1.3"/>',
+    'vue-instrument': '<path d="M3.8 16.5a8.2 8.2 0 1 1 16.4 0"/><path d="M12 16.5l4.2-5.2"/><circle cx="12" cy="16.5" r="1.2"/>',
   };
   const ic = (n, cls) => SVG(IC[n] || '', cls);
   /* CH-036 : le vocabulaire de l'opérateur (D-274, décisions du 01/11) :
@@ -361,8 +364,12 @@
   const phraseTuile = (m, phrase) => { const c = m.court; if (!c || sansBalise(c) === sansBalise(phrase)) return `<h3 class="sg-phrase">${phrase}</h3>${consigneHtml(m)}`;
     return `<h3 class="sg-phrase">${c}</h3>${consigneHtml(m)}${phrase ? `<p class="sg-phrase-longue">${phrase}</p>` : ''}`; };
   const NE_TOUCHE_C = 'Ariane travaille dans ESV : ne touche à rien.';
-  const tuileEtat = (m, anneau, droite, phrase, sous, label, details, ouvert) => `<section class="sg-instrument sg-tu sg-tu-etat" aria-live="polite"${label ? ` aria-label="${esc(label)}"` : ''}><div class="sg-haut">${pastille(m)}${droite ? `<span class="sg-partie">${droite}</span>` : ''}</div><div class="sg-milieu">${anneau}<div class="sg-texte">${phraseTuile(m, phrase)}${sous || ''}</div></div>${detailsB(details, ouvert)}</section>`;
+  const tuileEtat = (m, anneau, droite, phrase, sous, label, details, ouvert, outil = '') => `<section class="sg-instrument sg-tu sg-tu-etat" aria-live="polite"${label ? ` aria-label="${esc(label)}"` : ''}><div class="sg-haut">${pastille(m)}${droite ? `<span class="sg-partie">${droite}</span>` : ''}${outil}</div><div class="sg-milieu">${anneau}<div class="sg-texte">${phraseTuile(m, phrase)}${sous || ''}</div></div>${detailsB(details, ouvert)}</section>`;
   const DETAILS = ['Détails', 'Moins'];
+  /* CH-134 (D-368) : dans Orbite, lot ouvert ou fini, un bouton d'icône bascule la vue du lot : « instrument » (défaut : l'anneau, le détail replié)
+   * ou « fil » (en-tête d'état en haut, fil des derniers cuts et des événements, le plus récent en haut, actions en bas). Navigation locale
+   * (`sg:vue-lot`, src/ui5.js) : rien n'est envoyé au service worker. */
+  const vueB = fil => `<button type="button" class="sg-vue-b" data-act="sg:vue-lot" aria-pressed="${fil}" aria-label="${fil ? 'Vue instrument' : 'Vue fil'}" title="${fil ? 'Vue instrument' : 'Vue fil'}">${ic(fil ? 'vue-instrument' : 'vue-fil')}</button>`;
   const maj1 = t => t.replace(/^(\s*(?:<[^>]+>)*\s*)(\p{Ll})/u, (x, a, c) => a + c.toUpperCase());
   /* La partie est dite en haut à droite de la tuile : la phrase ne la répète pas. */
   const sansPartie = (phrase, partie) => !partie ? phrase : phrase === partie ? '' : phrase.startsWith(partie + ' · ') ? maj1(phrase.slice(partie.length + 3)) : phrase;
@@ -895,7 +902,7 @@
       const sous = trioHtml([[c.vus, c.vus > 1 ? 'Vus' : 'Vu'], [c.corriges, c.corriges > 1 ? 'Corrigés' : 'Corrigé'], [c.valides, c.valides > 1 ? 'Validés tels quels' : 'Validé tel quel']]);
       return { corps: `${tuileEtat(m, anneau, partie, sansPartie(m.phrase, partie) || m.phrase, sous, '', DETAILS, u.details)}<div class="sg-zone" data-z="echo-${esc(m.glyphe)}">${z}</div>${poigneeHtml(s, m, u)}` };
     }
-    const lot = a.etat !== 'pret', R = s.relChiffres || null, p2 = a.passe2, relu = a.etat === 'rel' && R && Number.isInteger(R.faits) && R.total > 0;
+    const lot = a.etat !== 'pret', vueFil = lot && u.vueLot === 'fil', R = s.relChiffres || null, p2 = a.passe2, relu = a.etat === 'rel' && R && Number.isInteger(R.faits) && R.total > 0;
     /* Le pourcentage : seulement quand un total est réellement connu (cuts ciblés du lot, cuts décidés du rattrapage, cuts à relire). Sinon l'anneau
      * porte le nombre de cuts traités ; il tourne tant qu'Ariane travaille. */
     let anneau;
@@ -924,19 +931,19 @@
     const B = bornesHtml(s, m); if (B) { z += B; large = true; }
     const RB = relBornesHtml(s, m); if (RB) { z += RB; large = true; }
     /* CH-129 : pendant une Constellation, détails fermés, la ligne « Constellation · partie k sur n » porte la trace des derniers cuts (une seule tuile) */
-    const traceFile = m.file && !u.details && lot && m.glyphe !== 'hors' && !m.fileBilan ? ((tuileFil(s, m, '').match(/<ul class="sg-fil">[\s\S]*<\/ul>/) || [])[0] || '') : '';
+    const traceFile = m.file && !u.details && !vueFil && lot && m.glyphe !== 'hors' && !m.fileBilan ? ((tuileFil(s, m, '').match(/<ul class="sg-fil">[\s\S]*<\/ul>/) || [])[0] || '') : '';
     const F = fileHtml(m, 'sg-large', traceFile); if (F) z += F;
     if (lot && m.glyphe !== 'hors' && !m.fileBilan) {
       const fil = c => traceFile ? '' : tuileFil(s, m, c), etapes = c => tuileEtapes(s, m, t, c);
-      z += `<div class="sg-duo" data-k="duo">${large ? fil('sg-second') + etapes('sg-second') : a.etat === 'rel' ? etapes('') + fil('sg-second') : fil('') + etapes('sg-second')}</div>`;
+      z += `<div class="sg-duo" data-k="duo">${vueFil ? fil('') + etapes('sg-second') : large ? fil('sg-second') + etapes('sg-second') : a.etat === 'rel' ? etapes('') + fil('sg-second') : fil('') + etapes('sg-second')}</div>`;
     }
     const cle = `orbite-${esc(a.etat)}-${esc(m.glyphe)}${m.incident ? '-incident' : ''}`;
-    return { corps: `${tuileEtat(m, anneau, partie, phrase || m.phrase, sous, '', DETAILS, u.details)}<div class="sg-zone" data-z="${cle}">${z}</div>${lot || nDif(a) ? poigneeHtml(s, m, u) : ''}` };
+    return { vue: vueFil ? 'fil' : '', corps: `${tuileEtat(m, anneau, partie, phrase || m.phrase, sous, '', DETAILS, u.details, lot && m.glyphe !== 'hors' ? vueB(vueFil) : '')}<div class="sg-zone" data-z="${cle}">${z}</div>${lot || nDif(a) ? poigneeHtml(s, m, u) : ''}` };
   }
   function rendre(snap, ui) {
     const s = snap || {}, u = ui || {}, m = modele(s, u);
     const couches = boite => u.couche === 'palette' ? paletteHtml(s, u) : u.couche === 'reglages' ? feuilleHtml(s) : u.couche === 'esv' ? esvHtml(s) : u.couche === 'menu' ? menuHtml(s, m) : boite && u.couche === 'file' ? boiteFileHtml(s) : '';
-    const fen = (activite, etat, t, corps, pied, extra = '') => `<div class="sg-fen" data-activite="${activite}" data-etat="${esc(etat)}" data-teinte="${t}">${barreHtml(s, m, u)}<div class="sg-page">${corps}</div>${pied}${extra}</div>`;
+    const fen = (activite, etat, t, corps, pied, extra = '', vue = '') => `<div class="sg-fen" data-activite="${activite}" data-etat="${esc(etat)}" data-teinte="${t}"${vue ? ` data-vue="${vue}"` : ''}>${barreHtml(s, m, u)}<div class="sg-page">${corps}</div>${pied}${extra}</div>`;
     if (u.onglet === 'correction' && !s.correction) {
       /* L'Aurore sans liste : l'onglet est toujours là (01/11, remarque de l'opérateur « où est le 4e onglet ? »), il dit ce qui le remplit. */
       const mv = { glyphe: 'pret', ton: 'encre2', mot: 'Rien à revoir' };
@@ -946,7 +953,7 @@
     if (u.onglet === 'correction' && s.correction) { const o = ongletCorrectionHtml(s, u); return fen('correction', s.correction.etat, teinte({ ...o.m, activite: 'correction' }, null), o.corps, o.pied, couches(false)); }
     if (u.onglet === 'file' && s.file) { const o = ongletFileHtml(s, u); return fen('file', s.file.etat, teinte({ ...o.m, activite: 'file' }, null), o.corps, o.pied, couches(false)); }
     const t = teinte(m, s), e = ecranHtml(s, m, t, u);
-    return fen(m.activite, m.etat, t, e.corps, actionsHtml(m), tiroirCouche(s, m, u) + couches(true));
+    return fen(m.activite, m.etat, t, e.corps, actionsHtml(m), tiroirCouche(s, m, u) + couches(true), e.vue);
   }
 
   /* CH-097 (D-319) — LES TEXTES DE LA DEUXIÈME PASSE, selon le mode EFFECTIF que le service worker rend avec les choix du lot (`passeDifferesReglage` :

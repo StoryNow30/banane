@@ -1,0 +1,5 @@
+{"titre":"Trois directions du panneau","modele":"chantiers/CH-132/outils/page-directions.html","scenesCH129":true,"scenesCH132":true,
+ "variantes":[
+  {"id":"instrument","nom":"A · Instrument","sous":"Un seul grand repère d'état, une action pleine, tout le reste derrière « Détails ». Sacrifie la densité.","css":["chantiers/CH-132/directions/instrument.css"]},
+  {"id":"console","nom":"B · Console","sous":"Dense et précis : petite typographie, sections à filets, compteurs alignés. Sacrifie le grand chiffre lisible de loin.","css":["chantiers/CH-132/directions/console.css"]},
+  {"id":"fil","nom":"C · Fil","sous":"Un en-tête d'état, le fil des derniers cuts, les actions en bas. Sacrifie l'anneau et la vue d'ensemble immobile.","css":["chantiers/CH-132/directions/fil.css"]}]}
