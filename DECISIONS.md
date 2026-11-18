@@ -3850,3 +3850,8 @@ Complète D-299 sans la modifier.
 ## D-369 — Dessiner la vraie interface dans Figma, avec ses animations (opérateur, 17/11 au soir)
 - Mots de l'opérateur : « n'oublie pas de dessiner la véritable interface sous Figma en gardant des animations aussi bien faites que sous la maquette » ; « (celle de Glacier j'entends) ».
 - Effet : une fois CH-134 fini (direction A par défaut, vue fil), l'intégrateur dessine dans Figma les écrans réels du panneau en palette Glacier, avec un prototype animé (transitions entre états, à la manière de la maquette « Direction A — Cadran » et de son tableau des gestes de mouvement). Les sessions de nuit n'ont pas l'accès à Figma : c'est l'intégrateur qui le fait.
+
+## D-370 — L'interface de la 5.0 est validée ; la 5.0 va sur main (opérateur, 18/11 au matin)
+- Contexte : après la nuit de clôture (CH-133 à CH-136 intégrés ; interface « Instrument » par défaut avec la vue fil, interface « Cadran » au choix dans les Réglages ; dessin Figma de l'interface réelle avec son prototype animé, D-369), l'intégrateur a laissé `main` et l'étiquette `v5.0` en attente de la validation de l'interface demandée par D-367 (3).
+- Mots de l'opérateur, après avoir consulté le dessin Figma : « Je valide l'interface ».
+- Effet : la condition (3) de D-367 est remplie ; la 5.0 est close avec la Vision 20. Selon l'accord de D-368, la 5.0 va sur `main` avec l'étiquette `v5.0`. `main` porte une retouche de documents de la 4.9 absente de l'histoire de la 5.0 : une avance simple n'est pas possible telle quelle ; la manière de rejoindre `main` est demandée à l'opérateur (compte rendu du 18/11).
