@@ -1,4 +1,4 @@
-# Banane V4 TEST — journal des versions
+# Ariane — journal des versions
 
 ## Vision 20 — 18/11 (D-366 à D-370 ; CH-133 à CH-136) — clôture de la 5.0 (interface validée, D-370) : l'interface « Instrument » par défaut, la vue fil, l'interface « Cadran » au choix, la recette totale
 - **Interface « Instrument » par défaut** (CH-134, D-368, direction A de CH-132 choisie par l'opérateur). Écrite dans les règles d'origine de `panel-signal.css`, sans feuille par-dessus : un grand anneau au centre (210 px), la phrase dessous, une action pleine toute largeur, l'avis en ligne ambre, la Constellation centrée. Équivalence de styles calculés contre « feuille d'avant + direction A » : 378 vues, aucun écart hors de trois classes expliquées.

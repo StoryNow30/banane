@@ -1,3 +1,32 @@
+# Ariane 5.0 — « Vision 20 »
+
+Ariane est une extension Chrome qui place les rails dans ESV (nuages LiDAR) : elle lit le cut affiché, pose les rails quand elle est sûre, laisse à l'opérateur ce qu'elle ne sait pas résoudre, puis relit et corrige ce qui doit l'être. Elle n'envoie jamais SKIP et ne valide jamais un cut non résolu.
+
+**Version stable : 5.0** (Vision 20, 18/11/2026, interface validée par l'opérateur, D-370).
+
+## Ce qu'il y a dans la 5.0
+- **Orbite** : le lot automatique (pose, différés, deuxième passe plafonnée à 10 écritures), avec l'interface **« Instrument »** par défaut et, dans la ligne d'état, la **« Vue fil »** (les derniers cuts, le plus récent en haut).
+- **Constellation** : plusieurs parties à la suite, avec leur bilan et leurs départs.
+- **Aurore** : la reprise des posés qu'Ariane juge probablement faux.
+- **Écho** : l'observation du travail manuel dans ESV, pour apprendre.
+- **Relecture** : en pause ou après un arrêt, on choisit le cut de départ et de fin.
+- **Réglages** : thème, palette (Glacier, Sarcelle, Signal), interface (Instrument ou Cadran), hauteur des poses (allumée par défaut), télécommande depuis le téléphone.
+
+## Installer
+1. Décompresser le paquet « Vision 20 » **dans le même dossier que la version précédente** (les réglages sont liés au dossier et au poste).
+2. `chrome://extensions` › Recharger, puis F5 sur ESV.
+3. Sur un poste neuf, le bandeau « Réglages neufs sur ce poste » le signale : vérifier les Réglages avant le premier lot.
+
+## Pour aller plus loin
+- `LIRE_EN_PREMIER.md` : l'état du projet.
+- `CHANGELOG.md` : le détail de chaque version et ses preuves.
+- `DECISIONS.md` : les décisions de l'opérateur (D-xxx).
+- `CLAUDE.md` et `fiches/PASSATION_SESSION.md` : les règles pour qui travaille dans ce dépôt.
+
+---
+
+# Historique (avant la 5.0)
+
 # Ariane 4.9.0 test 1 — préparation V1 locale
 
 Ce paquet de test dérive de la 4.8.6 (042aee64…) et du V1 corrigé relu (baa548d8…). Il chronomètre Orbite sans accélération ni changement des règles de pose. Son manifeste et ses métadonnées internes annoncent 4.9.0.1 ; les affichages annoncent « 4.9.0 test 1 ». Le numéro est proposé localement : réservation globale non vérifiée, aucun déploiement ni sortie stable.
