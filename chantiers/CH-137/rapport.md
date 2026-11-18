@@ -41,5 +41,11 @@ Branche `chantier/CH-137`, partie du tronc `claude/50-test17` (6f23171), tronc 3
 - **Retirés** : `src/cadran-rendu.js`, `panel-cadran.css`, `tests/ch135-cadran-*.test.cjs`.
 - Aucun fichier protégé ; `manifest.json`, la version et le paquet n'ont pas bougé.
 
+## Reste à faire (arrêt propre demandé : quota de l'opérateur)
+- Maquette ESV (`tests/esv-maquette/essais.cjs`) : lancée, puis arrêtée avant son résultat ; non rejouée.
+- Essais du panneau en Mix (`UI5_VARIANTE=mix`) et en Glacier, en entier : non rejoués. Sont verts seulement les fichiers cités plus haut (essais CH-137, ui5-panneau, pose-lot-inchanges, signal-normal, signal-compact, ch134-vue-fil, vue fil en Mix, connexion-t21, ch136-*). Liste à rejouer : les 35 fichiers qui chargent `tests/helpers/signal-navigateur.cjs`, puis ui5-*, ch129 à ch136, télécommande et intégration.
+- Audit des écrans neufs (validés par l'opérateur, D-374) sur 320 à 720 px × 2 thèmes : non fait ; seuls les 13 écrans de la planche ont été audités.
+- D-374 fait : « Suivre dans Orbite » est l'action pleine de la Constellation en cours et en passage, en Mix seulement (essai rouge puis vert).
+
 ## Ce qui reste
 - Le retour de l'opérateur sur les écrans neufs (page de captures envoyée), puis leur audit ; la question de la mère sur l'action pleine de la Constellation en cours et en passage. Détails techniques et pastille de la barre : finis.
