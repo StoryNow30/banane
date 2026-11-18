@@ -18,7 +18,7 @@ Ariane est une extension Chrome qui place des rails dans ESV (LiDAR). Ce fichier
 - Un exécutant (ticket `chantier/…`) ne touche **jamais** `src/engine.js`, `src/adapter-page.js`, `src/geometry*.js`, `src/gcv2*.js`, `src/lot-decision.js`, l'écriture dans ESV, `manifest.json`, la version, le paquet, ni le tronc.
 
 ## Branches
-- Tronc de la 5.0 : `claude/50-test17`. Seul l'intégrateur y pousse, en avance simple. Depuis D-303 (08/11), l'intégrateur est Claude ; depuis D-364 (17/11), OpenCode (sur le VPS de l'opérateur) prend la main par étapes, jusqu'à 100 % : il est exécutant d'abord, puis intégrateur (plan : `fiches/PASSATION_OPENCODE.md`). Ni Codex ni Cursor (D-306).
+- Tronc de la 5.0 : `claude/50-test17`. Seul l'intégrateur y pousse, en avance simple. Depuis D-303 (08/11), l'intégrateur est Claude ; depuis D-364 (17/11), OpenCode (sur le VPS de l'opérateur) prend la main par étapes, jusqu'à 100 % : il est exécutant d'abord, puis intégrateur (plan : `fiches/PASSATION_OPENCODE.md`). **Depuis D-375 (18/11), OpenCode a toute la main** : il est l'intégrateur et pousse le tronc ; Claude relit à la demande de l'opérateur. Ni Codex ni Cursor (D-306).
 - Un chantier = une branche `chantier/<ticket>` partie du tronc, un ticket `chantiers/<ticket>.md` lu en entier avant de commencer.
 - Documents de pilotage et données : dépôt `banane-data` (branche `claude/execute-prompt-00-18ra5a`).
 

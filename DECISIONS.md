@@ -3871,3 +3871,7 @@ Complète D-299 sans la modifier.
 ## D-374 — Les écrans neufs de l'interface Mix sont validés (opérateur, 18/11)
 - Après la page des écrans neufs de CH-137 (Constellation et son bilan, Aurore, Réglages, menu, vue fil, relecture et bornes, rattrapage, Écho sans séance, détails techniques, bandeau « Réglages neufs », en sombre et en clair) et la page de comparaison avec la planche Q4, mot de l'opérateur : « je valide ».
 - Effet : CH-137 finit sans changer ces écrans, sauf un point laissé à l'intégrateur (lecture de l'intégrateur, réversible d'un mot) : en Constellation « En cours » et « Passage », « Suivre dans Orbite » devient l'action pleine, comme la planche qui en a une par état ; mêmes ordres, même ordre des boutons. Puis maquette ESV, essais du panneau en Glacier et en Mix, intégration dans la Vision 21.
+
+## D-375 — Tout est confié à OpenCode (opérateur, 18/11)
+- Contexte : quota de l'opérateur presque épuisé (5 heures : 91 % ; semaine : 96 %, réinitialisée le dimanche à 21 h) ; CH-137 et CH-138 arrêtés proprement par l'intégrateur. Mot de l'opérateur : « on confie tout à opencode ».
+- Effet : les étapes 2 à 4 du passage (`fiches/PASSATION_OPENCODE.md`) sont levées : après CH-131, OpenCode est l'intégrateur, avec la main entière (tickets, intégration, verify, paquets, avance du tronc). Premier travail après CH-131 : la Vision 21 (`chantiers/VISION-21.md` : CH-137 et CH-138, avec ce qui reste à prouver). Tous les interdits de `CLAUDE.md` tiennent. Claude relit à la demande de l'opérateur. `CLAUDE.md` et `AGENTS.md` mis à jour.

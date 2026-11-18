@@ -2,6 +2,8 @@
 
 But (D-364, mots de l'opérateur) : « progressivement léguer toute la production et tout le développement […] au fur et à mesure c'est OpenCode qui aura la main à 100 % ». La suspension de D-365 (« d'abord clore Ariane 5.0 ») est tombée : la 5.0 est close (D-370, Vision 20, sur `main`). Le 18/11, l'opérateur a demandé la passation complète et le plan d'Ariane 6 (D-373). Ce document est tout ce qu'il faut à OpenCode pour faire, seul, le travail de l'exécutant puis celui de l'intégrateur. Le plan de travail est `fiches/PLAN_ARIANE_6.md`.
 
+**D-375 (18/11) : l'opérateur confie tout à OpenCode** (« on confie tout à opencode »). Les étapes 2 à 4 ci-dessous sont levées : après CH-131 (contrôle que le VPS refait le livré), tu es l'intégrateur, avec la main entière. Le tableau reste comme rappel de ce que chaque rôle fait.
+
 ## 0. Ton rôle, étape par étape
 Chaque étape ne s'ouvre que si la précédente est **tenue**, constaté par l'intégrateur et écrit au hub.
 | Étape | Tu fais | Claude fait | Tenue quand |
@@ -71,12 +73,12 @@ L'opérateur envoie ses exports (zips). Ils vont dans `banane-data/collections/<
 
 ## 9. État au 18/11/2026
 - 5.0 close : Vision 20 (build `a19c5ed5`) livrée ; `main` = 5.0 (d44ebb10). L'étiquette `v5.0` est à créer par une publication GitHub (en attente).
-- En cours chez Claude, à ne pas toucher : CH-137 (interface alternative « Mix », D-372 ; Glacier par défaut, Cadran retiré) et CH-138 (compteur des cuts appris), qui feront la Vision 21.
+- Arrêtés proprement par Claude le 18/11 (quota de l'opérateur épuisé), à intégrer par toi : CH-137 (interface alternative « Mix », D-372, D-374 ; `chantier/CH-137` à `91601a5`) et CH-138 (compteur des cuts appris ; `chantier/CH-138`, lire son rapport). C'est la Vision 21 : `chantiers/VISION-21.md`.
 - En attente de l'opérateur : réglages d'un poste à l'autre ; relais à redéployer ; validation du plan d'Ariane 6 et de son tronc.
-- Prêt pour toi : CH-131 (`chantiers/CH-131.md`, CRC de référence `chantiers/CH-131/crc-vision20.txt`).
+- À faire, dans l'ordre : `node tools/vps-pret.cjs` ; CH-131 (`chantiers/CH-131.md`, CRC de référence `chantiers/CH-131/crc-vision20.txt`) ; la Vision 21 (`chantiers/VISION-21.md`) ; puis le plan d'Ariane 6 une fois validé par l'opérateur.
 
 ## 10. Premier message à donner à OpenCode
-> Tu reprends le développement d'Ariane. Lis `AGENTS.md`, `CLAUDE.md` et `fiches/PASSATION_OPENCODE.md` en entier, puis lance `node tools/vps-pret.cjs` et dis-moi ce qui manque. Quand il dit « Prêt », fais le chantier CH-131 (`chantiers/CH-131.md`) et rends ton rapport au hub. Tout en français, seulement du mesuré.
+> Tu reprends le développement d'Ariane. Lis `AGENTS.md`, `CLAUDE.md` et `fiches/PASSATION_OPENCODE.md` en entier, puis lance `node tools/vps-pret.cjs` et dis-moi ce qui manque. Quand il dit « Prêt », fais le chantier CH-131 (`chantiers/CH-131.md`), rends ton rapport au hub, puis fabrique la Vision 21 (`chantiers/VISION-21.md`). Tu as toute la main (D-375). Tout en français, seulement du mesuré.
 
 ## Ce qui ne change pas
 Les interdits de `CLAUDE.md`, pour toi comme pour Claude ; les décisions de l'opérateur ; une version = un verify complet, la maquette si un chemin navigateur change, les parités si un module de décision change.
