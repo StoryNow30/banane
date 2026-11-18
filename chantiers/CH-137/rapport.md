@@ -3,7 +3,7 @@
 Branche `chantier/CH-137`, partie du tronc `claude/50-test17` (6f23171), tronc 30a7514 fusionné (merge, sans rebase). Maquette : banane-data `maquettes/figma-signal-mix-q4/` (d45e552). La finition « Riche » (D-371) a été abandonnée en cours de route (D-372) : rien n'en a été codé.
 
 ## Ce qui est livré
-- **Glacier** : Réglages › Interface « Glacier / Mix » ; la valeur gardée reste `signal`, aucune clé de stockage renommée. Plus aucun « Instrument » à l'écran ; il n'apparaissait que sur la ligne Interface. Restent « Vue instrument » / « Vue fil » (bouton de CH-134) : ils nomment la vue de l'anneau, pas l'interface. Question posée à la mère, laissés en l'état.
+- **Glacier** : Réglages › Interface « Glacier / Mix » ; la valeur gardée reste `signal`, aucune clé de stockage renommée. Plus aucun « Instrument » à l'écran ; il n'apparaissait que sur la ligne Interface. Le bouton de vue de CH-134 dit « Vue du lot » / « Vue fil » (réponse de la mère : « Instrument » quitte l'écran ; essai dans `tests/ch137-mix-rendu.test.cjs`).
 - **Cadran retiré** : `src/cadran-rendu.js`, `panel-cadran.css`, six essais `ch135`. Un choix gardé `cadran` ou `riche` ouvre en Mix.
 - **`src/mix-rendu.js`** (pur) : part du rendu et du modèle de Glacier. L'anneau devient le gros chiffre (Plex Mono 44) avec sa légende et la réglette graduée 0 / milieu / N. L'aiguille est ambre pendant le lot et claire en pause ; les marques désignent les cuts à poser ; pour Écho, un trait par visite. Rien sans donnée : pas de réglette sans total ciblé ; pas de chiffre là où la planche n'en porte pas (à toi, interrompu, rattrapage, hors ligne, fin). L'icône d'état vient de la planche. « Ce qui reste » titre la ligne du tiroir. La ligne « Palette » est retirée en Mix.
 - **Deux extras marqués `data-mx-extra`**, raccourcis vers des commandes du menu de Glacier : le bouton « Commandes » de la barre et le pied « Cache des exports », qui reprend le bouton du menu avec sa garde. La planche ne donne pas la taille du cache (« 1 lot, 190 Mo ») et le panneau ne la connaît pas : le pied dit seulement quand le cache est vidable.
@@ -23,15 +23,23 @@ Branche `chantier/CH-137`, partie du tronc `claude/50-test17` (6f23171), tronc 3
   - Chaque fichier passe en 12 s au plus.
 - Vue fil en Mix (`tests/integration-cloture-vue-fil-mix-navigateur.test.cjs`) : un seul bouton `sg:vue-lot`, `data-vue="fil"`, aucun message au service worker. ÉTABLI.
 - `ui5-panneau` 19/19 et `pose-lot-inchanges-4959` 6/6, mis à jour (nouveau script et nouveau fichier `src/`). ÉTABLI.
-- Audit : AUDIT_A_COMPLETER.
+- `ui5-navigateur-signal-normal`, `-compact`, `ch134-vue-fil` et `ch134-vue-fil-navigateur` dépendent maintenant de la variante (classe, police, allure de Mix) : verts en Glacier et en Mix (`UI5_VARIANTE=mix`). ÉTABLI.
+- Le rail de la Constellation n'écrit plus « +1 » ni « ? » en Mix : essai rouge puis vert. Glacier n'est pas changé.
+- Audit (`chantiers/CH-137/outils/audit.cjs`) des 13 écrans de la planche. Il mesure : débordement, zone à défiler, troncature, contraste 4,5:1, rien sous 11 px, et un bouton recouvert (mesure ajoutée, vérifiée sur un recouvrement posé exprès). ÉTABLI.
+  - Premier passage : 11 largeurs × 2 thèmes = 286 vues, 66 défauts.
+    - Le menu de la barre sortait de 2 px à 560 px : 26 défauts.
+    - Le pied était coupé par une ellipse à 320 px : 38 défauts.
+    - « File terminée » défilait de 108 px à 320 px : 2 défauts.
+  - Les trois sont corrigés ; contrôle : 286 vues, 0 défaut.
+  - Le bandeau « Réglages neufs » ne recouvre aucune action, à 320 px compris.
+  - Les écrans neufs ne sont pas encore audités : ils attendent le retour de l'opérateur.
 
 ## Fichiers
 - **Nouveaux** : `src/mix-rendu.js`, `panel-mix.css`, `tests/ch137-glacier-mix.test.cjs`, `tests/ch137-mix-rendu.test.cjs`, `tests/ch137-mix-navigateur{,-2,-3,-4}.test.cjs`, `chantiers/CH-137/outils/{scenes,photos,audit,page}.cjs`, ce rapport.
-- **Modifiés** : `src/ui5.js`, `src/signal-rendu.js` (ligne Interface), `panel.html`, `tests/ui5-panneau.test.cjs`, `tests/pose-lot-inchanges-4959.test.cjs`, `tests/helpers/signal-navigateur.cjs`.
+- **Modifiés** : `src/ui5.js`, `src/signal-rendu.js` (ligne Interface, « Vue du lot »), `panel.html`, `tests/ui5-panneau.test.cjs`, `tests/pose-lot-inchanges-4959.test.cjs`, `tests/helpers/signal-navigateur.cjs`, `tests/ui5-navigateur-signal-{normal,compact}.test.cjs`, `tests/ch134-vue-fil{,-navigateur}.test.cjs`.
 - **Renommé** : `tests/integration-cloture-vue-fil-mix-navigateur.test.cjs`.
 - **Retirés** : `src/cadran-rendu.js`, `panel-cadran.css`, `tests/ch135-cadran-*.test.cjs`.
 - Aucun fichier protégé ; `manifest.json`, la version et le paquet n'ont pas bougé.
 
 ## Ce qui reste
-- Le retour de l'opérateur sur les écrans neufs, puis leur finition (détails techniques, pastille de la barre en Constellation) et leur audit.
-- `ui5-navigateur-signal-normal` et `-compact` exigent la classe exacte `u-signal` : rejoués en Mix (`UI5_VARIANTE=mix`), ils échouent par construction, comme au Cadran.
+- Le retour de l'opérateur sur les écrans neufs (page de captures envoyée), puis leur audit ; la question de la mère sur l'action pleine de la Constellation en cours et en passage. Détails techniques et pastille de la barre : finis.
