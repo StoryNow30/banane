@@ -3,6 +3,9 @@
  * L'anneau (`.sg-anneau`, son `circle.sg-arc`) reste le même élément pendant que son chiffre change (CH-104 : le rail et son curseur n'existent plus ; sans total, l'arc tourne : animation `sg-tourne`) ; un nouveau différé entre seul ; une couche
  * ouverte (palette) ne rejoue pas son entrée ; le chiffre qui change le signale une fois (classe posée le temps de l'animation). Montage : tests/helpers/signal-navigateur.cjs. Données fabriquées. */
 const {test}=require('node:test'),assert=require('node:assert/strict');
+/* CH-137 : ce fichier décrit la mise à jour de l'anneau, qui n'existe qu'en Glacier. Il ne suit pas `UI5_VARIANTE` ; en Mix, le nombre est mis à
+ * jour en place par `src/mix-rendu.js` et cela se mesure dans tests/ch137-mix-*.test.cjs. */
+delete process.env.UI5_VARIANTE;
 const {CHROMIUM,PW,absent,N,SC,ouvrir}=require('./helpers/signal-navigateur.cjs');
 const lot=n=>N.lot('RUNNING',{processed:Array.from({length:n},(_,i)=>({identity:{part:13,cut:4790+i},cut:4790+i,durationMs:6000+i*100})),deferred:[4796,4803].map(c=>({identity:{part:13,cut:c},cut:c})),cutStartedAt:new Date().toISOString()});
 test('mise à jour en place : l’anneau reste le même et son chiffre change, un nouveau différé entre, la palette ne rejoue pas son entrée',{skip:absent,timeout:19000},async()=>{

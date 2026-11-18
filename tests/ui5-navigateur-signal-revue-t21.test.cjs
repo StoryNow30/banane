@@ -6,6 +6,9 @@
  *  - connexion T21 (test 22) : l'onglet 1, listé par `list-tabs` et prêt, est celui que le service worker cible (`tabId`) ; sans lui, « Démarrer » reste grisé ;
  *  - R6 : pendant un lot, le panneau se redessine chaque seconde ; l'écran de Signal n'est pas réécrit pour autant. */
 const {test}=require('node:test'),assert=require('node:assert/strict');
+/* CH-137 : ce fichier décrit le redessin de Glacier (l'anneau et le fil ne sont pas recréés). Il ne suit pas `UI5_VARIANTE` ; la variante Mix a
+ * ses propres essais (tests/ch137-mix-*.test.cjs). */
+delete process.env.UI5_VARIANTE;
 const {CHROMIUM,PW,absent,SC,ouvrir}=require('./helpers/signal-navigateur.cjs');
 
 /* Les messages envoyés, avec leurs arguments ; `start` refusé comme le moteur le refuse quand ESV n'affiche pas le premier cut. */

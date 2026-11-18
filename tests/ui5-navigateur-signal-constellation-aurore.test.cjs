@@ -6,6 +6,9 @@
  * aucun libellé d'onglet n'est coupé. Direction B « Cadran » (02/11) : l'anneau, le registre, les temps numérotés. La barre est mesurée par ses enfants directs et ses onglets : le nom de l'onglet ESV dans la puce se rogne (points
  * de suspension), c'est voulu. Données fabriquées. */
 const { test } = require('node:test'), assert = require('node:assert/strict');
+/* CH-137 : ce fichier décrit la Constellation et l'Aurore de Glacier (anneau, temps dans la tuile). Il ne suit pas `UI5_VARIANTE` ; la
+ * Constellation et l'Aurore de Mix ont leurs propres essais (tests/ch137-mix-*.test.cjs). */
+delete process.env.UI5_VARIANTE;
 const { CHROMIUM, PW, absent, ouvrir, SC } = require('./helpers/signal-navigateur.cjs');
 const { poserEtat } = require('./helpers/signal-file.cjs');
 const CL = require('../src/correction-liste.js');

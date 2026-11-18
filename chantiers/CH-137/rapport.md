@@ -35,17 +35,52 @@ Branche `chantier/CH-137`, partie du tronc `claude/50-test17` (6f23171), tronc 3
   - Les écrans neufs ne sont pas encore audités : ils attendent le retour de l'opérateur.
 
 ## Fichiers
-- **Nouveaux** : `src/mix-rendu.js`, `panel-mix.css`, `tests/ch137-glacier-mix.test.cjs`, `tests/ch137-mix-rendu.test.cjs`, `tests/ch137-mix-navigateur{,-2,-3,-4}.test.cjs`, `chantiers/CH-137/outils/{scenes,photos,audit,page}.cjs`, ce rapport.
+- **Nouveaux** : `src/mix-rendu.js`, `panel-mix.css`, `tests/ch137-mix-agencement.test.cjs`, `tests/ch137-mix-recouvrements.test.cjs`, `tests/ch137-mix-parite.test.cjs`, `tests/ch137-glacier-mix.test.cjs`, `tests/ch137-mix-rendu.test.cjs`, `tests/ch137-mix-navigateur{,-2,-3,-4}.test.cjs`, `chantiers/CH-137/outils/{scenes,photos,audit,page}.cjs`, ce rapport.
 - **Modifiés** : `src/ui5.js`, `src/signal-rendu.js` (ligne Interface, « Vue du lot »), `panel.html`, `tests/ui5-panneau.test.cjs`, `tests/pose-lot-inchanges-4959.test.cjs`, `tests/helpers/signal-navigateur.cjs`, `tests/ui5-navigateur-signal-{normal,compact}.test.cjs`, `tests/ch134-vue-fil{,-navigateur}.test.cjs`.
 - **Renommé** : `tests/integration-cloture-vue-fil-mix-navigateur.test.cjs`.
 - **Retirés** : `src/cadran-rendu.js`, `panel-cadran.css`, `tests/ch135-cadran-*.test.cjs`.
 - Aucun fichier protégé ; `manifest.json`, la version et le paquet n'ont pas bougé.
 
-## Reste à faire (arrêt propre demandé : quota de l'opérateur)
-- Maquette ESV (`tests/esv-maquette/essais.cjs`) : lancée, puis arrêtée avant son résultat ; non rejouée.
-- Essais du panneau en Mix (`UI5_VARIANTE=mix`) et en Glacier, en entier : non rejoués. Sont verts seulement les fichiers cités plus haut (essais CH-137, ui5-panneau, pose-lot-inchanges, signal-normal, signal-compact, ch134-vue-fil, vue fil en Mix, connexion-t21, ch136-*). Liste à rejouer : les 35 fichiers qui chargent `tests/helpers/signal-navigateur.cjs`, puis ui5-*, ch129 à ch136, télécommande et intégration.
-- Audit des écrans neufs (validés par l'opérateur, D-374) sur 320 à 720 px × 2 thèmes : non fait ; seuls les 13 écrans de la planche ont été audités.
-- D-374 fait : « Suivre dans Orbite » est l'action pleine de la Constellation en cours et en passage, en Mix seulement (essai rouge puis vert).
+## Audit des écrans neufs — fait le 18/11 (intégrateur)
 
-## Ce qui reste
-- Le retour de l'opérateur sur les écrans neufs (page de captures envoyée), puis leur audit ; la question de la mère sur l'action pleine de la Constellation en cours et en passage. Détails techniques et pastille de la barre : finis.
+`chantiers/CH-137/outils/audit.cjs` sur les **38 scènes**, 11 largeurs de 320 à 720 px et deux thèmes : **836 vues, 100 défauts**. Les 13 écrans de la planche, audités plus haut, restent à 0 ; les 100 défauts sont tous sur les écrans neufs validés par l'opérateur (D-374). ÉTABLI.
+
+Répartition mesurée, neuf familles :
+
+| Défaut | Nombre | Où |
+|---|---:|---|
+| `ZONE A DEFILER` | 30 | vue fil (22), bornes de relecture (8) |
+| `SORT` du menu de la barre (28 px, puis 12 px) | 28 | Constellation (14 vues), bilan de la Constellation (14) |
+| `RECOUVERT` — bouton « Ouvrir » de l'Aurore | 28 | toutes les largeurs, deux thèmes, sous `.sg-actions`, `BUTTON`, `entree`, `sg-secondaire`, `mx-pied` |
+| `RECOUVERT` — autres boutons et un champ | 14 | tiroir, bornes |
+| **Total** | **100** | Aurore 32, vue fil 22, bornes 10, tiroir 8, sept scènes de Constellation 4 chacune |
+
+Corrections, chacune avec son essai navigateur (`tests/ch137-mix-recouvrements.test.cjs`, `tests/ch137-mix-agencement.test.cjs`), dans `panel-mix.css` seulement :
+
+- **Aurore** : tête, comptes et lignes plus denses (40 px par cut, motif à 18 px de ligne ; en compact 11/14 px, le détail `sg-d` masqué) et actions du pied resserrées. Plus aucun « Ouvrir » ni « Examiner » sous les actions ou le pied, à aucune largeur.
+- **Tiroir** : en compact, chaque action garde son nom accessible mais prend la largeur de son icône (30 px) au lieu de déborder la zone.
+- **Barre de la Constellation** : espaces resserrés quand le bouton du bilan est présent ; sous 400 px la pastille ESV ne garde que son point (son libellé était déjà masqué à cette largeur) au lieu de réserver 60 px. Le menu rentre.
+- **Vue fil** : contrat de CH-134 tenu — la zone prend la hauteur libre et ce qui ne tient pas est **masqué**, pas défilé.
+- **Bornes de relecture** : sous 560 px la réglette s'efface au profit du choix des deux cuts et du gros chiffre ; la zone ne défile plus, aucune borne recouverte.
+
+**Aucune exclusion de critère n'a été ajoutée.** La règle `ZONE A DEFILER` de `chantiers/CH-104/outils/capturer.cjs` et la mesure `RECOUVRE` de `chantiers/CH-137/outils/scenes.cjs` sont utilisées sans changement : c'est la mise en page qui a changé.
+
+Contrôle final : **836 vues, 0 défaut.** ÉTABLI.
+
+## Essais du panneau en Glacier et en Mix — faits le 18/11 (intégrateur)
+
+Les **36 fichiers** qui montent le panneau par `tests/helpers/signal-navigateur.cjs` ont été rejoués deux fois, un fichier à la fois : en Glacier, puis avec `UI5_VARIANTE=mix`. **68 essais sur 68 dans les deux**, zéro annulé. ÉTABLI.
+
+Le premier passage en Mix donnait **13 rouges sur 65**. Ce n'étaient pas des régressions : six fichiers décrivent la **structure de Glacier** — l'anneau `.sg-anneau`, le `.sg-chiffre`, la ligne « Palette » des Réglages (retirée en Mix, D-371 : la palette ne vaut que pour Glacier), la trace masquée à 600 px, les temps dans la tuile — et la variable d'environnement les faisait mesurer Mix. Ces six fichiers fixent maintenant leur variante (`delete process.env.UI5_VARIANTE`, commenté et justifié) : un essai dit ce qu'il mesure, il ne l'hérite pas de l'environnement.
+
+Ce qu'ils portaient de **comportemental** est repris, mesuré en Mix, dans `tests/ch137-mix-parite.test.cjs` (3 essais, verts) :
+
+- l'Aurore liste ses deux parties, et une fois ouverte, « Ouvrir » sert aussi pour la partie 14 (traversée allumée) ;
+- la Constellation garde le bouton « Bilan et départs des parties » et ses deux écrans ;
+- le gros nombre de Mix suit le cut affiché, et l'anneau n'est plus dans le document (D-372).
+
+**Mesure non jugée, à savoir** : en Mix, à 380 × 640, la ligne d'état de la tuile est à **20 px** du haut, pour un seuil de « moins de 20 px » écrit pour la tuile de Glacier (CH-115). Même alignement, densité différente : le critère ne vise pas cette tuile-là, et je ne l'ai pas modifié. ÉTABLI comme mesure, non tranché comme exigence.
+
+## Reste à faire
+- Maquette ESV (`tests/esv-maquette/essais.cjs`) : non rejouée sur cette branche ; elle se rejoue sur l'arbre intégré, une fois.
+- Le retour de l'opérateur sur les écrans neufs : page de captures envoyée, retour non encore consigné.

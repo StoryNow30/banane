@@ -6,6 +6,9 @@
  *  - rien de tout cela sous « réduire les animations ».
  * Montage : tests/helpers/signal-navigateur.cjs ; états fabriqués de chantiers/CH-104/outils/capturer.cjs. */
 const {test}=require('node:test'),assert=require('node:assert/strict');
+/* CH-137 : ce fichier décrit l'anneau et les coches de Glacier. Il ne suit pas `UI5_VARIANTE` : la variante Mix a ses propres essais
+ * (tests/ch137-mix-*.test.cjs), et son équivalent du chiffre est le gros nombre, pas l'anneau. */
+delete process.env.UI5_VARIANTE;
 const {CHROMIUM,PW,absent,ouvrir}=require('./helpers/signal-navigateur.cjs');
 const {E}=require('../chantiers/CH-104/outils/capturer.cjs');
 const js=x=>JSON.parse(JSON.stringify(x));
