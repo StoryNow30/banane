@@ -19,12 +19,12 @@
   const D = root.document, S5 = root.ArianeSignalRendu, CLE = 'banane51Interface', CLE_EX = 'banane51Examines', CLE_PALETTE = 'banane51Palette', CLE_VUE = 'banane51VueLot';
   if (!D || !S5 || !root.ArianePanel) return;
   /* Test 23 : les présentations d'essai « ariane2 » et « palette » sont retirées (opérateur, après la test 21) ; Signal est la seule présentation. */
-  /* CH-137 (D-371) : « signal » est l'interface Glacier (par défaut) ; « mix », l'interface alternative choisie dans les Réglages (mêmes boutons, mêmes
-   * gardes), remplace le Cadran de CH-135 (retiré) : un choix gardé « cadran » ouvre en « mix ». En attendant son dessin, « mix » garde le rendu Glacier. */
+  /* CH-137 (D-371, D-372) : « signal » est l'interface Glacier (par défaut) ; « mix », l'interface alternative choisie dans les Réglages (src/mix-rendu.js,
+   * panel-mix.css ; mêmes boutons, mêmes gardes), remplace le Cadran de CH-135 (retiré) : un choix gardé « cadran » ou « riche » ouvre en « mix ». */
   const VARIANTES = ['signal', 'mix'], defaut = 'signal';
   const TAILLE = { signal: [600, 760], mix: [600, 760] };
-  const lireVariante = v => v === 'cadran' ? 'mix' : v;
-  const rendu = () => S5;
+  const lireVariante = v => ['cadran', 'riche'].includes(v) ? 'mix' : v;
+  const rendu = () => variante === 'mix' && root.ArianeMixRendu ? root.ArianeMixRendu : S5;
   const ui = { last: '', pauseLot: null, q: '', pi: 0, focusQ: false, tiroir: false, couche: null, sel: null, note: '', onglet: null, details: false, stats: false, palette: 'glacier', vueLot: 'instrument' };
   const examines = { lot: null, cles: new Set() };
   let variante = defaut, hote = null, gcv2Base = null, secours = false;
@@ -645,7 +645,7 @@
        * tel clic, le pied n'accepte aucun clic (la feuille « Ce qui reste », elle, répond tout de suite : « Ouvrir » y est attendu aussitôt). Leur aspect et leurs ordres ne changent pas ; les changements venus du lot non plus. */
       const t = Date.now(), act = a.dataset.act;
       if (molette.sansClic > t && a.closest?.('.sg-molette')) return;   /* CH-105 : la fin d'un glisser n'est pas un clic sur un voisin */
-      if (ui.gardePied && t < ui.gardePied && a.closest?.('.sg-actions')) return;
+      if (ui.gardePied && t < ui.gardePied && a.closest?.(variante === 'mix' ? '.sg-actions,.sg-poignee' : '.sg-actions')) return;   /* CH-137 : en Mix, « Ce qui reste » est sous les actions */
       if (/^(mode:|sg:onglet-|sg:tiroir$)/.test(act)) ui.gardePied = t + GARDE_PIED_MS;
       agir(act, a);
     });
@@ -755,8 +755,8 @@
   function appliquer(v, redimensionner) {
     variante = v;
     D.body.classList.toggle('ui5', !secours);
-    /* CH-137 : « mix » garde la feuille de Glacier (panel-signal.css, sous `#ui5.u-signal`) et porte en plus `u-mix`. */
-    hote.className = v === 'mix' ? 'u-signal u-mix' : 'u-signal';
+    /* CH-137 : Mix a sa propre feuille (panel-mix.css, sous `#ui5.u-mix`) ; celle de Glacier ne s'y applique pas. */
+    hote.className = v === 'mix' ? 'u-mix' : 'u-signal';
     hote.hidden = secours;
     ui.focusQ = ui.couche === 'palette';
     ui.last = '';

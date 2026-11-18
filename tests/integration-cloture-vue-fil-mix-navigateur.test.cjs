@@ -4,11 +4,11 @@
  * Vrai panneau (panel.html, API Chrome simulée, données fabriquées ; ignoré sans Chromium, et dit ignoré).
  *  - en Mix, un lot en cours offre un seul bouton `sg:vue-lot` (pas de doublon) ;
  *  - un clic passe en vue fil (`data-vue="fil"` sur la fenêtre, bouton pressé, choix gardé `banane51VueLot`), sans message au service worker ;
- *  - un second clic revient à la vue instrument. Scènes : chantiers/CH-135/outils/scenes.cjs. */
+ *  - un second clic revient à la vue instrument. Scènes : chantiers/CH-137/outils/scenes.cjs. */
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const navigateur=require('./esv-maquette/navigateur.cjs');
 const CHROMIUM=navigateur.executable(),absent=navigateur.indisponible()||false;
-const {SCENES,ouvrirScene}=require('../chantiers/CH-135/outils/scenes.cjs');
+const {SCENES,ouvrirScene}=require('../chantiers/CH-137/outils/scenes.cjs');
 /* lectures périodiques du panneau (aucune écriture), envoyées de même en instrument sans clic */
 const LECTURES=new Set(['view','list-tabs','fiches-depart']);
 
@@ -19,7 +19,7 @@ test('CH-137 : en Mix, « Vue fil » bascule la vue du lot et revient, un seul b
   const lire=()=>page.evaluate(()=>({classe:document.getElementById('ui5').className,n:document.querySelectorAll('#ui5 [data-act="sg:vue-lot"]').length,
    vue:document.querySelector('#ui5 .sg-fen')?.getAttribute('data-vue')||'',presse:document.querySelector('#ui5 [data-act="sg:vue-lot"]')?.getAttribute('aria-pressed')}));
   const a=await lire();
-  assert.equal(a.classe,'u-signal u-mix');assert.equal(a.n,1,'un seul bouton de vue');assert.equal(a.vue,'');assert.equal(a.presse,'false');
+  assert.equal(a.classe,'u-mix');assert.equal(a.n,1,'un seul bouton de vue');assert.equal(a.vue,'');assert.equal(a.presse,'false');
   const appels=(await page.evaluate(()=>window.__appels)).length;
   await page.click('#ui5 [data-act="sg:vue-lot"]');await page.waitForTimeout(500);
   const b=await lire();

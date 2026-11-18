@@ -1,0 +1,628 @@
+/* CH-137 (D-371, D-372) : L'INTERFACE ALTERNATIVE « MIX », d'après la planche Figma « Q4 sombre (mix strict) » (banane-data, maquettes/figma-signal-mix-q4/).
+ * Choisie dans les Réglages (« Interface : Glacier / Mix ») ; dessin : src/mix-rendu.js (balisage de Glacier, sauf le gros chiffre, la réglette, l'icône
+ * d'état, la marque et le pied « Cache des exports »). Tout est sous `#ui5.u-mix` : la feuille de Glacier (panel-signal.css, sous `#ui5.u-signal`) ne s'y
+ * applique pas, et celle-ci ne touche pas Glacier. La base des couches (menu, Réglages, palette, onglets ESV, tiroir, Constellation, Aurore, détails
+ * techniques) reprend celle du Cadran (CH-135, retiré), qui avait passé l'audit ; elle est repeinte aux jetons de la planche et à sa grammaire.
+ * Planche : fond uni, aucun dégradé, aucune couleur neuve ; l'ambre (`--marche`) pour ce qui avance, le corail (`--toi`) seulement pour ce qui attend
+ * l'opérateur ou une panne ; une seule action pleine claire, les autres en texte ; mot d'état IBM Plex Sans 28, chiffres IBM Plex Mono. Polices
+ * embarquées (SIL OFL, fonts/OFL-IBMPlexMono.txt, fonts/OFL-IBMPlexSans.txt) : rien ne vient d'un serveur.
+ * Clair (la planche est sombre) : mêmes rôles, valeurs du mode clair du même fichier Figma (variables de la page « Écrans » : fond, surface, surface2,
+ * encres, filets) ; l'ambre et le corail y prennent les teintes « attention » et « alerte » de ce mode, assombries pour lire à 4,5:1 sur le fond clair.
+ * Deux écarts mesurés : `--encre3` (#6f7378, 3,9:1 sur le fond) ne sert qu'aux graduations, jamais à du texte ; le « repère » de la planche (10 px)
+ * est écrit à 11 px (règle du projet : rien sous 11 px). */
+@font-face{font-family:"IBM Plex Mono";src:url(fonts/IBMPlexMono-latin-400.woff2) format("woff2");font-weight:400;font-display:block}
+@font-face{font-family:"IBM Plex Mono";src:url(fonts/IBMPlexMono-latin-500.woff2) format("woff2");font-weight:500 700;font-display:block}
+@font-face{font-family:"IBM Plex Sans";src:url(fonts/IBMPlexSans-latin-400.woff2) format("woff2");font-weight:400;font-display:block}
+@font-face{font-family:"IBM Plex Sans";src:url(fonts/IBMPlexSans-latin-500.woff2) format("woff2");font-weight:500;font-display:block}
+@font-face{font-family:"IBM Plex Sans";src:url(fonts/IBMPlexSans-latin-600.woff2) format("woff2");font-weight:600 700;font-display:block}
+
+
+/* ───────────────────────────── jetons (jetons.json de la planche, mode « Q4 sombre ») */
+#ui5.u-mix{
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --scene:#0c0d0e;--fond:#121314;--surface:#1a1b1d;--surface2:#222427;--encre:#ecedee;--encre2:#a6a9ad;--encre3:#6f7378;
+  --filet:#ffffff1f;--filet-fort:#ffffff38;--marche:#f2b65a;--toi:#f2806f;--action:#ecedee;--action-texte:#121314;--voile:#00000099;--ombre:0 8px 24px #00000066;
+  /* noms de la base commune (Cadran), rendus aux rôles de la planche */
+  --rail-vide:var(--encre3);--creux:var(--surface2);--pose:var(--encre);--cours:var(--marche);--differe:var(--encre);--incident:var(--toi);--plein:var(--action);--sur-plein:var(--action-texte);
+  --r1:4px;--r2:8px;--r3:12px;--angle:var(--r2);--marge:48px;--barre-h:48px;--courbe:cubic-bezier(.2,.7,.2,1);
+  color-scheme:dark;position:fixed;inset:0;background:var(--fond);color:var(--encre);font:400 15px/22px var(--sans);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased
+}
+#ui5.u-mix[data-theme="clair"]{
+  --scene:#dfe0de;--fond:#e8e9e7;--surface:#f1f2f0;--surface2:#fafaf9;--encre:#141516;--encre2:#4e5257;--encre3:#7c8085;
+  --filet:#0000001f;--filet-fort:#0000003d;--marche:#8a570a;--toi:#b2372b;--action:#141516;--action-texte:#e8e9e7;--voile:#14151647;--ombre:0 8px 24px #0000002e;color-scheme:light
+}
+#ui5.u-mix[data-taille="compact"]{--marge:20px;--barre-h:44px}
+@media (max-width:520px){#ui5.u-mix[data-taille]{--marge:20px}}
+body.ui5:has(#ui5.u-mix){background:#121314}
+body.ui5:has(#ui5.u-mix[data-theme="clair"]){background:#e8e9e7}
+
+/* ───────────────────────────── base : tout repart de l'héritage (panel.css style des éléments nus) */
+#ui5.u-mix *{box-sizing:border-box;margin:0;padding:0;border:0 solid transparent;min-width:0;color:inherit}
+#ui5.u-mix :is(footer,header,section,h3,h4,p,dl,dt,dd,ol,ul,li,small,label,table,th,td){font:inherit;color:inherit;letter-spacing:inherit;text-transform:none;background:none;text-align:inherit}
+#ui5.u-mix :is(button,input,select){font:inherit;color:inherit;letter-spacing:inherit;text-transform:none}
+#ui5.u-mix button{background:none;border:0;cursor:pointer;border-radius:var(--angle)}
+#ui5.u-mix :is(button:disabled,button[aria-disabled="true"]){cursor:default;opacity:.5}
+#ui5.u-mix :focus-visible{outline:2px solid var(--cours);outline-offset:2px}
+#ui5.u-mix svg{display:block;flex:none}
+#ui5.u-mix b{font-weight:500}
+#ui5.u-mix kbd{font:500 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:4px 6px;border-radius:var(--angle);color:var(--encre2);box-shadow:inset 0 0 0 1px var(--filet-fort)}
+#ui5.u-mix ::-webkit-scrollbar{width:8px;height:8px}
+#ui5.u-mix ::-webkit-scrollbar-thumb{background:var(--filet-fort);border:2px solid transparent;background-clip:content-box}
+#ui5.u-mix .sg-mono{font-family:var(--mono);font-weight:500;color:var(--encre)}
+#ui5.u-mix .sg-sep{color:var(--encre2)}
+#ui5.u-mix .sg-espace{flex:1}
+#ui5.u-mix .sg-dif{color:var(--differe)}
+#ui5.u-mix .sg-meta{font-size:12px;line-height:1.45;color:var(--encre2)}
+#ui5.u-mix .sg-meta b{color:var(--encre)}
+#ui5.u-mix .sg-vide{font-size:12.5px;color:var(--encre2);padding:6px 0}
+#ui5.u-mix[data-taille="compact"] .sg-long,#ui5.u-mix:not([data-taille="compact"]) .sg-court{display:none}
+/* étiquettes : capitales espacées, en mono (planche : « POSÉS », « DIFFÉRÉS », « RESTE ») */
+#ui5.u-mix :is(.sg-tu h4,.sg-trio dt,.sg-section,.sg-reg-tete,.sg-of-t){font:500 11px/1.3 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--encre2)}
+
+/* ───────────────────────────── la fenêtre : barre, tête, zone, actions, « Ce qui reste » (en pied, comme la maquette) */
+#ui5.u-mix .sg-fen{position:relative;height:100%;display:flex;flex-direction:column;background:var(--fond);overflow:hidden}
+#ui5.u-mix .sg-page{display:contents}
+#ui5.u-mix .sg-barre{order:0}
+#ui5.u-mix .sg-page>:is(.sg-tu-etat,.sg-constel){order:1}
+#ui5.u-mix .sg-page>.sg-zone{order:2}
+#ui5.u-mix .sg-actions{order:5}
+#ui5.u-mix .sg-page>.sg-poignee{order:8}
+
+/* barre : « Orbite · Écho · Constellation · Aurore », la puce ESV, le menu ; fond surface, un filet dessous */
+#ui5.u-mix .sg-barre{flex:none;display:flex;align-items:center;gap:8px;height:var(--barre-h);padding:0 12px 0 calc(var(--marge) - 8px);background:var(--surface);border-bottom:1px solid var(--filet)}
+#ui5.u-mix[data-taille="compact"] .sg-barre{gap:4px;padding:0 6px}
+#ui5.u-mix :is(.sg-bascule,.sg-seg){position:relative;display:inline-grid;grid-auto-flow:column;grid-auto-columns:auto;flex:none}
+#ui5.u-mix .sg-bascule{align-self:stretch}
+#ui5.u-mix .sg-pouce{position:absolute;left:0;width:var(--w,0px);transform:translateX(var(--x,0px));transition:transform .26s var(--courbe),width .26s var(--courbe);opacity:0;pointer-events:none}
+#ui5.u-mix [data-pouce]>.sg-pouce{opacity:1}
+#ui5.u-mix .sg-bascule .sg-pouce{bottom:-1px;height:2px;background:var(--encre)}
+#ui5.u-mix .sg-bascule>button{display:inline-flex;align-items:center;gap:6px;padding:0 9px;font:500 13.5px/1 var(--sans);color:var(--encre2);border-radius:0;white-space:nowrap}
+#ui5.u-mix[data-taille="compact"] .sg-bascule>button{padding:0 6px;font-size:12.5px}
+#ui5.u-mix .sg-bascule>button svg{width:15px;height:15px}
+/* barre étroite (quatre onglets, bouton du bilan, puce, menu) : les onglets se serrent, la puce ne garde que son trait quand ESV va bien */
+@media (max-width:540px){#ui5.u-mix[data-taille] .sg-barre{gap:2px;padding:0 4px}#ui5.u-mix[data-taille] .sg-bascule>button{padding:0 4px;font-size:12px}#ui5.u-mix[data-taille] .sg-ico{width:30px}#ui5.u-mix[data-taille] .sg-puce{padding:0 6px;gap:5px}#ui5.u-mix[data-taille] .sg-puce:is([data-etat="ok"],[data-etat="verrou"]) .sg-tx{display:none}}
+@media (max-width:400px){#ui5.u-mix[data-taille] .sg-bascule>button{padding:0 2px;font-size:11px}#ui5.u-mix[data-taille] .sg-ico{width:28px}#ui5.u-mix[data-taille] .sg-stats-b{margin-left:0}#ui5.u-mix[data-taille] .sg-puce .sg-fl{display:none}#ui5.u-mix[data-taille] .sg-puce .sg-tx{display:none}}
+#ui5.u-mix .sg-bascule>button:hover{color:var(--encre)}
+#ui5.u-mix .sg-bascule>button[aria-selected="true"]{color:var(--encre)}
+#ui5.u-mix .sg-bascule:not([data-pouce])>button[aria-selected="true"]{box-shadow:inset 0 -2px 0 var(--encre)}
+#ui5.u-mix .sg-espace{min-width:0}
+#ui5.u-mix .sg-puce{flex:0 1 auto;display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 9px;border-radius:var(--angle);font:400 12px/1 var(--mono);color:var(--encre2);min-width:0;max-width:220px}
+#ui5.u-mix .sg-puce:hover{background:var(--creux);color:var(--encre)}
+#ui5.u-mix .sg-puce i{flex:none;width:3px;height:13px;background:var(--encre)}
+#ui5.u-mix .sg-puce:is([data-etat="ko"]) i{background:var(--incident)}
+#ui5.u-mix .sg-puce:is([data-etat="libre"],[data-etat="aucun"]) i{background:var(--rail-vide)}
+#ui5.u-mix .sg-puce[data-etat="ko"]{color:var(--incident)}
+#ui5.u-mix .sg-puce .sg-tx{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ui5.u-mix .sg-puce .sg-fl{width:13px;height:13px}
+#ui5.u-mix .sg-ico{flex:none;display:inline-grid;place-items:center;width:34px;height:30px;border-radius:var(--angle);color:var(--encre2);box-shadow:inset 0 0 0 1px var(--filet-fort)}
+#ui5.u-mix .sg-ico:hover{color:var(--encre);background:var(--creux)}
+#ui5.u-mix .sg-ico svg{width:16px;height:16px}
+#ui5.u-mix .sg-menu-b{font:500 14px/1 var(--mono);letter-spacing:.08em}
+#ui5.u-mix .sg-barre-etat{display:inline-flex;align-items:center;gap:6px;font:400 12px/1 var(--mono);color:var(--encre2)}
+#ui5.u-mix .sg-barre-etat i{width:3px;height:12px;background:var(--encre)}
+#ui5.u-mix .sg-barre-etat[data-etat="ko"]{color:var(--incident)}
+#ui5.u-mix .sg-barre-etat[data-etat="ko"] i{background:var(--incident)}
+#ui5.u-mix .sg-barre-note{font-size:12px;color:var(--encre2)}
+
+/* ───────────────────────────── la tête : glyphe, MOT ESPACÉ, cut n/N ; la phrase ; la voie ; les compteurs */
+#ui5.u-mix .sg-tu:is(.sg-tu-etat,.sg-constel){flex:none;position:relative;display:flex;flex-direction:column;gap:0;padding:28px var(--marge) 16px;border-top:0}
+#ui5.u-mix[data-taille="compact"] .sg-tu:is(.sg-tu-etat,.sg-constel){padding:14px var(--marge) 8px}
+#ui5.u-mix .sg-haut{display:flex;align-items:center;gap:14px;min-height:30px}
+#ui5.u-mix .sg-etat{display:inline-flex;align-items:center;gap:16px;min-width:0}
+#ui5.u-mix .sg-mot{font:500 18px/1.15 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--encre);overflow-wrap:anywhere}
+#ui5.u-mix[data-taille="compact"] .sg-mot{font-size:15px;letter-spacing:.1em}
+/* le mot prend la couleur de ce qu'il dit : bleu quand Ariane travaille (le plan de coupe), rouge pour un incident ; sinon l'encre */
+#ui5.u-mix .sg-glyphe:is([data-g="cours"],[data-g="dem"],[data-g="pause"],[data-g="relecture"],[data-g="relpause"],[data-g="echo"])+.sg-mot{color:var(--cours)}
+#ui5.u-mix .sg-glyphe[data-ton="alerte"]+.sg-mot{color:var(--incident)}
+#ui5.u-mix .sg-partie{margin-left:auto}
+#ui5.u-mix .sg-milieu{display:flex;flex-direction:column;margin-top:26px}
+#ui5.u-mix[data-taille="compact"] .sg-milieu{margin-top:12px}
+#ui5.u-mix .sg-texte{display:contents}
+#ui5.u-mix .sg-milieu .sg-phrase{order:1}
+#ui5.u-mix .sg-milieu .sg-consigne{order:2}
+#ui5.u-mix .sg-milieu .sg-phrase-longue{order:3}
+#ui5.u-mix .sg-milieu .sg-trio{order:5}
+#ui5.u-mix .sg-milieu .sg-lot-bornes,#ui5.u-mix .sg-milieu .sg-cadran-d{order:6}
+#ui5.u-mix .sg-phrase{font:400 14px/1.45 var(--sans);color:var(--encre)}
+#ui5.u-mix .sg-phrase .sg-mono{font-weight:500}
+#ui5.u-mix .sg-consigne{margin-top:6px;font:500 13px/1.4 var(--sans);color:var(--encre)}
+#ui5.u-mix .sg-consigne::before{content:"";display:inline-block;width:2px;height:12px;margin-right:8px;background:var(--cours);vertical-align:-1px}
+#ui5.u-mix .sg-phrase-longue{margin-top:4px;font-size:12.5px;line-height:1.45;color:var(--encre2)}
+#ui5.u-mix .sg-lot-bornes,#ui5.u-mix .sg-cadran-d{margin-top:10px;font:400 12px/1.45 var(--mono);color:var(--encre2)}
+#ui5.u-mix .sg-details-b{align-self:flex-start;margin-top:12px;height:28px;padding:0 2px;font:500 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--encre2);border-radius:0;box-shadow:inset 0 -1px 0 var(--filet-fort)}
+#ui5.u-mix .sg-details-b:hover{color:var(--encre)}
+
+
+/* les compteurs : trois colonnes séparées par un filet vertical */
+#ui5.u-mix .sg-trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:14px}
+#ui5.u-mix .sg-trio>div{padding:2px 12px 2px 12px;border-left:1px solid var(--filet-fort);min-width:0}
+#ui5.u-mix .sg-trio dt{display:flex;align-items:flex-start;gap:7px;overflow-wrap:anywhere}
+#ui5.u-mix .sg-trio dt::before{content:"";flex:none;width:3px;height:12px;background:var(--pose)}
+#ui5.u-mix .sg-trio dd{margin-top:6px;font:400 20px/1 var(--mono);color:var(--encre)}
+#ui5.u-mix .sg-trio dd.sg-dif{color:var(--encre)}
+#ui5.u-mix[data-taille="compact"] .sg-trio dd{font-size:17px}
+#ui5.u-mix .sg-trio.sg-trois{grid-template-columns:repeat(3,minmax(0,1fr))}
+
+/* ───────────────────────────── la zone de l'état : sections séparées par un filet */
+#ui5.u-mix .sg-zone{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;padding:0 var(--marge) 12px}
+#ui5.u-mix .sg-duo{display:flex;flex-direction:column}
+#ui5.u-mix .sg-tu{position:relative;min-width:0;display:flex;flex-direction:column;gap:8px;padding:14px 0;border-top:1px solid var(--filet)}
+#ui5.u-mix :is(.sg-tu-etat,.sg-constel){border-top:0}
+#ui5.u-mix .sg-tu h4{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:2px 8px}
+#ui5.u-mix .sg-tu h4 :is(em,b){font-style:normal;color:var(--encre);white-space:nowrap}
+#ui5.u-mix .sg-tu>p{font-size:12.5px;line-height:1.45;color:var(--encre2)}
+#ui5.u-mix .sg-allure{font:400 12px/1.5 var(--mono);color:var(--encre2)}
+#ui5.u-mix .sg-allure b{font-weight:500;color:var(--encre)}
+/* l'épure : sans « Détails », la section du fil ne garde que l'allure (maquette : « Allure ≈ … ») ; étapes, bornes du lot et phrase longue s'ouvrent par « Détails » */
+#ui5.u-mix:not([data-details]) .sg-tu-fil{border-top:0;padding-top:2px}
+#ui5.u-mix:not([data-details]) .sg-tu-fil :is(h4,.sg-fil,.sg-vide){display:none}
+#ui5.u-mix:not([data-details]) .sg-tu-fil:not(:has(.sg-allure)){display:none}
+#ui5.u-mix:not([data-details]) :is(.sg-tu-etapes,.sg-lot-bornes,.sg-poignee .sg-reste){display:none}
+#ui5.u-mix:not([data-details]) .sg-fen[data-activite="echo"] .sg-objet{display:none}
+#ui5.u-mix .sg-of-note,#ui5.u-mix .sg-corr-note,#ui5.u-mix .sg-tu[data-k="note"],#ui5.u-mix .sg-tu-verrou{display:none}
+/* La vue fil de CH-134 (`data-vue="fil"` sur la fenêtre) : le fil des derniers cuts déplié sous la tuile, comme les Détails ; rien d'autre ne change. */
+#ui5.u-mix .sg-fen[data-vue="fil"] .sg-tu-fil{border-top:1px solid var(--filet);padding-top:14px}
+#ui5.u-mix .sg-fen[data-vue="fil"] .sg-tu-fil :is(h4,.sg-vide){display:revert}
+#ui5.u-mix .sg-fen[data-vue="fil"] .sg-fil{display:block}
+#ui5.u-mix .sg-vue-b{flex:none;display:inline-grid;place-items:center;width:32px;height:30px;border-radius:var(--angle);color:var(--encre2);box-shadow:inset 0 0 0 1px var(--filet-fort)}
+#ui5.u-mix .sg-vue-b:hover{color:var(--encre);background:var(--creux)}
+#ui5.u-mix .sg-vue-b[aria-pressed="true"]{color:var(--sur-plein);background:var(--plein);box-shadow:none}
+#ui5.u-mix .sg-vue-b svg{width:16px;height:16px}
+/* le fil des cuts (Détails) */
+#ui5.u-mix .sg-fil{list-style:none}
+#ui5.u-mix .sg-fil li{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:10px;height:36px;border-top:1px solid var(--filet);overflow:hidden}
+#ui5.u-mix .sg-fil li:first-child{border-top:0}
+#ui5.u-mix .sg-fil b{font:500 13px/1 var(--mono)}
+#ui5.u-mix .sg-fil span{font-size:12px;color:var(--encre2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#ui5.u-mix .sg-fil em{font:400 11.5px/1 var(--mono);font-style:normal;color:var(--encre2)}
+#ui5.u-mix .sg-tag{font:500 11px/1 var(--mono);font-style:normal;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;color:var(--encre2)}
+#ui5.u-mix .sg-tag.sg-attn{color:var(--differe)}
+#ui5.u-mix .sg-tag.sg-crit{color:var(--incident)}
+/* Détails ouverts : comme l'instrument, le fil montre ce qui tient (les plus récents en haut) et s'estompe ; les étapes passent devant lui */
+#ui5.u-mix[data-details] .sg-fen[data-activite="orbite"] .sg-duo{flex:1 1 auto;min-height:0}
+#ui5.u-mix[data-details] .sg-fen[data-activite="orbite"] .sg-duo>.sg-tu-etapes{order:-1;flex:none}
+#ui5.u-mix[data-details] .sg-fen[data-activite="orbite"] .sg-duo>.sg-tu-fil{flex:1 1 auto;min-height:0;overflow:hidden}
+#ui5.u-mix[data-details] .sg-fen[data-activite="orbite"] .sg-tu-fil .sg-fil{flex:1;min-height:0;overflow:hidden}
+/* les étapes du lot (Détails) */
+#ui5.u-mix .sg-etapes{list-style:none;display:flex;flex-direction:column}
+#ui5.u-mix .sg-etapes li{display:grid;grid-template-columns:14px auto minmax(0,1fr);gap:12px;align-items:center;padding:7px 0;color:var(--encre2);font-size:12.5px;border-top:1px solid var(--filet)}
+#ui5.u-mix .sg-etapes li:first-child{border-top:0}
+#ui5.u-mix .sg-etapes b{font:500 13px/1.2 var(--sans);white-space:nowrap}
+#ui5.u-mix .sg-etapes span{text-align:right;line-height:1.3;overflow-wrap:anywhere;font-family:var(--mono);font-size:12px}
+#ui5.u-mix .sg-etapes i{width:14px;height:14px;box-shadow:inset 0 0 0 1px var(--filet-fort)}
+#ui5.u-mix .sg-etapes li:is([data-etape="fait"],[data-etape="actif"]){color:var(--encre)}
+#ui5.u-mix .sg-etapes li[data-etape="fait"] i{background:var(--pose);box-shadow:none}
+#ui5.u-mix .sg-etapes li[data-etape="actif"] i{box-shadow:inset 0 0 0 2px var(--cours)}
+#ui5.u-mix .sg-etapes li[data-etape="sans"] i{box-shadow:inset 0 0 0 1px var(--filet)}
+/* avis, incident, verrou */
+#ui5.u-mix .sg-tu-avis{flex-direction:row;align-items:flex-start;gap:12px;padding:12px 14px;margin:6px 0 4px;border-top:0;background:var(--surface);border-left:2px solid var(--encre2)}
+#ui5.u-mix :is(.sg-incident,.sg-alerte,.sg-refus){border-left-color:var(--incident)}
+/* un avis seul (refus d'une action) n'est pas une alarme : filet à l'encre (CH-129) */
+#ui5.u-mix .sg-tu-avis.sg-avis-seul{border-left-color:var(--encre2);background:none}
+#ui5.u-mix .sg-tu-avis.sg-avis-seul .sg-ic{display:none}
+#ui5.u-mix .sg-tu-avis .sg-ic{flex:none;display:grid;place-items:center;width:20px;height:20px;border-radius:var(--angle);font:600 12px/1 var(--mono);color:var(--incident);box-shadow:inset 0 0 0 1px var(--incident)}
+#ui5.u-mix .sg-tu-avis .sg-ic svg{width:14px;height:14px}
+#ui5.u-mix .sg-tu-avis>div{min-width:0;display:flex;flex-direction:column;gap:4px}
+#ui5.u-mix .sg-tu-avis p{font-size:13px;line-height:1.45;color:var(--encre)}
+#ui5.u-mix .sg-tu-avis small{font-size:12px;color:var(--encre2)}
+/* fin du lot */
+#ui5.u-mix .sg-tu-fin{flex-direction:row;align-items:flex-start;gap:14px}
+#ui5.u-mix .sg-tu-fin>div{min-width:0;flex:1;display:flex;flex-direction:column;gap:8px}
+#ui5.u-mix .sg-tu-fin h3{font:500 11px/1.3 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--encre2)}
+#ui5.u-mix .sg-fin-rond{display:none}
+#ui5.u-mix .sg-fin{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 16px;font-size:13px;line-height:1.4}
+#ui5.u-mix .sg-fin dt{color:var(--encre2);white-space:nowrap}
+#ui5.u-mix .sg-fin dd{min-width:0;overflow-wrap:anywhere}
+#ui5.u-mix .sg-fin dd b{font:500 13px/1.4 var(--mono)}
+/* bornes du prochain lot, bornes de la relecture */
+#ui5.u-mix .sg-bornes{display:flex;flex-direction:column}
+#ui5.u-mix .sg-rang{display:flex;flex-direction:row;text-align:left;justify-content:space-between;align-items:center;gap:10px;min-height:40px;border-top:1px solid var(--filet);font-size:13px;color:var(--encre2)}
+#ui5.u-mix .sg-rang:first-child{border-top:0}
+#ui5.u-mix .sg-bornes input[type="number"]{width:min(170px,55%);height:32px;padding:0 10px;border-radius:var(--angle);border:1px solid var(--filet-fort);background:var(--surface);color:var(--encre);font:500 13px/1 var(--mono);text-align:right;appearance:textfield;-moz-appearance:textfield}
+#ui5.u-mix .sg-bornes input::-webkit-outer-spin-button,#ui5.u-mix .sg-bornes input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+#ui5.u-mix .sg-bornes input::placeholder{color:var(--encre2)}
+#ui5.u-mix :is(.sg-bornes>small,.sg-reprise small){display:block;font-size:12px;line-height:1.45;color:var(--encre2);margin-top:6px}
+#ui5.u-mix .sg-reprise{display:grid;grid-template-columns:auto 1fr;gap:2px 9px;align-items:start;margin-top:10px;font-size:12.5px}
+#ui5.u-mix .sg-reprise input{margin-top:2px;accent-color:var(--encre)}
+#ui5.u-mix .sg-reprise small{grid-column:2;margin-top:0}
+/* Constellation dite dans Orbite, bilan */
+#ui5.u-mix .sg-file p{font-size:12.5px;color:var(--encre2)}
+#ui5.u-mix .sg-file .sg-file-alerte{color:var(--incident)}
+#ui5.u-mix .sg-file-t{text-transform:none!important;letter-spacing:0!important;font:400 13px/1.3 var(--sans)!important;color:var(--encre)!important}
+#ui5.u-mix .sg-file-t b{font:500 11px/1.3 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--encre2)}
+#ui5.u-mix .sg-file-bilan{list-style:none;display:flex;flex-direction:column;font:400 12px/1.5 var(--mono);color:var(--encre2)}
+/* Écho : une marque par visite (Détails) */
+#ui5.u-mix .sg-marques{display:flex;flex-wrap:wrap;gap:4px}
+#ui5.u-mix .sg-marques i{width:3px;height:14px;background:var(--rail-vide)}
+#ui5.u-mix .sg-marques i.sg-c{background:var(--cours)}
+#ui5.u-mix .sg-marques i.sg-en{background:none;box-shadow:inset 0 0 0 1px var(--cours)}
+
+/* ───────────────────────────── actions : rectangulaires, 44 px, empilées (maquette) */
+#ui5.u-mix .sg-actions{flex:none;display:flex;flex-direction:column;align-items:stretch;gap:12px;padding:14px var(--marge) 18px}
+#ui5.u-mix[data-taille="compact"] .sg-actions{flex-direction:row;flex-wrap:wrap;gap:8px;padding:10px var(--marge)}
+#ui5.u-mix[data-taille="compact"] .sg-actions>button{flex:1 1 140px}
+#ui5.u-mix .sg-actions:empty{display:none}
+#ui5.u-mix .sg-actions>button{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:44px;padding:8px 16px;border-radius:var(--angle);font:500 14.5px/1.2 var(--sans);text-align:center;transition:background-color .2s var(--courbe),color .2s var(--courbe)}
+#ui5.u-mix .sg-actions>button svg{width:16px;height:16px}
+#ui5.u-mix .sg-principal{background:var(--plein);color:var(--sur-plein)}
+#ui5.u-mix .sg-principal:not(:disabled):hover{background:var(--encre2)}
+#ui5.u-mix .sg-secondaire{background:none;color:var(--encre);box-shadow:inset 0 0 0 1px var(--filet-fort)}
+#ui5.u-mix .sg-secondaire:not(:disabled):hover{background:var(--creux)}
+/* « ne lance rien », « Préparer un autre lot » : un lien sobre, comme la maquette */
+#ui5.u-mix .sg-secondaire.sg-discret{box-shadow:none;justify-content:flex-start;padding-inline:0;min-height:36px;color:var(--encre)}
+/* rouge = incident seulement : un arrêt demandé reste à l'encre (la palette garde sa seconde Entrée) */
+#ui5.u-mix .sg-principal.sg-danger{background:var(--plein);color:var(--sur-plein)}
+#ui5.u-mix .sg-tourne{width:14px;height:14px;border-radius:50%;box-shadow:inset 0 0 0 2px currentColor;opacity:.6}
+#ui5.u-mix .sg-raison{flex-basis:100%;font-size:12px;line-height:1.4;color:var(--encre2)}
+#ui5.u-mix .sg-verrou-ligne{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--encre2)}
+#ui5.u-mix .sg-verrou-ligne svg{width:15px;height:15px}
+
+/* ───────────────────────────── « Ce qui reste » : la ligne de pied (maquette), puis sa couche */
+#ui5.u-mix .sg-poignee{flex:none;display:flex;align-items:center;gap:8px;min-height:44px;padding:8px var(--marge);width:100%;text-align:left;border-radius:0;background:var(--surface);border-top:1px solid var(--filet);font:400 13px/1.3 var(--mono);color:var(--encre)}
+#ui5.u-mix .sg-poignee::before{content:"";flex:none;width:7px;height:7px;margin:2px 4px 0 2px;border-left:1.5px solid var(--encre);border-top:1.5px solid var(--encre);transform:rotate(45deg)}
+#ui5.u-mix .sg-poignee:hover{background:var(--surface2)}
+#ui5.u-mix .sg-poignee .sg-txt{min-width:0}
+#ui5.u-mix .sg-poignee .sg-n{font-weight:500;margin-right:4px}
+#ui5.u-mix .sg-poignee .sg-n.sg-dif{color:var(--differe)}
+#ui5.u-mix .sg-poignee .sg-reste{font:400 12px/1.3 var(--sans);font-style:normal;margin-left:auto;color:var(--encre2);text-align:right}
+#ui5.u-mix .sg-poignee .sg-fl{display:none}
+#ui5.u-mix .sg-tiroir{position:absolute;inset:var(--barre-h) 0 0 0;z-index:5;display:flex;flex-direction:column;background:var(--fond);animation:mx-monte .26s var(--courbe)}
+#ui5.u-mix .sg-tiroir[data-ouvert="0"]{display:none}
+#ui5.u-mix .sg-tete{flex:none;display:flex;align-items:center;gap:10px;height:48px;padding:0 12px 0 var(--marge);border-bottom:1px solid var(--filet);background:var(--surface)}
+#ui5.u-mix .sg-tete .sg-t{flex:1;font:500 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase}
+#ui5.u-mix .sg-tete .sg-meta{font-size:12px}
+#ui5.u-mix #sg-tiroir-corps{flex:1;min-height:0;overflow-y:auto;padding:0 var(--marge) var(--marge)}
+#ui5.u-mix .sg-section{display:flex;align-items:baseline;gap:8px;padding:18px 0 8px}
+#ui5.u-mix .sg-section .sg-n{color:var(--encre)}
+#ui5.u-mix .sg-section .sg-d{margin-left:auto;font-family:var(--sans);letter-spacing:0;text-transform:none;text-align:right}
+#ui5.u-mix .sg-ligne{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;min-height:44px;padding:6px 0;border-top:1px solid var(--filet);font-size:13px}
+#ui5.u-mix .sg-ligne[aria-selected="true"]{background:var(--creux);box-shadow:-8px 0 0 var(--creux),8px 0 0 var(--creux)}
+#ui5.u-mix .sg-ligne .sg-cut{font:500 13px/1.2 var(--mono)}
+#ui5.u-mix .sg-motif{min-width:0;line-height:1.35}
+#ui5.u-mix .sg-motif small,#ui5.u-mix .sg-prec{font-size:12px;color:var(--encre2)}
+#ui5.u-mix .sg-outils{display:inline-flex;gap:6px}
+#ui5.u-mix .sg-outils button{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px;border-radius:var(--angle);font:500 12px/1 var(--sans);color:var(--encre);box-shadow:inset 0 0 0 1px var(--filet-fort)}
+#ui5.u-mix .sg-outils button:not(:disabled):hover{background:var(--creux)}
+#ui5.u-mix .sg-outils button[aria-pressed="true"]{box-shadow:inset 0 0 0 1px var(--encre)}
+#ui5.u-mix .sg-outils svg{width:13px;height:13px}
+#ui5.u-mix .sg-examine :is(.sg-cut,.sg-motif){opacity:.6}
+#ui5.u-mix .sg-note-ligne{font-size:12px;color:var(--encre2);padding:6px 0}
+#ui5.u-mix .sg-note-ligne.sg-refus{color:var(--incident)}
+
+/* ───────────────────────────── couches : voile, menu, palette (Ctrl K), onglets ESV, Réglages, boîte de la Constellation */
+#ui5.u-mix .sg-voile{position:absolute;inset:0;z-index:10;background:var(--voile);animation:mx-fondu .2s var(--courbe)}
+#ui5.u-mix .sg-voile.sg-transparent{background:transparent}
+#ui5.u-mix :is(.sg-popover,.sg-palette,.sg-boite){position:absolute;z-index:11;border-radius:var(--angle);border:1px solid var(--filet-fort);background:var(--surface);animation:mx-descend .22s var(--courbe)}
+#ui5.u-mix .sg-popover{top:calc(var(--barre-h) + 4px);right:10px;width:min(340px,calc(100% - 20px));padding:6px;display:flex;flex-direction:column;max-height:calc(100% - var(--barre-h) - 14px);overflow-y:auto}
+#ui5.u-mix .sg-menu-l{display:flex;align-items:center;gap:10px;min-height:40px;padding:0 12px;width:100%;text-align:left;border-radius:var(--angle);font:500 13.5px/1.2 var(--sans)}
+#ui5.u-mix .sg-menu-l:hover{background:var(--creux)}
+#ui5.u-mix .sg-menu-l svg{width:16px;height:16px;color:var(--encre2)}
+#ui5.u-mix .sg-menu-l kbd{margin-left:auto}
+#ui5.u-mix .sg-cache{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px;padding:10px 10px 6px;border-top:1px solid var(--filet)}
+#ui5.u-mix .sg-cache .sg-q{display:flex;flex-direction:column;gap:2px;min-width:0;font-size:13px}
+#ui5.u-mix .sg-cache .sg-r{font:400 12px/1.4 var(--mono);color:var(--encre2)}
+#ui5.u-mix :is(.sg-cache button,.sg-ong button,.sg-danger-zone button,.sg-annuler){flex:none;min-height:32px;padding:0 13px;border-radius:var(--angle);font:500 12.5px/1.2 var(--sans);box-shadow:inset 0 0 0 1px var(--filet-fort);white-space:nowrap}
+#ui5.u-mix :is(.sg-cache button,.sg-ong button,.sg-annuler):not(:disabled):hover{background:var(--creux)}
+#ui5.u-mix .sg-ong{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:46px;padding:6px 10px;border-top:1px solid var(--filet)}
+#ui5.u-mix .sg-ong:first-of-type{border-top:0}
+#ui5.u-mix .sg-lib{display:flex;flex-direction:column;gap:2px;min-width:0;font-size:13px}
+#ui5.u-mix .sg-lib b{font-weight:500;overflow-wrap:anywhere}
+#ui5.u-mix .sg-lib small{font-size:12px;line-height:1.4;color:var(--encre2)}
+#ui5.u-mix .sg-conn{display:inline-flex;align-items:center;gap:6px;font:400 12px/1 var(--mono);color:var(--encre2)}
+#ui5.u-mix .sg-conn i{width:3px;height:12px;background:var(--encre)}
+#ui5.u-mix .sg-pied{display:flex;align-items:center;gap:10px;padding:9px 10px 5px;border-top:1px solid var(--filet);font-size:12px;line-height:1.4;color:var(--encre2)}
+#ui5.u-mix .sg-pied svg{width:14px;height:14px}
+#ui5.u-mix .sg-popover>.sg-vide{padding:10px}
+#ui5.u-mix .sg-palette{top:62px;left:12px;right:12px;margin:0 auto;max-width:460px;overflow:hidden}
+#ui5.u-mix #ui5-q{width:100%;height:50px;padding:0 18px;border:0;border-bottom:1px solid var(--filet);background:transparent;font:400 15px/1 var(--sans);color:var(--encre);outline:0}
+#ui5.u-mix #ui5-q::placeholder{color:var(--encre2)}
+/* le champ a le focus dès l'ouverture : un filet bleu dessous, visible (CH-106) */
+#ui5.u-mix #ui5-q:focus{box-shadow:inset 0 -2px 0 var(--cours)}
+#ui5.u-mix .sg-cmds{display:flex;flex-direction:column;padding:6px;max-height:min(420px,60vh);overflow-y:auto}
+#ui5.u-mix .sg-cmd{display:grid;grid-template-columns:18px minmax(0,1fr) auto;align-items:center;gap:10px;min-height:40px;padding:6px 12px;width:100%;text-align:left;font:500 13.5px/1.25 var(--sans);border-radius:var(--angle)}
+#ui5.u-mix .sg-cmd svg{width:16px;height:16px;color:var(--encre2)}
+#ui5.u-mix .sg-cmd[aria-selected="true"]{background:var(--surface2);box-shadow:inset 2px 0 0 var(--cours)}
+#ui5.u-mix .sg-et{font:400 12px/1.3 var(--mono);color:var(--encre2);text-align:right}
+#ui5.u-mix .sg-palette .sg-pied{padding:9px 14px}
+#ui5.u-mix .sg-feuille{position:absolute;inset:0;z-index:11;display:flex;flex-direction:column;background:var(--fond);animation:mx-monte .26s var(--courbe)}
+#ui5.u-mix .sg-feuille .sg-tete{height:var(--barre-h)}
+#ui5.u-mix .sg-liste{flex:1;min-height:0;overflow-y:auto;padding:0 var(--marge) var(--marge);display:flex;flex-direction:column}
+#ui5.u-mix .sg-reg{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:56px;padding:10px 0;border-top:1px solid var(--filet)}
+#ui5.u-mix .sg-liste>.sg-reg:first-child{border-top:0}
+#ui5.u-mix .sg-reg>.sg-lib{flex:1}
+#ui5.u-mix .sg-reg>:is(.sg-mono,.sg-seg){flex:none}
+#ui5.u-mix .sg-reg.sg-reg-bloc{flex-direction:column;align-items:stretch}
+#ui5.u-mix .sg-reg select{height:34px;max-width:52%;padding:0 10px;border-radius:var(--angle);border:1px solid var(--filet-fort);background:var(--surface);color:var(--encre);font:500 12.5px/1 var(--sans)}
+#ui5.u-mix .sg-reg select option{background:var(--surface);color:var(--encre)}
+/* le choix segmenté (thème, palette, interface…) : des cases accolées, la case choisie pleine */
+#ui5.u-mix .sg-seg{box-shadow:inset 0 0 0 1px var(--filet-fort);border-radius:var(--angle)}
+#ui5.u-mix .sg-seg .sg-pouce{display:none}
+#ui5.u-mix .sg-seg>button{min-height:34px;padding:0 12px;font:500 12.5px/1 var(--sans);color:var(--encre2);border-radius:var(--angle);white-space:nowrap}
+#ui5.u-mix .sg-seg>button:hover{color:var(--encre)}
+#ui5.u-mix .sg-seg>button[aria-pressed="true"]{background:var(--plein);color:var(--sur-plein)}
+#ui5.u-mix .sg-hist{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:baseline;padding:7px 0;border-top:1px solid var(--filet);font-size:12.5px;color:var(--encre2)}
+#ui5.u-mix .sg-hist small{font:400 12px/1.3 var(--mono);white-space:nowrap}
+#ui5.u-mix .sg-bas{display:flex;flex-direction:column;gap:10px;padding-top:12px;border-top:1px solid var(--filet)}
+#ui5.u-mix .sg-lien{display:flex;align-items:center;gap:10px;min-height:40px;width:100%;text-align:left;font:500 13px/1.35 var(--sans);color:var(--encre)}
+#ui5.u-mix .sg-lien:hover{text-decoration:underline;text-underline-offset:3px}
+#ui5.u-mix .sg-lien svg{width:16px;height:16px;color:var(--encre2)}
+#ui5.u-mix .sg-danger-zone{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 12px;border-left:2px solid var(--incident);background:var(--surface);font-size:12.5px;color:var(--encre2)}
+#ui5.u-mix .sg-danger-zone button{color:var(--incident);box-shadow:inset 0 0 0 1px var(--incident)}
+#ui5.u-mix .sg-boite{top:16%;left:16px;right:16px;margin:0 auto;max-width:440px;padding:18px;display:flex;flex-direction:column;gap:12px;max-height:calc(84% - 12px);overflow-y:auto;overscroll-behavior:contain}
+#ui5.u-mix .sg-boite .sg-t{font:500 12px/1.2 var(--mono);letter-spacing:.12em;text-transform:uppercase}
+#ui5.u-mix .sg-boite .sg-reg{border-top:0;padding:0;min-height:0;flex-wrap:wrap;row-gap:10px}
+#ui5.u-mix .sg-boite .sg-reg>.sg-lib{flex:1 1 170px}
+#ui5.u-mix .sg-boite .sg-reg>.sg-molette{flex:1 1 240px}
+#ui5.u-mix .sg-bts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+#ui5.u-mix .sg-bts>button{min-height:44px;padding:0 16px}
+#ui5.u-mix .sg-bts .sg-principal{border-radius:var(--angle);font:500 14px/1.2 var(--sans)}
+
+/* ───────────────────────────── la molette du nombre de parties : une fenêtre rectangulaire, le nombre choisi au centre */
+#ui5.u-mix .sg-molette{--c:40px;--mol-h:44px;display:inline-flex;align-items:center;gap:4px;padding:0;border-radius:var(--angle);box-shadow:inset 0 0 0 1px var(--filet-fort);flex:0 1 300px;max-width:100%;touch-action:pan-y}
+#ui5.u-mix[data-taille="compact"] .sg-molette{--c:34px;--mol-h:40px;flex-basis:260px}
+#ui5.u-mix[data-taille="compact"] :is(.sg-of-ligne>.sg-molette,.sg-boite .sg-reg>.sg-molette){flex:1 1 100%}
+#ui5.u-mix :is(.sg-mol-moins,.sg-mol-plus){flex:none;width:40px;height:var(--mol-h);border-radius:var(--angle);font:400 20px/1 var(--mono);color:var(--encre);display:inline-flex;align-items:center;justify-content:center}
+#ui5.u-mix :is(.sg-mol-moins,.sg-mol-plus):disabled{opacity:.3}
+#ui5.u-mix .sg-mol-fen{position:relative;flex:1 1 auto;min-width:calc(var(--c) * 3);height:var(--mol-h);overflow:hidden;cursor:grab;user-select:none;-webkit-user-select:none;touch-action:pan-y}
+#ui5.u-mix .sg-mol-fen:active{cursor:grabbing}
+#ui5.u-mix .sg-mol-fen::before{content:"";position:absolute;left:50%;top:6px;bottom:6px;width:var(--c);margin-left:calc(var(--c) / -2);box-shadow:inset 0 -2px 0 var(--cours)}
+#ui5.u-mix .sg-mol-bande{position:absolute;top:0;bottom:0;left:50%;display:flex;transform:translateX(calc(var(--c) * -1 * (var(--i, 0) + .5) + var(--dx, 0px)));transition:transform .3s var(--courbe)}
+#ui5.u-mix .sg-mol-bande.sg-glisse{transition:none}
+#ui5.u-mix .sg-mol-n{flex:none;width:var(--c);display:flex;align-items:center;justify-content:center;font:400 20px/1 var(--mono);color:var(--encre2);cursor:pointer;transition:transform .3s var(--courbe),opacity .3s}
+#ui5.u-mix[data-taille="compact"] .sg-mol-n{font-size:18px}
+#ui5.u-mix .sg-mol-n[data-d="0"]{font-weight:500;color:var(--encre);cursor:inherit}
+#ui5.u-mix .sg-mol-n[data-d="1"]{transform:scale(.75)}
+#ui5.u-mix .sg-mol-n:is([data-d="2"],[data-d="3"]){transform:scale(.62);opacity:.7}
+
+/* ───────────────────────────── Constellation : les parties sur une voie (une borne par partie), le titre en mono */
+#ui5.u-mix .sg-constel .sg-haut .sg-partie{margin-left:auto}
+#ui5.u-mix .sg-constel-t{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:4px 12px;margin-top:22px}
+#ui5.u-mix .sg-constel-t .sg-chiffre{font:500 22px/1.2 var(--mono);letter-spacing:.02em}
+#ui5.u-mix .sg-constel-t .sg-suite{font:400 12px/1 var(--mono);color:var(--encre2);white-space:nowrap}
+#ui5.u-mix[data-taille="compact"] .sg-constel-t .sg-chiffre{font-size:18px}
+#ui5.u-mix .sg-constel .sg-phrase{margin-top:8px}
+#ui5.u-mix .sg-chaine{list-style:none;margin:18px 0 4px;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);position:relative}
+#ui5.u-mix .sg-chaine::before{content:"";position:absolute;left:0;right:0;top:8px;height:8px;border-top:1px solid var(--rail-vide);border-bottom:1px solid var(--rail-vide)}
+#ui5.u-mix .sg-chaine li{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;font:400 12px/1 var(--mono);color:var(--encre2)}
+#ui5.u-mix .sg-chaine li:not([data-etat="a-venir"])::before{content:"";position:absolute;left:0;right:0;top:8px;height:8px;border-top:1.5px solid var(--pose);border-bottom:1.5px solid var(--pose)}
+#ui5.u-mix .sg-chaine li[data-etat="en-cours"]::before{right:50%}
+#ui5.u-mix .sg-chaine i{position:relative;z-index:1;width:2px;height:24px;background:var(--rail-vide)}
+#ui5.u-mix .sg-chaine li[data-etat="faite"] i{background:var(--pose)}
+#ui5.u-mix .sg-chaine li[data-etat="en-cours"] i{width:2px;background:var(--cours);box-shadow:-4px 0 0 -0px transparent}
+#ui5.u-mix .sg-chaine li[data-etat="en-cours"] i::before,#ui5.u-mix .sg-chaine li[data-etat="en-cours"] i::after{content:"";position:absolute;left:-3px;width:8px;height:2px;background:var(--cours)}
+#ui5.u-mix .sg-chaine li[data-etat="en-cours"] i::before{top:0}
+#ui5.u-mix .sg-chaine li[data-etat="en-cours"] i::after{bottom:0}
+#ui5.u-mix .sg-chaine li:is([data-etat="interrompue"],[data-etat="alerte"]) i{background:var(--incident);width:3px}
+#ui5.u-mix .sg-chaine li[data-etat="interrompue"] i{background:var(--differe)}
+#ui5.u-mix .sg-chaine li:not([data-etat="a-venir"]){color:var(--encre)}
+#ui5.u-mix .sg-chaine li[data-etat="en-cours"]{color:var(--cours)}
+/* chaîne dense (plus de 8 parties) : seuls les numéros repères (`data-num`) sont écrits, hors du flux, le premier et le dernier calés aux bords */
+#ui5.u-mix .sg-chaine-dense li{padding-bottom:18px}
+#ui5.u-mix .sg-chaine-dense li .sg-mono{position:absolute;top:32px;left:50%;transform:translateX(-50%);font-size:11px;white-space:nowrap}
+#ui5.u-mix .sg-chaine-dense li:first-child .sg-mono{left:0;transform:none}
+#ui5.u-mix .sg-chaine-dense li:last-child .sg-mono{left:auto;right:0;transform:none}
+#ui5.u-mix .sg-chaine-dense li:not([data-num]) .sg-mono{display:none}
+#ui5.u-mix .sg-temps{list-style:none;display:flex;gap:4px 16px;flex-wrap:wrap;margin-top:12px}
+#ui5.u-mix .sg-temps li{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:6px 0;color:var(--encre2)}
+#ui5.u-mix .sg-temps li[data-temps="fait"]{color:var(--encre)}
+#ui5.u-mix .sg-temps li[data-temps="courant"]{color:var(--cours);box-shadow:inset 0 -2px 0 var(--cours)}
+#ui5.u-mix .sg-stats-b{margin-left:8px}
+#ui5.u-mix .sg-stats-t{font:500 12px/1.3 var(--mono);letter-spacing:.12em;text-transform:uppercase;padding:18px 0 6px}
+#ui5.u-mix .sg-of-t{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+#ui5.u-mix .sg-of-d{font:400 12px/1.3 var(--sans);font-style:normal;letter-spacing:0;text-transform:none;color:var(--encre2)}
+#ui5.u-mix .sg-registre{display:flex;flex-direction:column;overflow-x:auto;scrollbar-width:thin}
+#ui5.u-mix :is(.sg-reg-tete,.sg-reg-partie){display:grid;grid-template-columns:minmax(0,1fr) 50px 58px 62px;align-items:center;gap:6px}
+#ui5.u-mix .sg-reg-tete{padding-bottom:6px}
+#ui5.u-mix :is(.sg-reg-tete>span:not(:first-child),.sg-reg-partie>.sg-mono){text-align:right}
+#ui5.u-mix .sg-reg-partie{padding:8px 0;border-top:1px solid var(--filet);font:400 13px/1.2 var(--mono)}
+#ui5.u-mix .sg-reg-partie .sg-mono{font-weight:400}
+#ui5.u-mix .sg-reg-p{display:inline-flex;align-items:center;gap:8px}
+#ui5.u-mix .sg-reg-p i{width:3px;height:14px;background:var(--rail-vide)}
+#ui5.u-mix .sg-reg-partie[data-etat="faite"] .sg-reg-p i{background:var(--pose)}
+#ui5.u-mix .sg-reg-partie[data-etat="en-cours"] .sg-reg-p i{background:var(--cours)}
+#ui5.u-mix .sg-reg-partie[data-etat="interrompue"] .sg-reg-p i{background:var(--differe)}
+#ui5.u-mix .sg-reg-partie[data-etat="alerte"] .sg-reg-p i{background:var(--incident)}
+#ui5.u-mix .sg-vide-n{color:var(--encre2)}
+#ui5.u-mix .sg-reg-motifs{grid-column:1/-1;font:400 12px/1.4 var(--sans);color:var(--encre2)}
+#ui5.u-mix .sg-of-departs{display:flex;flex-direction:column}
+#ui5.u-mix .sg-of-depart{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:baseline;padding:8px 0;border-top:1px solid var(--filet);font-size:13px;color:var(--encre2)}
+#ui5.u-mix .sg-of-depart:first-child{border-top:0}
+#ui5.u-mix .sg-of-depart b{font:500 13px/1.3 var(--mono);color:var(--encre)}
+#ui5.u-mix .sg-of-ch{grid-column:1/-1;font-size:12px;line-height:1.4}
+#ui5.u-mix .sg-of-ligne{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px}
+
+/* ───────────────────────────── Aurore */
+#ui5.u-mix .sg-corr-liste{display:flex;flex-direction:column}
+#ui5.u-mix .sg-corr-partie{display:flex;align-items:baseline;gap:10px;padding:12px 0 4px;font-size:13px}
+#ui5.u-mix .sg-corr-partie .sg-n,#ui5.u-mix .sg-corr-partie .sg-d{font-size:12px;color:var(--encre2)}
+#ui5.u-mix .sg-corr-partie .sg-d{margin-left:auto}
+#ui5.u-mix .sg-corr-partie[data-etat="en-cours"] .sg-mono{color:var(--cours)}
+#ui5.u-mix .sg-ligne.sg-corr{grid-template-columns:auto minmax(0,1fr) auto auto}
+#ui5.u-mix .sg-corr .sg-motif{display:flex;flex-direction:column}
+#ui5.u-mix .sg-corr-bilan{font-size:12.5px;color:var(--encre2);padding:2px 0 8px}
+#ui5.u-mix .sg-statut{font:500 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--encre2);white-space:nowrap}
+#ui5.u-mix .sg-statut[data-statut="en-cours"]{color:var(--cours)}
+#ui5.u-mix .sg-statut:is([data-statut="corrige"],[data-statut="valide"]){color:var(--encre)}
+#ui5.u-mix .sg-voie-seg+*{margin-top:4px}
+
+/* ───────────────────────────── détails techniques (couche hors de #ui5, src/ui5.js) quand Cadran est choisi */
+.sg-tech[data-variante="mix"]{--bg:#121314;--bg-2:#1a1b1d;--text:#ecedee;--text-2:#a6a9ad;--text-3:#a6a9ad;--hair:#ffffff1f;--hair-2:#ffffff38;--tile:#1a1b1d;--field:#222427;--sans:"IBM Plex Sans",system-ui,sans-serif;font-family:"IBM Plex Sans",system-ui,sans-serif;background:#121314;color:#ecedee}
+.sg-tech[data-variante="mix"][data-theme="clair"]{--bg:#e8e9e7;--bg-2:#f1f2f0;--text:#141516;--text-2:#4e5257;--text-3:#4e5257;--hair:#0000001f;--hair-2:#0000003d;--tile:#f1f2f0;--field:#fafaf9;background:#e8e9e7;color:#141516}
+.sg-tech[data-variante="mix"] .sg-tech-tete{background:var(--bg-2)}
+.sg-tech[data-variante="mix"] .sg-tech-tete b{font:500 15px/1.2 "IBM Plex Sans",sans-serif}
+.sg-tech[data-variante="mix"] :is(button,.sg-tech-tete button){border-radius:8px}
+.sg-tech[data-variante="mix"] :is(summary,h2,.lbl){font-size:11px}
+
+/* ───────────────────────────── mouvement : une courbe, 200 à 320 ms, aucune boucle */
+@keyframes mx-monte{from{opacity:0;transform:translateY(6px)}}
+@keyframes mx-descend{from{opacity:0;transform:translateY(-4px)}}
+@keyframes mx-fondu{from{opacity:0}}
+#ui5.u-mix .sg-zone>*{animation:mx-monte .24s var(--courbe) both}
+/* les boutons du pied entrent avec l'écran (320 ms, la borne haute de la planche) : pendant ce temps la garde du pied (src/ui5.js, 400 ms) refuse déjà les clics */
+#ui5.u-mix .sg-actions>button{animation:mx-monte .32s var(--courbe) both}
+@media (prefers-reduced-motion:reduce){#ui5.u-mix *,#ui5.u-mix *::before,#ui5.u-mix *::after{animation:none!important;transition:none!important}}
+
+/* ═════════════════════════════ LA GRAMMAIRE DE LA PLANCHE (après la base : ces règles l'emportent) */
+/* la fenêtre : la tuile d'état, la zone, les actions ; « Ce qui reste » puis le pied, calés en bas */
+#ui5.u-mix .sg-fen{background:var(--fond)}
+#ui5.u-mix .sg-page>.sg-zone{order:2;flex:0 1 auto}
+#ui5.u-mix .sg-actions{order:3}
+#ui5.u-mix .sg-page>.sg-poignee{order:8;margin-top:auto}
+#ui5.u-mix .mx-pied{order:9}
+#ui5.u-mix .sg-fen:not(:has(.sg-poignee)) .mx-pied{margin-top:auto}
+
+/* la barre : la marque, la bascule en pastille, l'onglet ESV en pastille, deux icônes */
+#ui5.u-mix .sg-barre{gap:10px;padding:0 12px 0 24px;background:var(--fond);border-bottom:1px solid var(--filet)}
+#ui5.u-mix .mx-marque-a{flex:none;display:inline-flex;align-items:center;gap:9px;margin-right:4px;font:500 15px/1 var(--sans);color:var(--encre)}
+#ui5.u-mix .mx-marque-a svg{width:18px;height:18px}
+#ui5.u-mix .sg-bascule{align-self:center;padding:3px;gap:2px;border-radius:var(--r2);box-shadow:inset 0 0 0 1px var(--filet-fort)}
+#ui5.u-mix .sg-bascule .sg-pouce{top:3px;bottom:3px;height:auto;background:var(--surface2);border-radius:5px}
+#ui5.u-mix .sg-bascule>button{position:relative;z-index:1;height:26px;padding:0 12px;border-radius:5px;font:400 13px/1 var(--sans);color:var(--encre2)}
+#ui5.u-mix .sg-bascule:not([data-pouce])>button[aria-selected="true"]{box-shadow:none;background:var(--surface2)}
+#ui5.u-mix .sg-bascule>button[aria-selected="true"]{color:var(--encre)}
+#ui5.u-mix .sg-puce{height:32px;padding:0 12px;gap:8px;border-radius:var(--r2);background:var(--surface2);font:400 13px/1 var(--sans);color:var(--encre)}
+#ui5.u-mix .sg-puce:hover{background:var(--surface2);box-shadow:inset 0 0 0 1px var(--filet-fort)}
+#ui5.u-mix .sg-puce i{width:7px;height:7px;border-radius:50%;background:var(--encre)}
+#ui5.u-mix .sg-puce:is([data-etat="libre"],[data-etat="aucun"]) i{background:none;box-shadow:inset 0 0 0 1.5px var(--encre2)}
+#ui5.u-mix .sg-puce[data-etat="ko"] i{background:var(--toi)}
+#ui5.u-mix .sg-puce[data-etat="ko"]{color:var(--encre)}
+#ui5.u-mix .sg-ico{width:32px;height:32px;box-shadow:none;color:var(--encre2)}
+#ui5.u-mix .sg-ico:hover{color:var(--encre);background:var(--surface2)}
+#ui5.u-mix .sg-ico svg{width:17px;height:17px}
+@media (max-width:540px){#ui5.u-mix[data-taille] .mx-marque-a span{display:none}#ui5.u-mix[data-taille] .sg-barre{padding-left:12px}#ui5.u-mix[data-taille] .sg-bascule>button{padding:0 6px}}
+@media (max-width:400px){#ui5.u-mix[data-taille] .mx-marque-a{display:none}#ui5.u-mix[data-taille] .mx-cmd{display:none}}
+
+/* la tuile d'état : l'icône et le mot (Plex Sans 28), la phrase dessous, le gros chiffre, la réglette */
+#ui5.u-mix .sg-tu:is(.sg-tu-etat,.sg-constel){padding:36px var(--marge) 0}
+#ui5.u-mix[data-taille="compact"] .sg-tu:is(.sg-tu-etat,.sg-constel){padding:18px var(--marge) 0}
+#ui5.u-mix .sg-haut{gap:12px;min-height:32px}
+#ui5.u-mix .sg-etat{gap:14px}
+#ui5.u-mix .mx-ic{flex:none;display:block;width:28px;height:28px;color:var(--encre)}
+#ui5.u-mix .mx-ic svg{width:28px;height:28px}
+#ui5.u-mix .mx-ic:is([data-g="cours"],[data-g="relecture"],[data-g="echo"],[data-g="verrou"]){color:var(--marche)}
+#ui5.u-mix .mx-ic[data-ton="alerte"]{color:var(--toi)}
+#ui5.u-mix .sg-mot{font:500 28px/32px var(--sans);letter-spacing:-.01em;text-transform:none;color:var(--encre)}
+#ui5.u-mix[data-taille="compact"] .sg-mot{font-size:24px;line-height:28px;letter-spacing:-.01em}
+#ui5.u-mix .sg-glyphe:is([data-g]) + .sg-mot{color:var(--encre)}
+#ui5.u-mix .sg-glyphe[data-ton="alerte"] + .sg-mot{color:var(--toi)}
+#ui5.u-mix .sg-partie{font:400 13px/18px var(--sans);color:var(--encre2)}
+#ui5.u-mix .sg-milieu{margin-top:6px}
+#ui5.u-mix[data-taille="compact"] .sg-milieu{margin-top:4px}
+#ui5.u-mix .sg-phrase,#ui5.u-mix .sg-phrase-longue{margin:0;font:400 15px/22px var(--sans);color:var(--encre2)}
+#ui5.u-mix .sg-texte:has(.sg-phrase-longue)>.sg-phrase{display:none}
+#ui5.u-mix .sg-milieu .sg-phrase-longue{order:1}
+#ui5.u-mix :is(.sg-phrase,.sg-phrase-longue) :is(.sg-mono,b){font:600 15px/22px var(--sans);color:var(--encre)}
+#ui5.u-mix .sg-consigne{font:500 15px/22px var(--sans)}
+#ui5.u-mix .sg-consigne::before{background:var(--marche)}
+#ui5.u-mix .sg-fen:is([data-activite="orbite"],[data-activite="echo"]) .sg-milieu .sg-trio{display:none}
+#ui5.u-mix .sg-milieu .mx-compte{order:4}
+#ui5.u-mix .sg-milieu .mx-reglette{order:5}
+#ui5.u-mix .mx-compte{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:4px 16px;margin-top:28px}
+#ui5.u-mix[data-taille="compact"] .mx-compte{margin-top:14px}
+#ui5.u-mix .mx-g{display:flex;align-items:baseline;gap:10px;min-width:0;flex-wrap:wrap}
+#ui5.u-mix .mx-chiffre{font:500 44px/48px var(--mono);letter-spacing:-.02em;color:var(--encre)}
+#ui5.u-mix[data-taille="compact"] .mx-chiffre{font-size:36px;line-height:40px}
+#ui5.u-mix .mx-leg,#ui5.u-mix .mx-d{font:400 15px/22px var(--sans);color:var(--encre2)}
+#ui5.u-mix .mx-d:empty{display:none}
+#ui5.u-mix .mx-d b{font-weight:600;color:var(--encre)}
+#ui5.u-mix .mx-reglette{display:flex;flex-direction:column-reverse;margin-top:16px}
+#ui5.u-mix .mx-reglette svg{width:100%;height:40px;overflow:visible}
+#ui5.u-mix .mx-reglette[data-forme="echo"]{margin-top:12px}
+#ui5.u-mix .mx-reglette[data-forme="echo"] svg{height:36px}
+#ui5.u-mix .mx-reglette line{vector-effect:non-scaling-stroke;shape-rendering:crispEdges}
+#ui5.u-mix .mx-grad{display:flex;justify-content:space-between;margin-top:-2px;font:400 11px/12px var(--mono);color:var(--encre2)}
+#ui5.u-mix .mx-tick{stroke:var(--encre3);stroke-width:1}
+#ui5.u-mix .mx-tick-fort{stroke:var(--encre2)}
+#ui5.u-mix .mx-reste{stroke:var(--encre2);stroke-width:1.5;stroke-dasharray:1.5 3}
+#ui5.u-mix .mx-fait{stroke:var(--encre);stroke-width:3}
+#ui5.u-mix .mx-marque{stroke:var(--encre);stroke-width:2}
+#ui5.u-mix .mx-aiguille line{stroke:var(--marche);stroke-width:2;vector-effect:non-scaling-stroke}
+#ui5.u-mix .mx-aiguille rect{fill:var(--marche)}
+#ui5.u-mix .mx-aiguille[data-ton="pause"] line{stroke:var(--encre)}
+#ui5.u-mix .mx-aiguille[data-ton="pause"] rect{fill:var(--encre)}
+#ui5.u-mix .mx-visite{stroke:var(--encre2);stroke-width:2}
+#ui5.u-mix .mx-visite.mx-corr{stroke:var(--encre)}
+#ui5.u-mix .mx-visite.mx-en{stroke:var(--marche)}
+#ui5.u-mix .sg-details-b{margin-top:14px;font:400 13px/18px var(--sans);letter-spacing:0;text-transform:none;box-shadow:none;padding:0;height:auto;color:var(--encre2);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--filet-fort)}
+#ui5.u-mix .sg-vue-b{width:32px;height:32px;box-shadow:none;border-radius:var(--r2)}
+#ui5.u-mix .sg-vue-b[aria-pressed="true"]{background:var(--surface2);color:var(--encre)}
+
+/* la zone : l'allure en une ligne, le bilan en liste, l'encadré à filet corail */
+#ui5.u-mix .sg-zone{padding:0 var(--marge);overflow-x:hidden}
+#ui5.u-mix .sg-tu{border-top:0;padding:0;gap:8px}
+#ui5.u-mix .sg-zone>*,#ui5.u-mix .sg-duo>*{margin-top:20px}
+#ui5.u-mix .sg-zone>.sg-duo{margin-top:0}
+#ui5.u-mix:not([data-details]) .sg-tu-fil{padding-top:0}
+#ui5.u-mix .sg-allure,#ui5.u-mix .sg-tu>p.sg-allure{font:400 15px/22px var(--sans);color:var(--encre2)}
+#ui5.u-mix .sg-allure b{font-weight:600;color:var(--encre)}
+#ui5.u-mix .sg-allure .sg-sep{color:var(--encre2)}
+#ui5.u-mix:not([data-details]) .sg-fen[data-activite="echo"] .sg-objet{display:flex}
+#ui5.u-mix:not([data-details]) .sg-fen[data-activite="echo"] .sg-objet :is(h4,.sg-marques){display:none}
+#ui5.u-mix[data-details] .sg-tu-fil,#ui5.u-mix .sg-fen[data-vue="fil"] .sg-tu-fil{border-top:1px solid var(--filet);padding-top:16px}
+#ui5.u-mix .sg-fen[data-vue="fil"] .sg-tu-fil :is(h4,.sg-vide){display:revert}
+#ui5.u-mix .sg-fen[data-vue="fil"] .sg-fil{display:block}
+#ui5.u-mix .sg-tu h4{font:500 13px/18px var(--sans);letter-spacing:0;text-transform:none;color:var(--encre2)}
+#ui5.u-mix .sg-fil li{height:40px}
+#ui5.u-mix .sg-fil b{font:500 15px/1 var(--mono)}
+#ui5.u-mix .sg-fil span,#ui5.u-mix .sg-fil em{font-size:13px}
+#ui5.u-mix .sg-tag{font:400 13px/1 var(--sans);letter-spacing:0;text-transform:none}
+#ui5.u-mix .sg-tag.sg-attn{color:var(--encre)}
+#ui5.u-mix .sg-tag.sg-crit{color:var(--toi)}
+#ui5.u-mix .sg-tu-avis{gap:0;margin:24px 0 0;padding:15px 16px;border:1px solid var(--toi);border-radius:var(--r3);background:none}
+#ui5.u-mix .sg-tu-avis.sg-avis-seul{border-color:var(--filet-fort)}
+#ui5.u-mix .sg-tu-avis .sg-ic{display:none}
+#ui5.u-mix .sg-tu-avis p{font:400 15px/22px var(--sans);color:var(--encre)}
+#ui5.u-mix .sg-tu-avis small{font:400 15px/22px var(--sans);color:var(--encre2)}
+#ui5.u-mix .sg-tu-fin{gap:0;padding:0}
+#ui5.u-mix .sg-tu-fin>svg,#ui5.u-mix .sg-tu-fin h3{display:none}
+#ui5.u-mix .sg-fin{gap:8px 24px;font:400 15px/22px var(--sans)}
+#ui5.u-mix .sg-fin dt{color:var(--encre2)}
+#ui5.u-mix .sg-fin dd{color:var(--encre2)}
+#ui5.u-mix .sg-fin dd b{font:600 15px/22px var(--sans);color:var(--encre)}
+#ui5.u-mix .sg-fin .sg-dif{color:var(--encre)}
+#ui5.u-mix .sg-rang{font-size:15px;min-height:44px}
+#ui5.u-mix .sg-bornes input[type="number"]{height:36px;border-radius:var(--r2);background:var(--surface2);border-color:var(--filet-fort);font:500 15px/1 var(--mono)}
+
+/* les actions : une seule pleine claire, les autres en texte, sur une ligne */
+#ui5.u-mix .sg-actions{flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px 24px;padding:24px var(--marge) 16px}
+#ui5.u-mix[data-taille="compact"] .sg-actions{padding:16px var(--marge) 12px;gap:8px 18px}
+#ui5.u-mix[data-taille="compact"] .sg-actions>button{flex:0 1 auto}
+#ui5.u-mix .sg-actions>button{min-height:44px;border-radius:var(--r2);font:500 15px/22px var(--sans);gap:12px}
+#ui5.u-mix .sg-principal{min-width:min(200px,100%);padding:0 24px;background:var(--action);color:var(--action-texte)}
+#ui5.u-mix .sg-principal:not(:disabled):hover{background:var(--action);box-shadow:inset 0 0 0 44px #ffffff14}
+#ui5.u-mix .sg-principal.sg-danger{background:var(--action);color:var(--action-texte)}
+#ui5.u-mix :is(.sg-secondaire,.sg-secondaire.sg-discret){min-height:44px;padding:0;box-shadow:none;background:none;font-weight:400;color:var(--encre2);justify-content:flex-start}
+#ui5.u-mix .sg-secondaire:not(:disabled):hover{background:none;color:var(--encre)}
+#ui5.u-mix .sg-secondaire.sg-danger{color:var(--encre2)}
+#ui5.u-mix .sg-actions>button:disabled{opacity:1;color:var(--encre2)}
+#ui5.u-mix .sg-principal:disabled{background:none;color:var(--encre2);box-shadow:inset 0 0 0 1px var(--filet-fort)}
+#ui5.u-mix .sg-raison{font:400 13px/18px var(--sans);color:var(--encre2)}
+#ui5.u-mix .sg-verrou-ligne{font:400 15px/22px var(--sans);color:var(--encre2)}
+#ui5.u-mix .sg-verrou-ligne svg{width:16px;height:16px}
+
+/* « Ce qui reste » : une barre sur la surface, son titre, ce qu'elle porte ; puis le pied « Cache des exports » */
+#ui5.u-mix .sg-poignee{min-height:40px;padding:0 var(--marge) 0 calc(var(--marge) + 0px);gap:0;background:var(--surface);border-top:1px solid var(--filet);font:400 15px/22px var(--sans);color:var(--encre2)}
+#ui5.u-mix .sg-poignee::before{width:6px;height:6px;margin:0 18px 0 0;border:0;border-right:1.5px solid var(--encre2);border-top:1.5px solid var(--encre2);transform:rotate(45deg)}
+#ui5.u-mix .sg-poignee[aria-expanded="true"]::before{transform:rotate(135deg)}
+#ui5.u-mix .sg-poignee:hover{background:var(--surface2)}
+#ui5.u-mix .sg-poignee .mx-t{font-weight:500;color:var(--encre)}
+#ui5.u-mix .sg-poignee .mx-sep{color:var(--encre2)}
+#ui5.u-mix .sg-poignee .sg-n,#ui5.u-mix .sg-poignee .sg-n.sg-dif{font-weight:400;margin-right:0;color:var(--encre2)}
+#ui5.u-mix .sg-poignee .sg-reste{font:400 13px/18px var(--sans)}
+#ui5.u-mix .mx-pied{flex:none;display:flex;align-items:center;gap:0;min-height:48px;padding:0 24px 0 var(--marge);border-top:1px solid var(--filet);background:var(--fond);font:400 13px/18px var(--sans);color:var(--encre2)}
+#ui5.u-mix .mx-pied .sg-r{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:pre}
+#ui5.u-mix .mx-pied button{flex:none;margin-left:auto;padding-left:16px;min-height:32px;background:none;box-shadow:none;font:400 13px/18px var(--sans);color:var(--encre)}
+#ui5.u-mix .mx-pied button:disabled{opacity:1;color:var(--encre2)}
+#ui5.u-mix .mx-pied button:not(:disabled):hover{text-decoration:underline;text-underline-offset:3px}
+#ui5.u-mix .sg-tiroir{box-shadow:var(--ombre)}
+#ui5.u-mix .sg-tete{background:var(--fond)}
+#ui5.u-mix .sg-tete .sg-t{font:500 15px/1 var(--sans);letter-spacing:0;text-transform:none}
+
+/* les couches : surfaces de la planche, angles r2/r3 */
+#ui5.u-mix :is(.sg-popover,.sg-palette,.sg-boite){border-radius:var(--r3);background:var(--surface);box-shadow:var(--ombre)}
+#ui5.u-mix :is(.sg-tu h4,.sg-trio dt,.sg-section,.sg-reg-tete,.sg-of-t){font:500 13px/18px var(--sans);letter-spacing:0;text-transform:none;color:var(--encre2)}
+#ui5.u-mix kbd{font:400 11px/1 var(--mono);letter-spacing:0;text-transform:none;border-radius:var(--r1)}
+#ui5.u-mix .sg-seg>button[aria-pressed="true"]{background:var(--action);color:var(--action-texte)}
+#ui5.u-mix .sg-ligne{font-size:15px}
+#ui5.u-mix .sg-ligne .sg-cut{font:500 15px/1.2 var(--mono)}
+#ui5.u-mix .sg-cmd[aria-selected="true"]{box-shadow:inset 2px 0 0 var(--marche)}
