@@ -492,7 +492,7 @@ body.ui5:has(#ui5.u-mix[data-theme="clair"]){background:#e8e9e7}
 #ui5.u-mix .sg-ico{width:32px;height:32px;box-shadow:none;color:var(--encre2)}
 #ui5.u-mix .sg-ico:hover{color:var(--encre);background:var(--surface2)}
 #ui5.u-mix .sg-ico svg{width:17px;height:17px}
-@media (max-width:540px){#ui5.u-mix[data-taille] .mx-marque-a span{display:none}#ui5.u-mix[data-taille] .sg-barre{padding-left:12px}#ui5.u-mix[data-taille] .sg-bascule>button{padding:0 6px}}
+@media (max-width:580px){#ui5.u-mix[data-taille] .mx-marque-a span{display:none}#ui5.u-mix[data-taille] .sg-barre{padding-left:12px}#ui5.u-mix[data-taille] .sg-bascule>button{padding:0 6px}}
 @media (max-width:400px){#ui5.u-mix[data-taille] .mx-marque-a{display:none}#ui5.u-mix[data-taille] .mx-cmd{display:none}}
 
 /* la tuile d'état : l'icône et le mot (Plex Sans 28), la phrase dessous, le gros chiffre, la réglette */
@@ -613,7 +613,8 @@ body.ui5:has(#ui5.u-mix[data-theme="clair"]){background:#e8e9e7}
 #ui5.u-mix .sg-poignee .sg-n,#ui5.u-mix .sg-poignee .sg-n.sg-dif{font-weight:400;margin-right:0;color:var(--encre2)}
 #ui5.u-mix .sg-poignee .sg-reste{font:400 13px/18px var(--sans)}
 #ui5.u-mix .mx-pied{flex:none;display:flex;align-items:center;gap:0;min-height:48px;padding:0 24px 0 var(--marge);border-top:1px solid var(--filet);background:var(--fond);font:400 13px/18px var(--sans);color:var(--encre2)}
-#ui5.u-mix .mx-pied .sg-r{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:pre}
+#ui5.u-mix .mx-pied .sg-r{min-width:0;white-space:pre-wrap}
+#ui5.u-mix .mx-pied{flex-wrap:wrap;padding-block:6px}
 #ui5.u-mix .mx-pied button{flex:none;margin-left:auto;padding-left:16px;min-height:32px;background:none;box-shadow:none;font:400 13px/18px var(--sans);color:var(--encre)}
 #ui5.u-mix .mx-pied button:disabled{opacity:1;color:var(--encre2)}
 #ui5.u-mix .mx-pied button:not(:disabled):hover{text-decoration:underline;text-underline-offset:3px}
@@ -689,3 +690,12 @@ body.ui5:has(#ui5.u-mix[data-theme="clair"]) #avis-stockage-neuf button{backgrou
 #ui5.u-mix .sg-puce{flex:0 1 auto;min-width:60px;overflow:hidden}
 #ui5.u-mix .sg-puce .sg-tx{flex:1 1 auto;min-width:0}
 #ui5.u-mix .sg-puce :is(i,svg){flex:none}
+/* fenêtre étroite : marges verticales resserrées (audit : « File terminée » défilait de 108 px à 320 px) */
+@media (max-width:520px){#ui5.u-mix[data-taille] .sg-tu:is(.sg-tu-etat,.sg-constel){padding-top:20px}#ui5.u-mix[data-taille] .sg-mot{font-size:24px;line-height:28px}
+ #ui5.u-mix[data-taille] .mx-compte{margin-top:16px}#ui5.u-mix[data-taille] .sg-zone>*,#ui5.u-mix[data-taille] .sg-duo>*{margin-top:14px}#ui5.u-mix[data-taille] .sg-tu-avis{margin-top:16px;padding:12px 14px}
+ #ui5.u-mix[data-taille] .sg-actions{padding:16px var(--marge) 12px;gap:4px 18px}#ui5.u-mix[data-taille] .sg-fin{gap:4px 16px}}
+/* le bilan par partie (Constellation finie, dans Orbite) : une liste en Plex Sans 13 qui défile seule ; la zone garde sa hauteur, les actions restent visibles */
+#ui5.u-mix .sg-file-bilan{font:400 13px/18px var(--sans);color:var(--encre2);gap:6px}
+#ui5.u-mix .sg-zone:has(>[data-k="file-bilan"]){overflow:hidden;flex:0 1 auto}
+#ui5.u-mix .sg-zone>[data-k="file-bilan"]{flex:0 1 auto;min-height:0}
+#ui5.u-mix .sg-zone>[data-k="file-bilan"] .sg-file-bilan{flex:0 1 auto;min-height:40px;overflow-y:auto;scrollbar-width:thin}
