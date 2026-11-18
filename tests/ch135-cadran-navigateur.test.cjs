@@ -10,6 +10,7 @@ const navigateur=require('./esv-maquette/navigateur.cjs');
 const CHROMIUM=navigateur.executable(),absent=navigateur.indisponible()||false;
 const {SCENES,ouvrirScene}=require('../chantiers/CH-135/outils/scenes.cjs');
 
+/* Découpé à l'intégration de la clôture (18/11) : le fichier entier durait plus de 20 s, la limite du verify par fichier. Partie 1 sur 5. */
 test('CH-135 : Interface « Cadran » choisie dans les Réglages, sans recharger, gardée ; retour à l’instrument',{skip:absent,timeout:30000},async()=>{
  const {chromium}=require(navigateur.modulePlaywright()),nav=await chromium.launch({executablePath:CHROMIUM});
  try{
@@ -36,45 +37,3 @@ test('CH-135 : Interface « Cadran » choisie dans les Réglages, sans recharger
  }finally{await nav.close();}
 });
 
-test('CH-135 : mêmes clics, mêmes messages au service worker en Cadran qu’en instrument',{skip:absent,timeout:60000},async()=>{
- const {chromium}=require(navigateur.modulePlaywright()),nav=await chromium.launch({executablePath:CHROMIUM});
- const CAS=[['cours','#ui5 .sg-actions>button:nth-child(1)'],['cours','#ui5 .sg-actions>button:nth-child(2)'],['pause','#ui5 .sg-actions>button:nth-child(1)'],
-  ['toi','#ui5 .sg-actions>button:nth-child(1)'],['fin','#ui5 .sg-actions>button:nth-child(2)'],['repos','#ui5 .sg-actions>button:nth-child(1)'],['echo','#ui5 .sg-actions>button:nth-child(2)']];
- let vus=0;
- try{
-  for(const [nom,sel] of CAS){
-   const res={};
-   for(const variante of ['signal','cadran']){
-    const {ctx,page,erreurs}=await ouvrirScene(nav,SCENES[nom],{variante});
-    const avant=(await page.evaluate(()=>window.__appels)).length;
-    const texte=await page.$eval(sel,e=>e.textContent.trim());
-    await page.click(sel);await page.waitForTimeout(400);
-    res[variante]={texte,appels:(await page.evaluate(()=>window.__appels)).slice(avant).filter(a=>a!=='view'&&a!=='list-tabs')};
-    assert.deepEqual(erreurs,[],`${nom} ${variante}`);await ctx.close();
-   }
-   assert.equal(res.cadran.texte,res.signal.texte,`${nom} : même bouton`);
-   assert.deepEqual(res.cadran.appels,res.signal.appels,`${nom} « ${res.signal.texte} » : mêmes messages`);vus+=res.signal.appels.length;
-  }
-  assert.ok(vus>=4,'les clics envoient bien des messages (sinon l’essai ne prouverait rien) : '+vus);
- }finally{await nav.close();}
-});
-
-/* Équivalents en Cadran des essais de l'instrument qui lisent l'anneau (Revue T21 R6, CH-115 « chiffre qui roule ») : la fenêtre et la voie restent
- * les mêmes nœuds d'un rendu à l'autre ; un nouveau cut change les compteurs et la voie, sans copie d'un ancien chiffre dans le panneau. */
-test('CH-135 : mise à jour en place : la voie n’est pas recréée chaque seconde, un nouveau cut la fait avancer, aucune copie de chiffre',{skip:absent,timeout:30000},async()=>{
- const {chromium}=require(navigateur.modulePlaywright()),nav=await chromium.launch({executablePath:CHROMIUM});
- try{
-  const {ctx,page,erreurs}=await ouvrirScene(nav,SCENES.cours,{});
-  await page.evaluate(()=>{window.__fen=document.querySelector('#ui5 .sg-fen');window.__voie=document.querySelector('#ui5 .cd-voie');});
-  await page.waitForTimeout(2600);
-  assert.deepEqual(await page.evaluate(()=>[window.__fen.isConnected,window.__voie.isConnected]),[true,true],'même fenêtre, même voie après plusieurs rendus');
-  const avant=await page.evaluate(()=>({n:document.querySelectorAll('#ui5 .cd-tr.cd-pose').length,t:document.querySelector('#ui5 .sg-trio dd').textContent}));
-  const s=await page.evaluate(()=>window.ArianePanel.state());
-  const b=s.batch,p=[...(b.processed||[])],dernier=p.at(-1);
-  await page.evaluate(x=>{window.ArianePanel.state().batch.processed.push(x);window.ArianeUi5.maj(true);},{...dernier,cut:(dernier?.cut??0)+1,identity:{...(dernier?.identity||{}),cut:(dernier?.identity?.cut??0)+1}});
-  await page.waitForTimeout(500);
-  const apres=await page.evaluate(()=>({n:document.querySelectorAll('#ui5 .cd-tr.cd-pose').length,t:document.querySelector('#ui5 .sg-trio dd').textContent,copie:!!document.querySelector('#ui5 .sg-roule')}));
-  assert.notDeepEqual(apres,{...avant,copie:false},'un cut de plus se voit');assert.equal(apres.copie,false,'aucune copie dans le panneau dessiné');
-  assert.deepEqual(erreurs,[]);await ctx.close();
- }finally{await nav.close();}
-});

@@ -50,9 +50,12 @@
    * du premier lot ; il ne se montre qu'hors lot (Prêt, Terminé, Arrêté, ou panneau sans Signal) et se cache, sans être acquitté, pendant un lot. */
   const HORS_LOT = ['pret', 'fini', 'arrete'];
   function horsLot(D) { let e = null; try { e = D?.querySelector?.('#ui5 .sg-fen')?.dataset?.etat ?? null; } catch { /* rien */ } return e === null || HORS_LOT.includes(e); }
-  function reserver(boite, D) { try { D.documentElement?.style?.setProperty?.('--avis-sn-h', (Math.ceil(boite.offsetHeight || 0) + ((root.innerWidth ?? 600) < 480 ? 16 : 24)) + 'px'); D.body.classList?.add?.('avis-sn'); } catch { /* rien */ } }
-  function rendre(D) { try { D.documentElement?.style?.removeProperty?.('--avis-sn-h'); D.body.classList?.remove?.('avis-sn'); } catch { /* rien */ } }
-  function suivreEtat(boite, D) { const montre = horsLot(D); if (boite.hidden !== !montre) boite.hidden = !montre; /* n'écrire que ce qui change : l'observateur suit `hidden` */ if (montre) reserver(boite, D); else rendre(D); }
+  function reserver(boite, D) { try { const h = (Math.ceil(boite.offsetHeight || 0) + ((root.innerWidth ?? 600) < 480 ? 16 : 24)) + 'px';
+    /* n'écrire que ce qui change : appelé à chaque rendu du panneau, une réécriture à l'identique relance le calcul des styles */
+    if (boite.dataset?.snH !== h) { D.documentElement?.style?.setProperty?.('--avis-sn-h', h); if (boite.dataset) boite.dataset.snH = h; }
+    if (!D.body.classList?.contains?.('avis-sn')) D.body.classList?.add?.('avis-sn'); } catch { /* rien */ } }
+  function rendre(D, boite) { try { if (boite?.dataset) delete boite.dataset.snH; if (!D.body.classList?.contains?.('avis-sn')) return; D.documentElement?.style?.removeProperty?.('--avis-sn-h'); D.body.classList?.remove?.('avis-sn'); } catch { /* rien */ } }
+  function suivreEtat(boite, D) { const montre = horsLot(D); if (boite.hidden !== !montre) boite.hidden = !montre; /* n'écrire que ce qui change : l'observateur suit `hidden` */ if (montre) reserver(boite, D); else rendre(D, boite); }
   async function brancher({ L = root.chrome?.storage?.local, D = root.document } = {}) {
     if (!L?.get || !D) return { avis: false };
     let stock;
