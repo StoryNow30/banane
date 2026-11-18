@@ -37,3 +37,7 @@ test('CH-137 : src/ui5.js connaît signal et mix, replie cadran et riche sur mix
   assert.match(u,/v === 'mix' \? 'u-mix' : 'u-signal'/);
   assert.match(u,/root\.ArianeMixRendu/);
 });
+test('CH-137 : le téléphone reste sur le rendu Glacier (comme pour le Cadran)',()=>{
+  const t=lire('src/telecommande-instantane.js');
+  assert.match(t,/variante: 'signal'/);assert.doesNotMatch(t,/ArianeMixRendu|mix-rendu/);
+});
