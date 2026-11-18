@@ -699,3 +699,41 @@ body.ui5:has(#ui5.u-mix[data-theme="clair"]) #avis-stockage-neuf button{backgrou
 #ui5.u-mix .sg-zone:has(>[data-k="file-bilan"]){overflow:hidden;flex:0 1 auto}
 #ui5.u-mix .sg-zone>[data-k="file-bilan"]{flex:0 1 auto;min-height:0}
 #ui5.u-mix .sg-zone>[data-k="file-bilan"] .sg-file-bilan{flex:0 1 auto;min-height:40px;overflow-y:auto;scrollbar-width:thin}
+
+/* ───────────────────────────── correctifs de l'audit des 38 scènes : commandes visibles et zones qui tiennent */
+/* Constellation : le bouton du bilan ajoute une commande dans la barre. Les espaces se resserrent ; en compact,
+ * la pastille ESV ne garde que son point (son libellé est déjà masqué à cette largeur) au lieu de réserver 60 px. */
+#ui5.u-mix:not([data-taille="compact"]) .sg-fen[data-activite="file"] .sg-barre{gap:6px}
+@media (max-width:400px){#ui5.u-mix .sg-fen[data-activite="file"] .sg-barre{gap:0}
+ #ui5.u-mix .sg-fen[data-activite="file"] .sg-puce{min-width:32px;width:32px;padding:0;justify-content:center}}
+
+/* En compact, les deux actions d'une ligne du tiroir gardent leur nom accessible mais prennent la largeur de leur icône. */
+#ui5.u-mix[data-taille="compact"] .sg-outils button span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+#ui5.u-mix[data-taille="compact"] .sg-outils button{position:relative;width:30px;padding:0;justify-content:center}
+
+/* Aurore : la liste et sa tête sont plus denses pour qu'aucun bouton « Ouvrir » ne passe sous les actions ou le pied. */
+#ui5.u-mix .sg-fen[data-activite="correction"] .sg-tu-etat{padding-top:12px}
+#ui5.u-mix .sg-fen[data-activite="correction"] .mx-compte{margin-top:4px}
+#ui5.u-mix .sg-fen[data-activite="correction"] .sg-zone>.sg-tu-liste{margin-top:4px}
+#ui5.u-mix .sg-fen[data-activite="correction"] .sg-corr-partie{padding:8px 0 2px}
+#ui5.u-mix .sg-fen[data-activite="correction"] .sg-section{padding:8px 0 4px}
+#ui5.u-mix .sg-fen[data-activite="correction"] .sg-ligne.sg-corr{min-height:40px;padding:4px 0}
+#ui5.u-mix .sg-fen[data-activite="correction"] .sg-corr .sg-motif{line-height:18px}
+#ui5.u-mix .sg-fen[data-activite="correction"] .sg-corr .sg-motif small{line-height:16px}
+#ui5.u-mix .sg-fen[data-activite="correction"] .sg-actions{padding-top:8px;padding-bottom:6px}
+#ui5.u-mix[data-taille="compact"] .sg-fen[data-activite="correction"] :is(.sg-corr .sg-motif,.sg-corr .sg-motif small,.sg-corr .sg-statut){font-size:11px;line-height:14px}
+#ui5.u-mix[data-taille="compact"] .sg-fen[data-activite="correction"] .sg-corr-partie{padding:2px 0 0}
+#ui5.u-mix[data-taille="compact"] .sg-fen[data-activite="correction"] .sg-section{padding:4px 0 2px}
+#ui5.u-mix[data-taille="compact"] .sg-fen[data-activite="correction"] .sg-section .sg-d{display:none}
+#ui5.u-mix[data-taille="compact"] .sg-fen[data-activite="correction"] .mx-pied .sg-r{display:none}
+
+/* Vue fil (contrat de CH-134) : le fil occupe la hauteur libre et ce qui ne tient pas est masqué, rien ne défile. */
+#ui5.u-mix .sg-fen[data-vue="fil"] .sg-zone{flex:1 1 auto;min-height:0;overflow:hidden}
+#ui5.u-mix .sg-fen[data-vue="fil"] .sg-duo{flex:1 1 auto;min-height:0}
+#ui5.u-mix .sg-fen[data-vue="fil"] .sg-tu-fil{display:flex;flex:1 1 0;min-height:0;overflow:hidden}
+#ui5.u-mix .sg-fen[data-vue="fil"] .sg-fil{flex:1 1 auto;min-height:0;overflow:hidden}
+
+/* Bornes de la relecture : le choix des deux cuts passe avant la réglette ; le gros chiffre et son compte restent visibles. */
+@media (max-width:560px){#ui5.u-mix:has(.sg-zone [data-k="relecture-bornes"]) .mx-reglette{display:none}
+ #ui5.u-mix:has(.sg-zone [data-k="relecture-bornes"]) .mx-compte{margin-top:4px}
+ #ui5.u-mix:has(.sg-zone [data-k="relecture-bornes"]) .sg-tu-etat{padding-top:16px}}
