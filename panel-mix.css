@@ -446,12 +446,15 @@ body.ui5:has(#ui5.u-mix[data-theme="clair"]){background:#e8e9e7}
 #ui5.u-mix .sg-voie-seg+*{margin-top:4px}
 
 /* ───────────────────────────── détails techniques (couche hors de #ui5, src/ui5.js) quand Cadran est choisi */
-.sg-tech[data-variante="mix"]{--bg:#121314;--bg-2:#1a1b1d;--text:#ecedee;--text-2:#a6a9ad;--text-3:#a6a9ad;--hair:#ffffff1f;--hair-2:#ffffff38;--tile:#1a1b1d;--field:#222427;--sans:"IBM Plex Sans",system-ui,sans-serif;font-family:"IBM Plex Sans",system-ui,sans-serif;background:#121314;color:#ecedee}
-.sg-tech[data-variante="mix"][data-theme="clair"]{--bg:#e8e9e7;--bg-2:#f1f2f0;--text:#141516;--text-2:#4e5257;--text-3:#4e5257;--hair:#0000001f;--hair-2:#0000003d;--tile:#f1f2f0;--field:#fafaf9;background:#e8e9e7;color:#141516}
+.sg-tech[data-variante="mix"]{--bg:#121314;--bg-2:#1a1b1d;--text:#ecedee;--text-2:#a6a9ad;--text-3:#a6a9ad;--hair:#ffffff1f;--hair-2:#ffffff38;--tile:#1a1b1d;--field:#222427;--tuile-t:#1a1b1d;--menu:#222427;--vert-1:#ecedee;--vert-2:#ecedee;--voie:#f2b65a;--sans:"IBM Plex Sans",system-ui,sans-serif;font-family:"IBM Plex Sans",system-ui,sans-serif;background:#121314;color:#ecedee}
+.sg-tech[data-variante="mix"][data-theme="clair"]{--bg:#e8e9e7;--bg-2:#f1f2f0;--text:#141516;--text-2:#4e5257;--text-3:#4e5257;--hair:#0000001f;--hair-2:#0000003d;--tile:#f1f2f0;--field:#fafaf9;--tuile-t:#f1f2f0;--menu:#fafaf9;--vert-1:#141516;--vert-2:#141516;--voie:#8a570a;background:#e8e9e7;color:#141516}
 .sg-tech[data-variante="mix"] .sg-tech-tete{background:var(--bg-2)}
 .sg-tech[data-variante="mix"] .sg-tech-tete b{font:500 15px/1.2 "IBM Plex Sans",sans-serif}
 .sg-tech[data-variante="mix"] :is(button,.sg-tech-tete button){border-radius:8px}
-.sg-tech[data-variante="mix"] :is(summary,h2,.lbl){font-size:11px}
+.sg-tech[data-variante="mix"] :is(summary,h2,.lbl){font-size:13px;letter-spacing:0;text-transform:none}
+.sg-tech[data-variante="mix"] .sg-tech-corps>*{border-radius:12px}
+.sg-tech[data-variante="mix"] .sg-tech-tete button{border-radius:8px;background:#ecedee;color:#121314;border:0}
+.sg-tech[data-variante="mix"][data-theme="clair"] .sg-tech-tete button{background:#141516;color:#e8e9e7}
 
 /* ───────────────────────────── mouvement : une courbe, 200 à 320 ms, aucune boucle */
 @keyframes mx-monte{from{opacity:0;transform:translateY(6px)}}
@@ -682,3 +685,7 @@ body.ui5:has(#ui5.u-mix) #avis-stockage-neuf::before{display:none}
 body.ui5:has(#ui5.u-mix) #avis-stockage-neuf button{background:#ecedee;color:#121314;border:0;border-radius:8px;font:500 13px/18px "IBM Plex Sans",system-ui,sans-serif}
 body.ui5:has(#ui5.u-mix[data-theme="clair"]) #avis-stockage-neuf{background:#f1f2f0;color:#141516;border-color:#b2372b;box-shadow:0 8px 24px #0000002e}
 body.ui5:has(#ui5.u-mix[data-theme="clair"]) #avis-stockage-neuf button{background:#141516;color:#e8e9e7}
+/* la pastille ESV ne se comprime jamais sous son point et son cadenas (barre de la Constellation, plus chargée : bouton du bilan) */
+#ui5.u-mix .sg-puce{flex:0 1 auto;min-width:60px;overflow:hidden}
+#ui5.u-mix .sg-puce .sg-tx{flex:1 1 auto;min-width:0}
+#ui5.u-mix .sg-puce :is(i,svg){flex:none}
