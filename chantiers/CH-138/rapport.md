@@ -31,3 +31,22 @@ node --max-old-space-size=13000 tools/compteur-gcv2.cjs --donnees bd --racine-su
 node --test tests/compteur-gcv2.test.cjs tests/ui5-panneau.test.cjs && node tools/scan-identite.cjs
 ```
 Le doublon p0 est tranché : il n'y a rien à refaire. Reste à rapporter le total après, et sa ventilation par `cadre` et entre projet sûr et « ? », à partir de `sources[]` du JSON généré.
+
+## Fini — génération faite le 18/11 (intégrateur)
+
+Génération terminée sur les 92 parties, `--max-old-space-size=13000`, 7z dépliés sur deux niveaux (l'archive contient des `.zip`). ÉTABLI.
+
+- **Cuts corrigés : 6 761** (dont 4 485 de plus de 5 mm, 2 684 de plus de 10 mm) ; validés tels quels : 1 366 ; visités sans action (≥ 0,6 s) : 9 631 ; **apprenables : 17 758**. Avant, au 19/10 : 2 684 et 5 258.
+- File : 4 623 corrigés / 13 734 apprenables ; appris : 2 138 / 4 024.
+- Essais : `compteur-gcv2` et `ui5-panneau` **27 sur 27**, les deux essais rouges passent. `scan-identite` ne relève rien (motifs confidentiels absents de cette machine : seuls les quatre motifs publics sont contrôlés).
+
+Ventilation, lue dans `sources[]` du JSON généré et rapprochée du fichier des sources :
+
+| Cadre | Projet | Parties | Corrigés | Apprenables |
+|---|---|---:|---:|---:|
+| non précisé | sûr | 13 | 2 684 | 5 258 |
+| `echo-dedie` | sûr | 9 | 893 | 2 396 |
+| `echo-dedie` | ? | 29 | 1 721 | 6 779 |
+| `echo-pendant-lot` | ? | 41 | 1 463 | 3 325 |
+
+Les 13 parties déjà comptées le 19/10 rendent exactement l'ancien total (2 684 / 5 258) : la génération ne recompte rien, elle ajoute. PROBABLE pour les 70 parties en projet « ? », dont le rattachement repose sur le numéro de partie et la taille de la liste d'ESV.
