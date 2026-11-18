@@ -13,7 +13,7 @@ const THEMES = process.env.THEMES ? process.env.THEMES.split(',') : ['sombre', '
   for (const theme of THEMES) for (const w of LARGEURS) for (const nom of LISTE) {
     const { ctx, page, erreurs } = await ouvrirScene(nav, SCENES[nom], { largeur: w, theme, variante: process.env.VARIANTE || 'mix' });
     const m = [...erreurs.map(x => 'ERREUR ' + x), ...await page.evaluate(MESURE), ...await page.evaluate(PETIT), ...await page.evaluate(RECOUVRE)];
-    res[`${theme}-${w}-${nom}`] = m; n++; defauts += m.length; await ctx.close();
+    res[`${theme}-${w}-${nom}`] = m; n++; defauts += m.length; await ctx.close(); if (process.env.SUIVI) console.log(n, `${theme}-${w}-${nom}`, m.length ? m.join(' | ') : 'ok');
   }
   await nav.close();
   if (process.argv[2]) fs.writeFileSync(process.argv[2], JSON.stringify(res, null, 1));
