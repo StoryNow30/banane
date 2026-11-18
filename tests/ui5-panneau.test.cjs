@@ -50,7 +50,10 @@ test('un clic sur un onglet ESV le choisit puis clique « Reconnecter ESV » ; l
 test('le compteur des exemples d’apprentissage est lu dans datasets/compteur-gcv2.json (format du compteur)',async()=>{
  const p=await monter({etat:etat(null)});
  const j=JSON.parse(lire('datasets/compteur-gcv2.json'));
- assert.deepEqual(js(p.ui.instantane(etat(null)).gcv2),{total:j.totaux.tous.corriges,date:'19/10/2026'});
+ /* CH-138 (D-371) : le compteur est recalculé avec les Échos archivés après le 19/10 ; le panneau affiche son total et sa date. */
+ assert.ok(j.creeLe>'2026-10-20',`compteur arrêté au ${j.creeLe} : pas recalculé depuis le 19/10`);
+ const d=new Date(j.creeLe),date=`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+ assert.deepEqual(js(p.ui.instantane(etat(null)).gcv2),{total:j.totaux.tous.corriges,date});
 });
 
 test('état du lot : une pause qui attend un choix est « à toi », une pause simple « en pause » ; sans lot ni cut affiché, « aucun onglet ESV »',async()=>{

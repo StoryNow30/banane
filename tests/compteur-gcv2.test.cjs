@@ -57,6 +57,15 @@ test('fichier des sources du dépôt : valide, sans code de projet ESV ni adress
   assert.ok(!/https?:\/\//.test(brut), 'aucune adresse');
 });
 
+test('compteur généré : il couvre exactement les sources du fichier des sources (mêmes parties, même état), dans l\'ordre', () => {
+  const dir = path.join(__dirname, '..', 'datasets');
+  const sources = JSON.parse(fs.readFileSync(path.join(dir, 'compteur-gcv2-sources.json'), 'utf8')).sources;
+  const r = JSON.parse(fs.readFileSync(path.join(dir, 'compteur-gcv2.json'), 'utf8'));
+  assert.deepEqual(r.sources.map(s => [s.id, s.projet, s.partie, s.etat]), sources.map(s => [s.id, s.projet, s.partie, s.etat || 'en-file']), 'régénérer avec node tools/compteur-gcv2.cjs');
+  const somme = k => r.sources.reduce((a, s) => a + s[k], 0);
+  for (const k of ['corriges', 'valideSansMouvement', 'visiteSansAction']) assert.equal(r.totaux.tous[k], somme(k), `total ${k} = somme des parties`);
+});
+
 test('arguments : la racine de banane-data est obligatoire, le seuil de visite doit être positif', () => {
   assert.throws(() => C.lireArguments([]), /Usage/);
   assert.throws(() => C.lireArguments(['--donnees', '/r', '--seuil-visite', '-1']), /positive/);
