@@ -1,6 +1,6 @@
 {
   "format": "ariane-compteur-gcv2-sources-v1",
-  "note": "Écho archivés dans banane-data (dossiers relatifs à collections/). `etat` : en-file (archivé, GCV2 pas encore entraînée dessus) ou appris. Tout part en file tant que Mic n'a pas confirmé l'entraînement (D-188). Les parties apprises par la GCV2 (G1-b, datasets/gcv2-parametres.json) sont à l'état « appris » ; p1-17 (Écho en 7z) est lue par `--racine-supplementaire` (voir `archive7z`).",
+  "note": "Écho archivés dans banane-data (dossiers relatifs à collections/). `etat` : en-file (archivé, GCV2 pas encore entraînée dessus) ou appris. Tout part en file tant que l’opérateur n'a pas confirmé l'entraînement (D-188). Les parties apprises par la GCV2 (G1-b, datasets/gcv2-parametres.json) sont à l'état « appris » ; p1-17 (Écho en 7z) est lue par `--racine-supplementaire` (voir `archive7z`). CH-138 (D-371) : sources ajoutées pour les Échos archivés du 19/10 au 17/11 ; une partie est identifiée par son numéro et le nombre de lignes de sa liste d’ESV (aucun export ne porte de projet) ; projet « ? » = non précisé (projetCertain:false) ; `cadre` : echo-dedie (séance Écho) ou echo-pendant-lot (Écho pris pendant un lot Orbite ou Constellation).",
   "sources": [
     {
       "id": "p1-24",
@@ -18,7 +18,7 @@
       "dossiers": [
         "2026-10-16_v4.9.5.3_partie-12-operateur/echo p12 10h02"
       ],
-      "note": "partie d'un opérateur débutant relue par Mic",
+      "note": "partie d'un opérateur débutant relue par l’opérateur",
       "etat": "appris"
     },
     {
@@ -28,7 +28,7 @@
       "dossiers": [
         "2026-10-16_v4.9.5.3_partie-13-operateur/echo p13 10h20"
       ],
-      "note": "partie d'un opérateur débutant relue par Mic",
+      "note": "partie d'un opérateur débutant relue par l’opérateur",
       "etat": "appris"
     },
     {
@@ -75,7 +75,7 @@
       "dossiers": [
         "2026-10-18_v4.9.5.7_echo-partie-14/echo p14 18h27"
       ],
-      "note": "opérateur débutant selon Mic",
+      "note": "opérateur débutant selon l’opérateur",
       "etat": "appris"
     },
     {
@@ -95,7 +95,7 @@
       "dossiers": [
         "2026-10-18_v4.9.5.7_echo-partie-16/echo p16 19h04"
       ],
-      "note": "opérateur débutant selon Mic",
+      "note": "opérateur débutant selon l’opérateur",
       "etat": "appris"
     },
     {
@@ -128,6 +128,956 @@
         "2026-10-19_v4.9.5.8_echo-partie-7/echo p7 09h21"
       ],
       "note": "Écho du 19/10 (4.9.5.8, 1 106 visites, 33 zips : sauvegardes cumulatives puis export final) : partie neuve, réservée, examinée (rotation D-192) ; même total de cuts (9 791) que le lot Orbite du 16/10"
+    },
+    {
+      "id": "p2-13",
+      "projet": "2",
+      "partie": 13,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-10-19_v4.9.5.8_echo-partie-13/echo p13 12h46"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 19/10 ; partie identifiée par sa liste d'ESV (9 772 lignes)"
+    },
+    {
+      "id": "p2-18",
+      "projet": "2",
+      "partie": 18,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-10-19_v4.9.5.8_echo-partie-18/echo p18 15h01",
+        "2026-10-20_v4.9.5.13_echo-partie-18/echo p18 08h39"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Échos du 19/10, 20/10 ; partie identifiée par sa liste d'ESV (5 479 lignes)"
+    },
+    {
+      "id": "p2-17",
+      "projet": "2",
+      "partie": 17,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-10-20_v4.9.5.13_echo-partie-17/echo p17 08h28"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 20/10 ; partie identifiée par sa liste d'ESV (9 844 lignes)"
+    },
+    {
+      "id": "p2-19",
+      "projet": "2",
+      "partie": 19,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-10-20_v4.9.5.13_echo-partie-19/echo p19 09h25"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 20/10 ; partie identifiée par sa liste d'ESV (5 554 lignes)"
+    },
+    {
+      "id": "p2-20",
+      "projet": "2",
+      "partie": 20,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-10-20_v4.9.5.13_echo-partie-20/echo 12h32"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 20/10 ; partie identifiée par sa liste d'ESV (5 503 lignes)"
+    },
+    {
+      "id": "p3-0",
+      "projet": "3",
+      "partie": 0,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-10-21_v4.9.5.15_echo-partie-0/echo 08h33",
+        "2026-10-21_v4.9.5.15_echo2-partie-0/echo 09h05"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Échos du 21/10 ; partie identifiée par sa liste d'ESV (9 400 lignes)"
+    },
+    {
+      "id": "p3-1",
+      "projet": "3",
+      "partie": 1,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-10-21_v4.9.5.16_echo-partie-1/echo 09h12"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 21/10 ; partie identifiée par sa liste d'ESV (9 321 lignes)"
+    },
+    {
+      "id": "p3-5",
+      "projet": "3",
+      "partie": 5,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-10-21_v4.9.6.1_echo-partie-5/echo 09h04",
+        "2026-10-21_v4.9.6.1_echo2-partie-5/echo 11h36",
+        "2026-10-21_v4.9.6.1_echo2-partie-5/echo 11h55"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Échos du 21/10 ; partie identifiée par sa liste d'ESV (9 365 lignes)"
+    },
+    {
+      "id": "p4-2",
+      "projet": "4",
+      "partie": 2,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-10-22_v4.9.5.18_echo-partie-2/echo 08h42"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 22/10 ; partie identifiée par sa liste d'ESV (9 556 lignes)"
+    },
+    {
+      "id": "px-0-10006",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 0,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-10-23_v4.9.5.19_echo-partie-0/echo 14h41"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 23/10 ; partie identifiée par sa liste d'ESV (10 006 lignes), projet non précisé"
+    },
+    {
+      "id": "px-15-10013",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 15,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-10-26_v4.9.5.21_echo-partie-15/echo 08h52-08h58"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 26/10 ; partie identifiée par sa liste d'ESV (10 013 lignes), projet non précisé"
+    },
+    {
+      "id": "px-16-10179",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 16,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-10-26_v4.9.5.21_echo-partie-16/echo 10h47-11h03"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 26/10 ; partie identifiée par sa liste d'ESV (10 179 lignes), projet non précisé"
+    },
+    {
+      "id": "px-17-10109",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 17,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-10-26_v4.9.5.21_echo-partie-17/echo 11h07-11h17"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 26/10 ; partie identifiée par sa liste d'ESV (10 109 lignes), projet non précisé"
+    },
+    {
+      "id": "px-18-10009",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 18,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-10-26_v4.9.5.21_echo-partie-18/echo 13h27-13h50"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 26/10 ; partie identifiée par sa liste d'ESV (10 009 lignes), projet non précisé"
+    },
+    {
+      "id": "px-20-10055",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 20,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-10-26_v4.9.5.21_echo-partie-20/echo 14h09-14h21"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 26/10 ; partie identifiée par sa liste d'ESV (10 055 lignes), projet non précisé"
+    },
+    {
+      "id": "px-0-9810",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 0,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-10-26_v4.9.5.23_echo-partie-0/echo partie 0"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 26/10 ; partie identifiée par sa liste d'ESV (9 810 lignes), projet non précisé"
+    },
+    {
+      "id": "px-1-9794",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 1,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-10-26_v4.9.5.23_echo-partie-1/echo partie 1"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 26/10 ; partie identifiée par sa liste d'ESV (9 794 lignes), projet non précisé"
+    },
+    {
+      "id": "px-17-9581",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 17,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-10-29_CH-012_poses-reference-strictes-partie17/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 29/10 ; partie identifiée par sa liste d'ESV (9 581 lignes), projet non précisé"
+    },
+    {
+      "id": "px-20-9550",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 20,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-10-29_v4.9.5.23_echo-partie-20/raw"
+      ],
+      "cadre": "echo-dedie",
+      "archive7z": true,
+      "note": "CH-138 : Écho du 29/10 ; partie identifiée par sa liste d'ESV (9 550 lignes), projet non précisé ; Écho en 7z : extraction temporaire"
+    },
+    {
+      "id": "px-10-9857",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 10,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-01_v4.9.5.30_aurore-parties-10-11/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 01/11 ; partie identifiée par sa liste d'ESV (9 857 lignes), projet non précisé"
+    },
+    {
+      "id": "px-11-9951",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 11,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-01_v4.9.5.30_aurore-parties-10-11/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 01/11 ; partie identifiée par sa liste d'ESV (9 951 lignes), projet non précisé"
+    },
+    {
+      "id": "px-0-10008",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 0,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-02_v4.9.5.31_partie0-echo-complet/raw",
+        "2026-11-02_v4.9.5.33_echo-partie2-touche-Z/raw"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Échos du 02/11 ; partie identifiée par sa liste d'ESV (10 008 lignes), projet non précisé ; une partie des visites rattachée par la liste du lot de la même séance (PROBABLE)"
+    },
+    {
+      "id": "px-12-9932",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 12,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-02_v4.9.5.35_constellation-parties-12-13-14/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 02/11 ; partie identifiée par sa liste d'ESV (9 932 lignes), projet non précisé"
+    },
+    {
+      "id": "px-13-9972",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 13,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-02_v4.9.5.35_constellation-parties-12-13-14/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 02/11 ; partie identifiée par sa liste d'ESV (9 972 lignes), projet non précisé"
+    },
+    {
+      "id": "px-14-10022",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 14,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-02_v4.9.5.35_constellation-parties-12-13-14/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 02/11 ; partie identifiée par sa liste d'ESV (10 022 lignes), projet non précisé"
+    },
+    {
+      "id": "px-10-8681",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 10,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-04_v5_echo-manuel-parties-10-13-14-15/raw"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 04/11 ; partie identifiée par sa liste d'ESV (8 681 lignes), projet non précisé"
+    },
+    {
+      "id": "px-13-8862",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 13,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-04_v5_echo-manuel-parties-10-13-14-15/raw"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 04/11 ; partie identifiée par sa liste d'ESV (8 862 lignes), projet non précisé"
+    },
+    {
+      "id": "px-14-8664",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 14,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-04_v5_echo-manuel-parties-10-13-14-15/raw"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 04/11 ; partie identifiée par sa liste d'ESV (8 664 lignes), projet non précisé ; une partie des visites rattachée par la liste du lot de la même séance (PROBABLE)"
+    },
+    {
+      "id": "px-15-8685",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 15,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-04_v5_echo-manuel-parties-10-13-14-15/raw"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 04/11 ; partie identifiée par sa liste d'ESV (8 685 lignes), projet non précisé ; une partie des visites rattachée par la liste du lot de la même séance (PROBABLE)"
+    },
+    {
+      "id": "px-8-9566",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 8,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-05_v5_reference-avant-apprentissage/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 05/11 ; partie identifiée par sa liste d'ESV (9 566 lignes), projet non précisé"
+    },
+    {
+      "id": "px-9-9434",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 9,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-05_v5_reference-avant-apprentissage/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 05/11 ; partie identifiée par sa liste d'ESV (9 434 lignes), projet non précisé"
+    },
+    {
+      "id": "px-10-9610",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 10,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-05_v5_reference-avant-apprentissage/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 05/11 ; partie identifiée par sa liste d'ESV (9 610 lignes), projet non précisé"
+    },
+    {
+      "id": "px-11-9660",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 11,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-05_v5_reference-avant-apprentissage/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 05/11 ; partie identifiée par sa liste d'ESV (9 660 lignes), projet non précisé"
+    },
+    {
+      "id": "px-12-9705",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 12,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-05_v5_reference-avant-apprentissage/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 05/11 ; partie identifiée par sa liste d'ESV (9 705 lignes), projet non précisé"
+    },
+    {
+      "id": "px-13-9476",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 13,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-06_v5_constellation-parties-13-16/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 06/11 ; partie identifiée par sa liste d'ESV (9 476 lignes), projet non précisé"
+    },
+    {
+      "id": "px-14-9549",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 14,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-06_v5_constellation-parties-13-16/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 06/11 ; partie identifiée par sa liste d'ESV (9 549 lignes), projet non précisé ; une partie des visites rattachée par la liste du lot de la même séance (PROBABLE)"
+    },
+    {
+      "id": "px-15-9534",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 15,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-06_v5_constellation-parties-13-16/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 06/11 ; partie identifiée par sa liste d'ESV (9 534 lignes), projet non précisé"
+    },
+    {
+      "id": "px-16-9555",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 16,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-06_v5_constellation-parties-13-16/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 06/11 ; partie identifiée par sa liste d'ESV (9 555 lignes), projet non précisé"
+    },
+    {
+      "id": "px-3-5297",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 3,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-08_v5_vision-echo/raw"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 08/11 ; partie identifiée par sa liste d'ESV (5 297 lignes), projet non précisé"
+    },
+    {
+      "id": "px-4-6632",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 4,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-08_v5_vision-echo/raw"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 08/11 ; partie identifiée par sa liste d'ESV (6 632 lignes), projet non précisé"
+    },
+    {
+      "id": "px-6-9930",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 6,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-08_v5_vision-echo/raw"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 08/11 ; partie identifiée par sa liste d'ESV (9 930 lignes), projet non précisé"
+    },
+    {
+      "id": "px-1-9918",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 1,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-10_v5_echo-partie1/raw"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 10/11 ; partie identifiée par sa liste d'ESV (9 918 lignes), projet non précisé"
+    },
+    {
+      "id": "px-1-9046",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 1,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-12_v15_echo-partie1/raw"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 12/11 ; partie identifiée par sa liste d'ESV (9 046 lignes), projet non précisé"
+    },
+    {
+      "id": "px-15-8211",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 15,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-12_v15_echo-partie15/raw"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 12/11 ; partie identifiée par sa liste d'ESV (8 211 lignes), projet non précisé"
+    },
+    {
+      "id": "px-16-8213",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 16,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-12_v15_echo-partie16/raw"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 12/11 ; partie identifiée par sa liste d'ESV (8 213 lignes), projet non précisé"
+    },
+    {
+      "id": "px-17-6115",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 17,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-12_v15_echo-partie17/raw"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 12/11 ; partie identifiée par sa liste d'ESV (6 115 lignes), projet non précisé"
+    },
+    {
+      "id": "px-0-9152",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 0,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-12_v15_echo-partie0/raw",
+        "2026-11-12_v15_echo-partie1/raw",
+        "2026-11-12_v15_echo-partie2/raw"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Échos du 12/11 ; partie identifiée par sa liste d'ESV (9 152 lignes), projet non précisé ; une partie des visites rattachée par la liste du lot de la même séance (PROBABLE)"
+    },
+    {
+      "id": "px-2-9143",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 2,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-12_v15_echo-partie2/raw"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 12/11 ; partie identifiée par sa liste d'ESV (9 143 lignes), projet non précisé"
+    },
+    {
+      "id": "px-22-5521",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 22,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-12_v15_echo-partie2/raw",
+        "2026-11-12_v15_echo-partie23/raw"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Échos du 12/11 ; partie identifiée par sa liste d'ESV (5 521 lignes), projet non précisé"
+    },
+    {
+      "id": "px-4-9168",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 4,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-12_v15_echo-partie23/raw",
+        "2026-11-12_v15_echo-partie4/raw"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Échos du 12/11 ; partie identifiée par sa liste d'ESV (9 168 lignes), projet non précisé ; une partie des visites rattachée par la liste du lot de la même séance (PROBABLE)"
+    },
+    {
+      "id": "px-21-8681",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 21,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-12_v15_echo-partie23/raw"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 12/11 ; partie identifiée par sa liste d'ESV (8 681 lignes), projet non précisé ; une partie des visites rattachée par la liste du lot de la même séance (PROBABLE)"
+    },
+    {
+      "id": "px-23-5500",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 23,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-12_v15_echo-partie23/raw"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Écho du 12/11 ; partie identifiée par sa liste d'ESV (5 500 lignes), projet non précisé"
+    },
+    {
+      "id": "px-3-9164",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 3,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-12_v15_echo-partie3/raw",
+        "2026-11-12_v15_echo-partie4/raw"
+      ],
+      "cadre": "echo-dedie",
+      "note": "CH-138 : Échos du 12/11 ; partie identifiée par sa liste d'ESV (9 164 lignes), projet non précisé ; une partie des visites rattachée par la liste du lot de la même séance (PROBABLE)"
+    },
+    {
+      "id": "px-6-9478",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 6,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-12_v15_lot-soir-parties6-18/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 12/11 ; partie identifiée par sa liste d'ESV (9 478 lignes), projet non précisé"
+    },
+    {
+      "id": "px-8-9501",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 8,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-12_v15_lot-soir-parties6-18/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 12/11 ; partie identifiée par sa liste d'ESV (9 501 lignes), projet non précisé"
+    },
+    {
+      "id": "px-9-9440",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 9,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-12_v15_lot-soir-parties6-18/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 12/11 ; partie identifiée par sa liste d'ESV (9 440 lignes), projet non précisé"
+    },
+    {
+      "id": "px-10-9508",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 10,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-12_v15_lot-soir-parties6-18/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 12/11 ; partie identifiée par sa liste d'ESV (9 508 lignes), projet non précisé"
+    },
+    {
+      "id": "px-11-10036",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 11,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-12_v15_lot-soir-parties6-18/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 12/11 ; partie identifiée par sa liste d'ESV (10 036 lignes), projet non précisé"
+    },
+    {
+      "id": "px-12-10041",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 12,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-12_v15_lot-soir-parties6-18/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 12/11 ; partie identifiée par sa liste d'ESV (10 041 lignes), projet non précisé"
+    },
+    {
+      "id": "px-13-10004",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 13,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-12_v15_lot-soir-parties6-18/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 12/11 ; partie identifiée par sa liste d'ESV (10 004 lignes), projet non précisé"
+    },
+    {
+      "id": "px-14-817",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 14,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-12_v15_lot-soir-parties6-18/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 12/11 ; partie identifiée par sa liste d'ESV (817 lignes), projet non précisé"
+    },
+    {
+      "id": "px-15-9176",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 15,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-12_v15_lot-soir-parties6-18/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 12/11 ; partie identifiée par sa liste d'ESV (9 176 lignes), projet non précisé"
+    },
+    {
+      "id": "px-16-9163",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 16,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-12_v15_lot-soir-parties6-18/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 12/11 ; partie identifiée par sa liste d'ESV (9 163 lignes), projet non précisé"
+    },
+    {
+      "id": "px-17-9322",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 17,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-12_v15_lot-soir-parties6-18/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 12/11 ; partie identifiée par sa liste d'ESV (9 322 lignes), projet non précisé"
+    },
+    {
+      "id": "px-18-9316",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 18,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-12_v15_lot-soir-parties6-18/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 12/11 ; partie identifiée par sa liste d'ESV (9 316 lignes), projet non précisé"
+    },
+    {
+      "id": "px-25-10154",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 25,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-16_v18_constellation-25-32/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 16/11 ; partie identifiée par sa liste d'ESV (10 154 lignes), projet non précisé"
+    },
+    {
+      "id": "px-26-9909",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 26,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-16_v18_constellation-25-32/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 16/11 ; partie identifiée par sa liste d'ESV (9 909 lignes), projet non précisé"
+    },
+    {
+      "id": "px-27-9971",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 27,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-16_v18_constellation-25-32/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 16/11 ; partie identifiée par sa liste d'ESV (9 971 lignes), projet non précisé ; une partie des visites rattachée par la liste du lot de la même séance (PROBABLE)"
+    },
+    {
+      "id": "px-32-7011",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 32,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-16_v18_constellation-25-32/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 16/11 ; partie identifiée par sa liste d'ESV (7 011 lignes), projet non précisé ; une partie des visites rattachée par la liste du lot de la même séance (PROBABLE)"
+    },
+    {
+      "id": "px-3-9276",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 3,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-17_v191_lot-et-echo/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 17/11 ; partie identifiée par sa liste d'ESV (9 276 lignes), projet non précisé"
+    },
+    {
+      "id": "px-4-9324",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 4,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-17_v191_lot-et-echo/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 17/11 ; partie identifiée par sa liste d'ESV (9 324 lignes), projet non précisé"
+    },
+    {
+      "id": "px-5-9169",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 5,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-17_v191_lot-et-echo/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 17/11 ; partie identifiée par sa liste d'ESV (9 169 lignes), projet non précisé"
+    },
+    {
+      "id": "px-6-9171",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 6,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-17_v191_lot-et-echo/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 17/11 ; partie identifiée par sa liste d'ESV (9 171 lignes), projet non précisé"
+    },
+    {
+      "id": "px-7-9079",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 7,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-17_v191_lot-et-echo/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 17/11 ; partie identifiée par sa liste d'ESV (9 079 lignes), projet non précisé"
+    },
+    {
+      "id": "px-8-9304",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 8,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-17_v191_lot-et-echo/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 17/11 ; partie identifiée par sa liste d'ESV (9 304 lignes), projet non précisé"
+    },
+    {
+      "id": "px-9-9292",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 9,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-17_v191_lot-et-echo/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 17/11 ; partie identifiée par sa liste d'ESV (9 292 lignes), projet non précisé"
+    },
+    {
+      "id": "px-10-9264",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 10,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-17_v191_lot-et-echo/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 17/11 ; partie identifiée par sa liste d'ESV (9 264 lignes), projet non précisé"
+    },
+    {
+      "id": "px-12-9301",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 12,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-17_v191_lot-et-echo/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 17/11 ; partie identifiée par sa liste d'ESV (9 301 lignes), projet non précisé"
+    },
+    {
+      "id": "px-13-9209",
+      "projet": "?",
+      "projetCertain": false,
+      "partie": 13,
+      "etat": "en-file",
+      "dossiers": [
+        "2026-11-17_v191_lot-et-echo/raw"
+      ],
+      "cadre": "echo-pendant-lot",
+      "note": "CH-138 : Écho du 17/11 ; partie identifiée par sa liste d'ESV (9 209 lignes), projet non précisé"
     }
   ]
 }
