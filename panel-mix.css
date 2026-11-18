@@ -626,3 +626,59 @@ body.ui5:has(#ui5.u-mix[data-theme="clair"]){background:#e8e9e7}
 #ui5.u-mix .sg-ligne{font-size:15px}
 #ui5.u-mix .sg-ligne .sg-cut{font:500 15px/1.2 var(--mono)}
 #ui5.u-mix .sg-cmd[aria-selected="true"]{box-shadow:inset 2px 0 0 var(--marche)}
+
+/* ═════════════════════════════ ÉCRANS NEUFS (D-372) : ce que la planche ne dessine pas, dans sa grammaire */
+#ui5.u-mix :focus-visible{outline:2px solid var(--encre);outline-offset:2px}
+/* Constellation : le titre comme le mot d'état, le rail des parties comme la réglette, les temps en texte */
+#ui5.u-mix .sg-constel-t{margin-top:20px}
+#ui5.u-mix .sg-constel-t .sg-chiffre{font:500 22px/28px var(--sans);letter-spacing:0;color:var(--encre)}
+#ui5.u-mix[data-taille="compact"] .sg-constel-t .sg-chiffre{font-size:19px}
+#ui5.u-mix .sg-constel-t .sg-suite{font:400 15px/22px var(--sans);color:var(--encre2)}
+#ui5.u-mix .sg-constel .sg-phrase{margin-top:4px}
+#ui5.u-mix .sg-chaine{margin:22px 0 4px}
+#ui5.u-mix .sg-chaine::before{top:11px;height:0;border-top:1.5px dotted var(--encre2);border-bottom:0}
+#ui5.u-mix .sg-chaine li:not([data-etat="a-venir"])::before{top:10px;height:0;border-top:3px solid var(--encre);border-bottom:0}
+#ui5.u-mix .sg-chaine i{height:22px;width:1.5px;background:var(--encre2)}
+#ui5.u-mix .sg-chaine li[data-etat="faite"] i{background:var(--encre)}
+#ui5.u-mix .sg-chaine li[data-etat="en-cours"] i{width:2px;background:var(--marche)}
+#ui5.u-mix .sg-chaine li[data-etat="en-cours"] i::before{left:-3px;width:8px;height:5px;background:var(--marche)}
+#ui5.u-mix .sg-chaine li[data-etat="en-cours"] i::after{display:none}
+#ui5.u-mix .sg-chaine li[data-etat="interrompue"] i,#ui5.u-mix .sg-chaine li[data-etat="alerte"] i{background:var(--toi);width:2px}
+#ui5.u-mix .sg-chaine li{font:400 11px/12px var(--mono);color:var(--encre2)}
+#ui5.u-mix .sg-chaine li:not([data-etat="a-venir"]),#ui5.u-mix .sg-chaine li[data-etat="en-cours"]{color:var(--encre)}
+#ui5.u-mix .sg-temps{gap:4px 20px;margin-top:14px}
+#ui5.u-mix .sg-temps li{font:400 13px/18px var(--sans);letter-spacing:0;text-transform:none;padding:4px 0}
+#ui5.u-mix .sg-temps li[data-temps="courant"]{color:var(--encre);box-shadow:inset 0 -2px 0 var(--marche)}
+#ui5.u-mix .sg-stats-t{font:500 22px/28px var(--sans);letter-spacing:0;text-transform:none;color:var(--encre);padding:28px 0 8px}
+#ui5.u-mix .sg-reg-partie{font:400 15px/22px var(--mono)}
+#ui5.u-mix .sg-reg-p i{width:2px;background:var(--encre2)}
+#ui5.u-mix .sg-reg-partie[data-etat="en-cours"] .sg-reg-p i{background:var(--marche)}
+#ui5.u-mix .sg-reg-partie:is([data-etat="interrompue"],[data-etat="alerte"]) .sg-reg-p i{background:var(--toi)}
+#ui5.u-mix .sg-reg-motifs,#ui5.u-mix .sg-of-ch{font:400 13px/18px var(--sans)}
+#ui5.u-mix .sg-of-depart{font-size:15px}
+#ui5.u-mix .sg-of-depart b{font:600 15px/22px var(--sans)}
+#ui5.u-mix .sg-file-t b{font:500 13px/18px var(--sans);letter-spacing:0;text-transform:none}
+#ui5.u-mix .sg-file .sg-file-alerte{color:var(--toi)}
+/* Aurore : la partie en cours à l'encre, les statuts en texte */
+#ui5.u-mix .sg-corr-partie{font-size:15px}
+#ui5.u-mix .sg-corr-partie[data-etat="en-cours"] .sg-mono{color:var(--encre)}
+#ui5.u-mix .sg-statut{font:400 13px/18px var(--sans);letter-spacing:0;text-transform:none}
+#ui5.u-mix .sg-statut[data-statut="en-cours"]{color:var(--marche)}
+#ui5.u-mix .sg-corr-bilan{font-size:15px}
+#ui5.u-mix .sg-outils button{border-radius:var(--r2);font:400 13px/1 var(--sans)}
+/* menu, palette, onglets ESV : textes de la planche */
+#ui5.u-mix .sg-cache .sg-r,#ui5.u-mix .sg-conn,#ui5.u-mix .sg-et{font:400 13px/18px var(--sans)}
+#ui5.u-mix .sg-conn i{width:7px;height:7px;border-radius:50%}
+#ui5.u-mix .sg-menu-l,#ui5.u-mix .sg-cmd{font:400 15px/22px var(--sans)}
+#ui5.u-mix #ui5-q{font-size:15px}
+#ui5.u-mix #ui5-q:focus{box-shadow:inset 0 -1px 0 var(--filet-fort)}
+#ui5.u-mix .sg-reg select{border-radius:var(--r2);background:var(--surface2);font:400 13px/1 var(--sans)}
+#ui5.u-mix .sg-seg{border-radius:var(--r2)}
+#ui5.u-mix .sg-seg>button{border-radius:6px;font:400 13px/1 var(--sans)}
+#ui5.u-mix .sg-lien{font:400 15px/22px var(--sans)}
+/* « Réglages neufs sur ce poste » (CH-136, hors de #ui5) : ce qui attend l'opérateur, encadré à filet corail, « Compris » en action pleine */
+body.ui5:has(#ui5.u-mix) #avis-stockage-neuf{background:#1a1b1d;color:#ecedee;border:1px solid #f2806f;border-radius:12px;box-shadow:0 8px 24px #00000066;font:400 13px/18px "IBM Plex Sans",system-ui,sans-serif}
+body.ui5:has(#ui5.u-mix) #avis-stockage-neuf::before{display:none}
+body.ui5:has(#ui5.u-mix) #avis-stockage-neuf button{background:#ecedee;color:#121314;border:0;border-radius:8px;font:500 13px/18px "IBM Plex Sans",system-ui,sans-serif}
+body.ui5:has(#ui5.u-mix[data-theme="clair"]) #avis-stockage-neuf{background:#f1f2f0;color:#141516;border-color:#b2372b;box-shadow:0 8px 24px #0000002e}
+body.ui5:has(#ui5.u-mix[data-theme="clair"]) #avis-stockage-neuf button{background:#141516;color:#e8e9e7}

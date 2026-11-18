@@ -7,6 +7,8 @@ const path = require('node:path');
 const R = path.resolve(__dirname, '../../..');
 const { ouvrirPanneau } = require(R + '/tests/helpers/panneau-local.cjs');
 const { E, MESURE, lot, id } = require(R + '/chantiers/CH-104/outils/capturer.cjs');
+const C134 = require(R + '/chantiers/CH-134/outils/scenes.cjs').SCENES;
+const relPause = C134['rel-bornes'].rel;
 const A = (nom, gestes, x = {}) => ({ ...E[nom], gestes: [...(E[nom].actions || []), ...gestes], ...x });
 /* Ordre de la page : Orbite, relecture, rattrapage, Constellation, Aurore, Écho, couches. */
 const SCENES = {
@@ -21,6 +23,15 @@ const SCENES = {
   echo: A('echo', []),
   details: A('cours', ['sg:details']), tiroir: A('tiroir', []), menu: A('menu', []), palette: A('palette', []), reglages: A('reglages', []), esv: A('esv', []),
   'boite-file': A('boite-file', []), tech: A('tech', []),
+  /* CH-137 : un lot au total ciblé connu (la réglette), la vue fil (CH-134), la relecture en pause sur ses bornes (CH-133), la Constellation arrêtée sur une
+   * correction interrompue (« J'ai contrôlé le cut N », CH-132), Écho hors observation */
+  'cours-total': A('cours-total', []), 'vue-fil': A('cours', ['sg:vue-lot']),
+  'rel-bornes': { state: E['relecture-pause'].state, rel: relPause, gestes: [] },
+  'constellation-acquitter': { ...C134['file-arret'], gestes: ['sg:onglet-file'] },
+  'echo-vide': { state: E.pret.state, hash: '#native', gestes: [] },
+  /* planche : « Interrompu » (résultat incertain), « File arrêtée » et « File terminée » dans Orbite */
+  interrompu: { state: { ...E.cours.state, reconcileRequired: true }, gestes: [] },
+  'file-arret-orbite': A('file-arret', []), 'file-fin-orbite': A('file-fin', []),
 };
 async function ouvrirScene(nav, sc, { largeur = 600, hauteur = 760, variante = 'mix', theme = 'sombre', echelle = 1, stockage = {} } = {}) {
   const ctx = await nav.newContext({ viewport: { width: largeur, height: hauteur }, deviceScaleFactor: echelle }), page = await ctx.newPage(), erreurs = [];
