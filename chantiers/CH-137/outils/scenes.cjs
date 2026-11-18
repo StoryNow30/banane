@@ -63,4 +63,12 @@ const PETIT = () => { const P = document.querySelector('#ui5 .sg-fen'), out = []
   for (const Z of zones) for (const e of Z.querySelectorAll('*')) { if (!e.getClientRects().length || e.closest('svg')) continue; if (![...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) continue;
     const s = getComputedStyle(e); if (s.visibility === 'hidden' || Number(s.opacity) === 0) continue; const t = parseFloat(s.fontSize); if (t < 11) out.push(`SOUS 11 PX ${e.tagName.toLowerCase()}.${String(e.className || '').split(' ')[0]} « ${e.textContent.trim().slice(0, 24)} » ${t}px`); }
   return [...new Set(out)]; };
-module.exports = { SCENES, ouvrirScene, MESURE, PETIT };
+/* CH-137 : RECOUVREMENT : chaque bouton visible de la fenêtre doit recevoir un clic en son centre (rien ne le recouvre : bandeau « Réglages neufs »,
+ * pied, tiroir) ; les boutons sous une couche ouverte, inertes ou grisés ne comptent pas. */
+const RECOUVRE = () => { const P = document.querySelector('#ui5 .sg-fen'), out = []; if (!P) return out;
+  for (const b of P.querySelectorAll('button,[role="tab"],input,select')) { if (!b.getClientRects().length || b.disabled || b.closest('[inert]') || b.closest('[aria-hidden="true"]')) continue;
+    const r = b.getBoundingClientRect(); if (r.width < 2 || r.height < 2) continue; const x = r.left + r.width / 2, y = r.top + r.height / 2;
+    if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) continue; const e = document.elementFromPoint(x, y);
+    if (e && !b.contains(e) && !e.closest('.sg-voile,[role="dialog"],.sg-tiroir[data-ouvert="1"],.sg-feuille')) out.push(`RECOUVERT ${b.tagName.toLowerCase()} « ${(b.textContent || b.getAttribute('aria-label') || '').trim().slice(0, 24)} » par ${e.id || String(e.className || e.tagName).split(' ')[0]}`); }
+  return [...new Set(out)]; };
+module.exports = { SCENES, ouvrirScene, MESURE, PETIT, RECOUVRE };
