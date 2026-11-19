@@ -48,7 +48,11 @@ jobs:
             exit 1
           fi
           if printf '%s' "$JETON" | grep -q '[^A-Za-z0-9_-]'; then
-            echo "Le secret contient un caractère qui n'appartient pas à un jeton Cloudflare (guillemet, espace interne, retour à la ligne)."
+            echo "Le secret contient un caractère qui n'appartient pas à un jeton Cloudflare."
+            echo "Diagnostic, sans jamais afficher le contenu :"
+            echo "  longueur après nettoyage : ${#JETON} (un jeton Cloudflare en fait 40)"
+            echo "  lettres $(printf '%s' "$JETON" | tr -cd 'A-Za-z' | wc -c), chiffres $(printf '%s' "$JETON" | tr -cd '0-9' | wc -c), tirets $(printf '%s' "$JETON" | tr -cd '-' | wc -c), soulignés $(printf '%s' "$JETON" | tr -cd '_' | wc -c)"
+            echo "  octets étrangers (valeurs décimales) : $(printf '%s' "$JETON" | tr -d 'A-Za-z0-9_-' | od -An -tu1 | tr '\n' ' ')"
             echo "Réenregistre-le : Settings › Secrets and variables › Actions › CLOUDFLARE_API_TOKEN › Update."
             exit 1
           fi
