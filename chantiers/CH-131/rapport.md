@@ -76,3 +76,6 @@ Trois lignes, pour le lot A1 du plan d'Ariane 6 :
 - Le VPS n'a **pas** l'adresse du relais : le paquet reconstruit est identique hors ce fichier, et la télécommande restera muette tant que l'adresse n'est pas posée.
 - La cause de l'échec de `lot-signal-eteint-rechargement` est **PROBABLE**, non mesurée.
 - Aucune donnée de terrain (adresse, code de projet, UUID, coordonnée) dans ce rapport ni dans un fichier de `banane`.
+
+## Clos le 19/11/2026
+Fusionné dans le tronc et `main` sur demande de l'opérateur (PR #30, commit de fusion `85570470`). L'outil de comparaison reste au dépôt : `python3 chantiers/CH-131/comparer-crc.py` sur un paquet reconstruit et la référence `chantiers/CH-131/crc-vision20.txt`.
