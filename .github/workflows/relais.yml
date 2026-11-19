@@ -1,0 +1,57 @@
+# Relais de la télécommande : déploiement du Worker Cloudflare qui sert la page du téléphone
+# (telecommande/INSTALLATION.md § G). Ce fichier ne contient aucun secret : le jeton Cloudflare est un secret de
+# dépôt, `CLOUDFLARE_API_TOKEN`, posé une fois par l'opérateur dans Settings › Secrets and variables › Actions.
+# L'adresse du relais porte le nom de l'opérateur (CH-130) : elle n'est jamais écrite dans le dépôt, un commit, le
+# hub ou un journal de workflow — elle est masquée dans la sortie ci-dessous.
+name: Relais
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Tape « deploy » pour confirmer le déploiement du relais'
+        required: true
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: relais
+  cancel-in-progress: false
+
+jobs:
+  deployer:
+    if: github.event.inputs.confirmation == 'deploy'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: telecommande
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Le secret est-il posé ?
+        env:
+          JETON: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$JETON" ]; then
+            echo "Le secret CLOUDFLARE_API_TOKEN n'est pas posé sur ce dépôt."
+            echo "Settings › Secrets and variables › Actions › New repository secret, nom exact CLOUDFLARE_API_TOKEN."
+            exit 1
+          fi
+          echo "Secret présent (valeur jamais affichée)."
+      - name: Déployer le relais
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CI: 'true'
+        run: |
+          set -o pipefail
+          npx --yes wrangler@4 deploy 2>&1 | sed -E 's#https?://[A-Za-z0-9._-]*workers\.dev#adresse du relais (masquée)#g'
+      - name: Rappeler le contrôle
+        run: |
+          echo "Déploiement terminé. Contrôle sur l'iPhone : les quatre onglets Orbite · Écho · Constellation · Aurore,"
+          echo "et menu ··· › « Page du relais : schéma 2 ». Dans le panneau, la feuille « Télécommande » ne dit plus"
+          echo "« ancienne page ». Le nom du Worker, l'appairage et la clé ne changent pas : le téléphone n'a rien à refaire."
