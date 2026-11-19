@@ -1,6 +1,6 @@
-# Plan de développement d'Ariane 6 (proposition du 18/11/2026, D-373)
+# Plan de développement d'Ariane 6 (**validé le 19/11/2026 — D-378** ; proposition du 18/11, D-373)
 
-Demandé par l'opérateur avec la passation à OpenCode : « prépare aussi la passation complète vers opencode » ; « le plan de dev d'ariane 6 ». Ce plan est une **proposition** : rien n'y est décidé tant que l'opérateur ne l'a pas validé par écrit (D-xxx). Il réunit ce que les décisions ont déjà renvoyé à Ariane 6 (D-272, D-273, D-320, D-357, D-360, D-368) et le donne à faire en chantiers bornés, au rythme du passage de la main à OpenCode (`fiches/PASSATION_OPENCODE.md`).
+Demandé par l'opérateur avec la passation à OpenCode : « prépare aussi la passation complète vers opencode » ; « le plan de dev d'ariane 6 ». Ce plan était une **proposition** ; il a été **validé tel quel le 19/11/2026** (D-378) : ordre A → B → C → D, tronc `ariane6`, but chiffré du § 3. Les quatre points de la dernière liste du § 4 restent, eux, en attente d'une décision écrite. Il réunit ce que les décisions ont déjà renvoyé à Ariane 6 (D-272, D-273, D-320, D-357, D-360, D-368) et le donne à faire en chantiers bornés, au rythme du passage de la main à OpenCode (`fiches/PASSATION_OPENCODE.md`).
 
 ## 1. Ce qui ne bouge pas
 - Les interdits de `CLAUDE.md` : aucune donnée de terrain ni nom dans `banane` ; jamais SKIP ; jamais un cut non résolu validé ; la deuxième passe écrit, plafonnée à 10 ; pas de réécriture d'historique ; aucun nom de modèle d'IA dans les fichiers ; l'adresse du relais hors dépôt.
@@ -54,7 +54,9 @@ Direction (c) de D-357 : relire d'abord les cuts les plus douteux. Ne s'ouvre qu
 | 3 à 4 | A3, A4 ; intégration de la Vision 22 sous relecture (étape 3) | Lot B (relu par le modèle le plus fort) |
 | 5 et suite | Lot C, un levier à la fois ; la main entière à l'étape 4 (décision de l'opérateur) | Relecture à la demande |
 
-## 6. Ce que l'opérateur décide pour lancer
-1. Valider ce plan, ou en changer l'ordre (B avant C est une proposition).
-2. Le tronc d'Ariane 6 (`ariane6` proposé).
-3. Le but chiffré (§ 3) et ce qui compte comme « Ariane 6 finie ».
+## 6. Ce que l'opérateur a décidé pour lancer (19/11, D-378)
+1. Plan et ordre **validés tels quels** (A → B → C → D).
+2. Tronc d'Ariane 6 : **`ariane6`**, branche neuve partie de la Vision 21 ; `claude/50-test17` garde les correctifs de la 5.0.
+3. But chiffré : différés **sous 5 % puis sous 3 %** des cibles d'un lot, sur des lots non vus, **0 mauvaise voie de plus**, **0 pose juste perdue** (§ 3).
+4. Conception d'un lot confiée à un modèle plus fort, en sous-agent sur brief écrit ; l'intégrateur garde tickets, relecture, fusion, verify et paquets (D-375, D-378).
+Premier chantier ouvert : **CH-139** (lot A1).
