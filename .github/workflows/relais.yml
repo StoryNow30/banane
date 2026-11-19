@@ -33,19 +33,30 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Le secret est-il posé ?
+      # Un jeton copié depuis le tableau de bord arrive souvent avec un espace ou un retour à la ligne collé avec :
+      # wrangler le refuse alors par « Headers.set: "***" is an invalid header value » (mesuré le 19/11). On le nettoie
+      # ici une fois pour toutes, sans jamais l'afficher, et on refuse tôt un contenu qui n'est pas un jeton.
+      - name: Le secret est-il posé, et propre ?
         env:
-          JETON: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          BRUT: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
+          set -eu
+          JETON="$(printf '%s' "$BRUT" | tr -d '[:space:]')"
           if [ -z "$JETON" ]; then
             echo "Le secret CLOUDFLARE_API_TOKEN n'est pas posé sur ce dépôt."
             echo "Settings › Secrets and variables › Actions › New repository secret, nom exact CLOUDFLARE_API_TOKEN."
             exit 1
           fi
-          echo "Secret présent (valeur jamais affichée)."
+          if printf '%s' "$JETON" | grep -q '[^A-Za-z0-9_-]'; then
+            echo "Le secret contient un caractère qui n'appartient pas à un jeton Cloudflare (guillemet, espace interne, retour à la ligne)."
+            echo "Réenregistre-le : Settings › Secrets and variables › Actions › CLOUDFLARE_API_TOKEN › Update."
+            exit 1
+          fi
+          echo "::add-mask::$JETON"
+          echo "CLOUDFLARE_API_TOKEN=$JETON" >> "$GITHUB_ENV"
+          echo "Secret présent et nettoyé (valeur jamais affichée) : ${#JETON} caractères."
       - name: Déployer le relais
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CI: 'true'
         run: |
           set -o pipefail
