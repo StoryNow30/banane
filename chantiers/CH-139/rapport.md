@@ -1,31 +1,40 @@
-# CH-139 — effet net du retrait du passage « branche » — mesuré, écarté
+# CH-139 — lot A1 : la règle « branche » (écartée) et ce que l'ancre achète
 
-**Méthode.** Rejeu fidèle du corpus (4 016 cuts, banc à zones de lot `BANC_ZONES=journal`, passe plafonnée à 10, profil L1-se, écriture du passage actuelle) sur trois variantes de l'écriture de la passe, sans rien changer à `src/` :
+**Méthode.** Rejeu fidèle du corpus de CH-116 (4 016 cuts, banc à zones de lot `BANC_ZONES=journal`, deuxième passe plafonnée à 10, profil L1-se), sans toucher à `src/` : les variantes sont des leviers du banc. Trois rejeux complets, même corpus, même banc.
 
-| Variant | Différés | Justes ≤ 10 mm | Fausses > 10 mm | > 50 mm |
-|---|---:|---:|---:|---:|
-| Livré (`ch139-livre-zjp`) | **564** | **506** | 36 | **29** |
-| Contrôle départ (ancre, `ch139-N-zjp`) | 596 | 508 | 36 | 0 |
-| Sans branche (variante CH-139) | **602** | **505** | 36 | 0 |
+| Rejeu | Ce qu'il allume | Différés | Justes ≤ 10 mm | 10–50 mm | > 50 mm | Fausses > 10 mm (total) |
+|---|---|---:|---:|---:|---:|---:|
+| `ch139-livre-zjp` — le livré | rien (ancre éteinte) | **564** | **506** | 36 | **29** | **65** |
+| `ch139-N-zjp` — l'ancre | levier `ancre` (CH-124) | 596 | 508 | 36 | 0 | 36 |
+| `ch139-sans-branche` | ancre + retrait du passage « branche » | **602** | **505** | 36 | 0 | 36 |
 
-**Question :** que donnerait « la deuxième passe ne pose plus quand son motif est `branche` » ?
+Les trois rejeux jugent 571, 544 et 541 poses (les cuts sans référence ne sont pas jugés). Total des cuts : 4 016 dans les trois.
 
-**Réponse :** la passe sans branche écrit **12 décisions en moins** (non posées), comme attendu — le passage est aussi protégé par les décisions « rien » du livré (56 sans approche, 42 sans voie, 28 départs probables…).
+## 1. La question du lot : « la passe ne pose plus sur `branche` »
 
-**Differentiel départ → « sans branche »** (même corpus, même banc) : **+6 différés, −3 justes, 0 erreur évitée, 0 nouvelle juste** ; 5 justes perdues (0511/2005, 0511/4974, 0511/9335, 0411/170, 1211/5285). **Conclusion : le retrait augmenterait les différés (596 → 602) et ferait perdre 3 justes, sans rien éviter.**
+**Réponse : écarté.** Le retrait supprime 12 décisions de la passe (non posées), mais il **coûte 6 différés de plus** (596 → 602) et **3 justes** (508 → 505), sans **aucune** erreur évitée : 5 justes perdues (0511/2005, 0511/4974, 0511/9335, 0411/170, 1211/5285), 0 fausse devenue différée.
 
-Note : le terrain du 16 et 17/11 avait montré 6 fausses sur 6 sur « branche » (26 à 50 mm) — ce n'est pas le corpus du 18/11 : le retrait y a costé **5 justes perdues et 0 erreur évitée**, et n'a supprimé aucune pose « branche » commise par le livré (à jeter, pas à traiter ici).
+Le terrain des 16 et 17/11 (6 poses « branche », 4 fausses de 26 à 50 mm) n'est donc pas reproduit par ce corpus : ici, bloquer « branche » fait perdre des poses justes et n'évite rien. **Le passage reste.** Les deux mesures ne se contredisent pas sur la même population : elles ne portent pas sur les mêmes lots ni sur le même état du code.
 
-## Reste à faire
+## 2. Ce que A1 a mesuré sans le chercher : l'ancre vaut 29 erreurs grossières
 
-- **A1** : les chiffres de cette mesure terminent les questions du plan : sur le banc actuel **564 différés**, 596 avec l'ancre. Le plan cite 571 → 603 (écriture du 14/11, voir ci-dessous).
-- **A3** : les trois inconnues — la page d'ESV muette 3 min après Maj+Espace, la cause de la fragilité des essais, Glacier/vue fil/Mix en crochet visuel. La mesure du 19/11 : le silence ne reproduit pas (rapport du journal, CH-140).
-- **A2/A4** en file.
+Écart entre le livré (ancre éteinte) et le même rejeu avec le levier `ancre` (CH-124) :
 
-**Vérifications du plan** (LIRE_EN_PREMIER) : la figure publiée du 14/11 (603 différés, 29 → 0, 503 ≤ 10 mm) date de l'écriture avant D-363 ; le passant actuel débouche à **564 différés** (sans ancre), ou **596** avec l'ancre, **29 > 50 mm** dans les deux.
+- **> 50 mm : 29 → 0.** Les 29 sont réparties sur quatre lots : 1111 (6), 1211 (13), 0611 (7), 0811b (3).
+- 10–50 mm : 36 → 36, inchangé.
+- Justes ≤ 10 mm : 506 → 508.
+- Différés : 564 → 596 (**32 de plus**), soit 32 poses en moins.
 
-**Pointers** : sorties sous `banane-data/outils/analyse-lots/CH-139/sortouts/` (`differentiel.md`, `differentiel.csv`, `resume.json`, `motifs-*.md`, `*-tableau.md`) ; scripts sous `banane-data/outils/analyse-lots/CH-139/` (`mesure.cjs`, `rejeux.sh`, `rejeux-v18.sh`, `plafond-arret-v18.patch`, `NOTE.md`), rejouables depuis `/home/opencode/.ariane/tmp-CH-139/travail/`.
+Autrement dit : allumer l'ancre **diffère 32 cuts et supprime 29 poses à plus de 5 cm**, sans dégrader la tranche 10–50 mm. C'est le fait le plus lourd de ce lot, et il ne concerne pas « branche » : il concerne **A2** (l'ancre muette sur le terrain, D-357), qui décide de l'ordre du lot B. La question d'A2 n'est donc pas « l'ancre sert-elle ? » — au banc, oui — mais « **se tait-elle souvent sur les lots réels ?** » : quand N n'a pas de liste d'ESV, l'ancre ne protège rien.
 
-## Ce que le banc ne juge pas
-- Justesse des poses « branche » écrites par le livré : non jugées, et non lue par le banc.
-- La raison pour laquelle le passage existe : c'est une opération conçue, non mesurée ici.
+## 3. Vérification du point de départ du plan
+
+Le plan (`fiches/PLAN_ARIANE_6.md`, D-373) cite **571 → 603 différés, 29 → 0, 503 justes**. Le mesuré du 19/11 : **564 → 596 différés**, 29 → 0 confirmé, **506 → 508 justes**. L'écart (7 différés, 3 justes) vient de l'écriture de la passe changée par D-363 depuis les chiffres de D-357 — le point de départ d'Ariane 6 est `564` (livré) et `596` (avec ancre), pas `603`.
+
+## 4. Ce que le banc ne juge pas
+
+- Les cuts sans référence (3 265 au compteur) : aucune pose n'y est jugée.
+- La justesse d'une décision « branche » isolée : ce qui est mesuré est l'effet du retrait sur le lot entier, pas la qualité de chaque décision.
+- Pourquoi le terrain des 16–17/11 a vu 4 fausses sur 6 : cause non établie ; ce corpus-ci ne les reproduit pas.
+
+**Pointers** : `banane-data/outils/analyse-lots/CH-139/sorties/` (`differentiel.md`, `differentiel.csv`, `resume.json`, `motifs-*.md`, `*-tableau.md`) ; scripts et protocole dans le même dossier (`mesure.cjs`, `rejeux.sh`, `rejeux-v18.sh`, `plafond-arret-v18.patch`, `NOTE.md`), rejouables depuis `/home/opencode/.ariane/tmp-CH-139/travail/`.
