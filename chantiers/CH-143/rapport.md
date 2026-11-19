@@ -42,6 +42,7 @@ visites, pas seulement dans les corrections.
 
 ## Conséquence pour le lot D
 
-**Le lot D s'ouvre** : la relecture est le premier poste de temps mesuré (6,4 h pour 8,2 h de pose,
-43,9 % du total posé + relu), et il devra d'abord supprimer des **visites** (78,6 % du temps), pas
-seulement accélérer des corrections.
+**Le lot D s'ouvre** : la relecture est le premier poste **réductible** (6,4 h, 78,1 % du temps de
+pose et 43,9 % du total posé + relu ; la pose, 8,2 h, reste le plus gros bloc mais c'est le travail
+lui-même), et il devra d'abord supprimer des **visites** (78,6 % du temps), pas seulement accélérer
+des corrections.
