@@ -55,3 +55,6 @@ Branche `chantier/CH-130`, partie de `0a78516` (`claude/50-test17`). Exécutant 
      - `[data-k="c:22:50"]`.
    - `tests/esv-maquette/ch111-telecommande.test.cjs` : `.sg-tu-etat .sg-mot`, `.sg-tu-etat .sg-partie`, `.sg-tu-etat .sg-phrase`, `.sg-tu-etat .sg-chiffre`, `.sg-barre-note`, `button[data-ordre]`.
    - La page du téléphone gère les actions `sg:details`, `sg:tiroir`, `sg:fermer`, `sg:menu` et `mode:*`, et les onglets. Si CH-129 ajoute un bouton d'en-tête (par exemple `sg:bilan`) : l'ajouter à `NAVIGATION` dans `src/telecommande-instantane.js` **et** à la page (`telecommande/telephone.html`, gestionnaire de clic, état `ui`). Sinon, le filtre le retire du téléphone : sûr, mais le bilan ne s'ouvre plus là.
+
+## Clos le 19/11/2026
+Le point 3 de « Pour l'intégrateur » (redéployer le relais une fois) est fait : déploiement par GitHub Actions (D-377), run `44482350002` réussi; page servie 19 459 octets, identique au dépôt, avec les quatre onglets; `signal-rendu.js` et `panel-signal.css` servis identiques au dépôt; contrôle de l'opérateur sur son iPhone : « tout fonctionne »; jeton supprimé ensuite. « Non prouvé » reste vrai pour le rendu iPhone (observation de l'opérateur, pas mesure de banc) ; les quatre essais de structure cités au point 4 ont été ajustés à CH-129 puis à CH-137.
