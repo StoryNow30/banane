@@ -27,7 +27,7 @@ Sur les **visités**, le total principal est 92 muets sur 3 187 (2,9 %) ; l'éca
 
 ## 3. Ce que la mesure ne dit pas
 
-- Les causes de mutisme **hors liste** ne sont pas mesurées : `calage-ligne`, `calage-lot` et `pose` (la pose de départ de la capture ne se cale pas) demandent les captures et l'ordre du lot. Sur V18, la NOTE du lot compte 66 décisions non jugées ; les quatre causes ci-dessus n'en expliquent que 14, l'écart (52) n'est pas ventilé ici.
+- Les causes de mutisme **hors liste** ne sont pas mesurées : `calage-ligne`, `calage-lot` et `pose` (la pose de départ de la capture ne se cale pas) demandent les captures et l'ordre du lot. Sur V18, la NOTE du lot compte 66 décisions non jugées sur 1 418, quand les quatre causes ci-dessus en déclarent 14 sur les mêmes cuts ; l'écart (52) relève d'autres motifs (calage, pose, absence de décision) et n'est pas ventilé ici.
 - La liste de l'export est le **dernier instantané** de la partie, pas forcément celle chargée au moment du cut : une liste absente de l'export ne prouve pas que la page ne l'avait pas (PROBABLE).
 - Les Échos ne sont pas une population : seuls les journaux de lot comptent. Les cuts jamais visités ne sont pas comptés.
 - La Vision 21 n'existe pas encore dans `collections/` ; aucune archive `.7z` de lot dans les cinq collections lues.
