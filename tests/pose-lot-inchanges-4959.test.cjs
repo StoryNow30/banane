@@ -169,6 +169,8 @@ const JOURNAL_INDEX=['journal-index.js'];
 /* CH-060 : le signal de fin de chargement d'ESV éteint pendant la relecture (src/relecture-signal.js) : partie pure, lue par la relecture seule (après le
  * lot) ; elle ne lit ni ne commande la pose. Son réglage `relectureSignalEteint` est ALLUMÉ depuis D-290 (vérifié plus bas). */
 const SIGNAL_RELECTURE=['relecture-signal.js'];
+/* CH-152 : filtre pur de la relecture sur la liste d'ESV ; il ne lit ni ne commande la pose du lot. */
+const FILTRE_RELECTURE=['relecture-filtre-liste.js'];
 
 /* D-284 (ordre de l'opérateur du 05/11) : la sélection de la relecture relit les voisins d'un cut « À contrôler » et bouche les trous de 3 cuts au
  * plus ; sans ces lignes, src/relecture-ombre.js est celui de la test 8. Toute autre modification du fichier reste détectée. */
@@ -181,6 +183,29 @@ const sansD284=t=>t
  .replace(/\n  \/\* D-284 : trou de 1 à[\s\S]*?\}\}\}/,'')
  .replace("(p.zone||ZONE[p.motif]||'vert-hors-zone')===z)for(let c=p.a;c<=p.z;c++)if(!zoneDe.has(c))","(ZONE[p.motif]||'vert-hors-zone')===z)for(let c=p.a;c<=p.z;c++)if(!zoneDe.has(c))")
  .replace("'ecartement','trou']),","'ecartement']),");
+/* CH-152 (D-380, D-381) : seuls les blocs balisés du filtre de liste et de la qualification S1/A* sont retirés pour comparer à la test 8.
+ * Un marqueur absent ou un changement hors de ces blocs laisse le texte modifié et fait donc échouer l'empreinte, comme pour les autres patchs déclarés. */
+const sansBlocCH152=(t,id,remplacement='')=>{const debut=`/* CH-152-${id}`,fin=`/* FIN CH-152-${id} */`,a=t.indexOf(debut),b=t.indexOf(fin,a),ligne=t.lastIndexOf('\n',a);
+ return a<0||b<0||ligne<0?t:t.slice(0,ligne)+remplacement+t.slice(b+fin.length);};
+const CONFIANCE_AVANT_CH152=[
+ "  const conf=j.confiance;",
+ "  for(const s of SIDES){const c=conf?.[s];",
+ "   if(!Number.isFinite(c))return non('confiance',`confiance du rail ${s==='left'?'gauche':'droit'} ${c==='s1'?'non calibrée (S1)':'absente'}`);",
+ "   if(c<Z.confianceMin)return non('confiance',`confiance du rail ${s==='left'?'gauche':'droit'} ${virgule(c)} sous ${virgule(Z.confianceMin)}`);}"
+].join('\n');
+const sansCH152=(f,t)=>{
+ if(f==='src/relecture-ombre.js'){
+  let s=t.replace("module.exports=factory(require('../vendor/capture-core.js'),require('./relecture-filtre-liste.js'))","module.exports=factory(require('../vendor/capture-core.js'))")
+   .replace('root.BananeRelectureOmbre=factory(root.BananeCaptureCore,root.BananeRelectureFiltreListe)','root.BananeRelectureOmbre=factory(root.BananeCaptureCore)')
+   .replace('function(C,F){','function(C){').replace(' function selectionBase(entree,options){',' function selection(entree,options){');
+  for(const id of ['D1-SELECTION','D2-SOUTIEN','D2-JUGEMENT'])s=sansBlocCH152(s,id);
+  return s.replace(',confiance,soutienS1,juger,',',confiance,juger,');}
+ if(f==='src/relecture-critere.js'){
+  let s=t.replace(' function reglagesBase(fichier,source=\'defaut\'){',' function reglages(fichier,source=\'defaut\'){');
+  for(const id of ['D2-REGLAGES','D2-QUALIFIANT'])s=sansBlocCH152(s,id);
+  s=sansBlocCH152(s,'D2-BOUCLE','\n'+CONFIANCE_AVANT_CH152);
+  return s.replace(',correctionPermise,qualifierConfiance,juger}',',correctionPermise,juger}');}
+ return t;};
 /* D-296 (CH-064, étape 6 a) : lecture LiDAR en Rust dans la page. Un fichier de page en plus (src/lidar-rust.js, le chargeur), et l'adaptateur
  * qui choisit la variante de la lecture quand le noyau est chargé et le réglage `rust.lidar` allumé. La sortie de capture() est identique au bit près
  * (parité sur les 4 647 captures réelles du 04 au 06/11, Node et Chromium ; tests/rust-lidar.test.cjs) ; sans ces lignes, l'adaptateur est celui d'avant. */
@@ -244,7 +269,7 @@ test('la pose et le lot lisent la test 8 : octets identiques, ou AST identique p
  const deplaces=[];
  for(const [f,empreinte] of Object.entries(REF.fichiers)){
   if(ECHO[f]||L1[f]||STOCKAGE[f])continue;
-  const texte=f==='src/relecture-ombre.js'?sansD284(lire(f)):PANNEAU[f]?PANNEAU[f](lire(f)):VERSION_SEULE.includes(f)?sansChangerPartiePont(sansCH096(f,sansD344(f,lire(f)))).split("VERSION='5',VERSION_NAME='5'").join("VERSION='4.9.5.8',VERSION_NAME='4.9.5 test 8'").split('Ariane 5 · ouvrir').join('Ariane 4.9.5 test 8 · ouvrir'):sansCH086(f,sansCH065(f,lire(f)));
+  const texte=f==='src/relecture-ombre.js'?sansD284(sansCH152(f,lire(f))):PANNEAU[f]?PANNEAU[f](lire(f)):VERSION_SEULE.includes(f)?sansChangerPartiePont(sansCH096(f,sansD344(f,lire(f)))).split("VERSION='5',VERSION_NAME='5'").join("VERSION='4.9.5.8',VERSION_NAME='4.9.5 test 8'").split('Ariane 5 · ouvrir').join('Ariane 4.9.5 test 8 · ouvrir'):sansCH152(f,sansCH086(f,sansCH065(f,lire(f))));
   if(f==='src/appuis-liste.js'){
    /* CH-075 : annotations seules ; --origine rattache la preuve AST au SHA historique sans imposer Git aux archives. */
    const T=require('../tools/typage-ch075.cjs');assert.equal(empreinte,T.ORIGINE);T.identite();
@@ -252,7 +277,7 @@ test('la pose et le lot lisent la test 8 : octets identiques, ou AST identique p
  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);
  assert.ok(fs.existsSync(path.join(racine,'src/raison-correction.js')),'le seul fichier de src/ en plus');
- const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE,...HISTORIQUE,...GARDE_PASSE,...SKIP_OMBRE,...FILE_PARTIES,...GARDE_APRES_DIFFERE,...CORRECTION,...RECHERCHE_LARGE,...SERIE_VIDES,...FILE_PRIORITAIRE,...RECONSTRUCTION,...VOIE_B1_ECART,...CH079,...CH114,...ETAT_MORCEAUX,...JOURNAL_INDEX,...SIGNAL_RELECTURE,...RUST_LIDAR,...PRECHAUFFAGE,...TELECOMMANDE,...ANCRE_TRAJECTOIRE,...STOCKAGE_NEUF,...MIX,...REINITIALISATION].sort());
+ const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE,...HISTORIQUE,...GARDE_PASSE,...SKIP_OMBRE,...FILE_PARTIES,...GARDE_APRES_DIFFERE,...CORRECTION,...RECHERCHE_LARGE,...SERIE_VIDES,...FILE_PRIORITAIRE,...RECONSTRUCTION,...VOIE_B1_ECART,...CH079,...CH114,...ETAT_MORCEAUX,...JOURNAL_INDEX,...SIGNAL_RELECTURE,...FILTRE_RELECTURE,...RUST_LIDAR,...PRECHAUFFAGE,...TELECOMMANDE,...ANCRE_TRAJECTOIRE,...STOCKAGE_NEUF,...MIX,...REINITIALISATION].sort());
 });
 test('le moteur est celui de la baseline V4.6.0 (src/engine.js intact)',()=>{
  const base=require('../audit/v4.6.0-engine-baseline.json');
@@ -278,7 +303,7 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
  assert.equal(sha(ap),REF.fichiers['src/adapter-page.js'],'src/adapter-page.js hors vueFin');
  for(const f of ['src/early-input.js','src/engine.js','src/geometry.js','src/geometry-brain.js','src/geometry-candidate-v1.js','src/placement-convention.js','src/lot-decision.js',
   'src/regles-metier.js','src/hauteur-apprise.js','src/faux-vert-ombre.js','src/relecture-ombre.js','src/relecture-critere.js','src/verts-a-controler.js','src/voie-recentree.js'])
-  {const h=sha(f==='src/relecture-ombre.js'?sansD284(lire(f)):sansCH086(f,sansCH065(f,lire(f))));assert.equal(h,CH087[f]||REF.fichiers[f],f);}
+  {const h=sha(f==='src/relecture-ombre.js'?sansD284(sansCH152(f,lire(f))):sansCH152(f,sansCH086(f,sansCH065(f,lire(f)))));assert.equal(h,CH087[f]||REF.fichiers[f],f);}
  /* La session Écho ne touche pas au lot : elle ne lit rien du lot en plus (`differesDuLot`, mémoire des différés, existaient). */
  const diff=lire('src/native-session.js');assert.ok(!/batch\.scope|startBatch|lotCommands|applyInESV/.test(diff.slice(diff.indexOf('RM-11 (fiches/RM11'),diff.indexOf('summariseGesture(record,observed){'))));
 });

@@ -220,7 +220,7 @@ function creer({stockage,WS,executer,journal=()=>{},sources,chrome=null/* versio
   if(!c.ok){noter('telecommande-ordre',{ordre:nom,resultat:'refuse',motif:c.motif});
    if(Number.isSafeInteger(o?.n))await envoyer({type:'accuse',pour:o.n,ordre:nom,resultat:'refuse',motif:c.motif});return;}
   let resultat='accepte',refus=null,texte=null;const remise=c.action==='reinitialiser-extension',liaison=remise&&A&&ws?{D:A.D,ws}:null;
-  try{await executer(c.action,remise?{confirme:true}:{});}catch(e){resultat='refuse';texte=String(e?.message||e);refus=codeRefus(texte);}
+  try{if(remise)await executer(c.action,{confirme:true});else await executer(c.action);}catch(e){resultat='refuse';texte=String(e?.message||e);refus=codeRefus(texte);}
   /* Journal local : le code ET la phrase d'Ariane (bornée) ; au téléphone : le code et le cut seulement. */
   noter('telecommande-ordre',{ordre:nom,resultat,motif:refus?'refus-ariane':null,...(refus?{refus:refus.code,cut:refus.cut,texte:texte.slice(0,300)}:{})});
   const accuse={type:'accuse',pour:o.n,ordre:nom,resultat,motif:refus?refus.code:null,cut:refus?refus.cut:null};

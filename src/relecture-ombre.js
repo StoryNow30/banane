@@ -1,7 +1,7 @@
 (function(root,factory){
-  if(typeof module==='object'&&module.exports)module.exports=factory(require('../vendor/capture-core.js'));
-  else root.BananeRelectureOmbre=factory(root.BananeCaptureCore);
-})(typeof globalThis!=='undefined'?globalThis:this,function(C){
+  if(typeof module==='object'&&module.exports)module.exports=factory(require('../vendor/capture-core.js'),require('./relecture-filtre-liste.js'));
+  else root.BananeRelectureOmbre=factory(root.BananeCaptureCore,root.BananeRelectureFiltreListe);
+})(typeof globalThis!=='undefined'?globalThis:this,function(C,F){
  'use strict';
  /* 5.0 (D-170, D-171, D-172) — RELECTURE APRÈS LE LOT, EN OMBRE (fiches/RELECTURE_OMBRE.md).
   *
@@ -106,7 +106,7 @@
  /* Ordre de couverture des types de zone (le premier qui couvre un cut le garde), comme l'étude. */
  const ORDRE_ZONES=['pn','adv','abords','vert-hors-zone','ecartement'];
 
- function selection(entree,options){const cfg=cfgDe(options),e=entree&&typeof entree==='object'?entree:{};
+ function selectionBase(entree,options){const cfg=cfgDe(options),e=entree&&typeof entree==='object'?entree:{};
   const total=entier(e.total)&&e.total>0?e.total:null,max=total!==null?total-1:Infinity;
   const lot=(Array.isArray(e.lot)?e.lot:[]).filter(x=>entier(x?.cut)&&x.cut<=max).map(x=>({cut:x.cut,differe:x.differe===true}));
   const differes=new Set(lot.filter(x=>x.differe).map(x=>x.cut)),poses=new Set(lot.filter(x=>!x.differe&&!differes.has(x.cut)).map(x=>x.cut));
@@ -169,6 +169,18 @@
    plafondParZone:Object.fromEntries(['adv','abords','vert-hors-zone','ecartement'].map(z=>[z,entier(parZoneBudget[z])?parZoneBudget[z]:null])),
    plages:gardees.map(p=>({debut:p.debut,fin:p.fin,motifs:p.motifs,zone:p.zone,libelle:p.libelle,relus:p.cuts.length,traverses:p.traverses})),
    cuts,horsPlafond};}
+ /* CH-152-D1-SELECTION — La sélection historique est calculée à l'identique ; seule une table fournie active son filtrage géométrique. */
+ function selection(entree,options){
+  const sortie=selectionBase(entree,options),cfg=cfgDe(options),e=entree&&typeof entree==='object'?entree:{},brute=cfg.filtreListe,fl=brute&&typeof brute==='object'?brute:{};
+  const table=e.tableListe||fl.table||fl.tableListe||null;
+  if(!table||brute===false||fl.actif===false||typeof F?.filtrerSelection!=='function')return sortie;
+  const {table:_table,tableListe:_tableListe,...reglagesFiltre}=fl,differes=new Set();
+  for(const x of Array.isArray(e.lot)?e.lot:[])if(x?.differe===true&&entier(x.cut))differes.add(x.cut);
+  for(const c of sortie.cuts)if(c.role==='differe')differes.add(c.cut);
+  return F.filtrerSelection(sortie,{table,differes:[...differes],alertesGardeVoie:e.alertesGardeVoie||[],aControler:e.aControler||[],
+   options:{...reglagesFiltre,tempsParCutS:cfg.tempsParCutS,tempsTraverseS:cfg.tempsTraverseS}});
+ }
+ /* FIN CH-152-D1-SELECTION */
  /* Options de sélection depuis le bloc `selection` du fichier de réglages (marges de grappe, d'isolé, de différé) ; le reste : défaut.
   * Les marges des PN et des ADV sont celles des règles métier, qui donnent les plages déjà marginées. */
  function optionsSelection(bloc){const b=bloc&&typeof bloc==='object'?bloc:{},n=(v,d)=>Number.isInteger(v)&&v>=0&&v<=100?v:d,o={};
@@ -196,10 +208,18 @@
  function confiance(science){if(!science?.rails)return null;
   return Object.fromEntries(SIDES.map(s=>{const r=science.rails[s];return [s,Number.isFinite(r?.astar?.confidence)?r1(r.astar.confidence):null];}));}
  const s1De=science=>science?.rails?Object.fromEntries(SIDES.map(s=>[s,science.rails[s]?.s1Changed===true])):null;
+ /* CH-152-D2-SOUTIEN — Un zéro de sélection S1 n'est admis que si la cellule repêchée est elle-même géométriquement forte. */
+ function soutienS1(science){if(!science?.rails)return null;
+  return Object.fromEntries(SIDES.map(s=>{const r=science.rails[s],n=r?.next;
+   return [s,r?.s1Changed===true&&n?.status==='candidate'&&Number.isFinite(n.topRows)&&n.topRows>=15&&Number.isFinite(n.faceCount)&&n.faceCount>=6&&!n.slopeLimited];}));}
+ /* FIN CH-152-D2-SOUTIEN */
  function juger({capture,decision,science=null,hauteur=true},options){const cfg=cfgDe(options),rails=capture?.rails;
   const actuelle=rails&&SIDES.every(s=>Array.isArray(rails[s]?.positionSceneRelative))?Object.fromEntries(SIDES.map(s=>[s,rails[s].positionSceneRelative.map(um)])):null;
   const base={etage:decision?.stage??null,motifDecision:decision?.reason!=null?String(decision.reason).slice(0,80):null,
    appuis:Array.isArray(decision?.anchorsUsed)?decision.anchorsUsed.slice(0,12):[],confiance:confiance(science),s1:s1De(science),poseActuelle:actuelle};
+  /* CH-152-D2-JUGEMENT — Compatibilité de `confiance` conservée ; l'alias explicite et le soutien S1 sont ajoutés. */
+  base.confianceAstar=base.confiance;base.s1Soutenu=soutienS1(science);
+  /* FIN CH-152-D2-JUGEMENT */
   const calc=actuelle?poseCalculee(decision,rails,{hauteur}):null;
   if(!calc)return {...base,poseCalculee:null,ecartMm:null,ecartBrutMm:null,pireMm:null,hauteurMm:null,zoneGrise:false,verdict:'je laisserais',
    raison:`aucune pose sûre calculée (${base.etage||'?'}${base.motifDecision?' : '+base.motifDecision:''}) : rien à proposer`};
@@ -227,5 +247,5 @@
 
  /* Durée lisible : « 2 min 20 s », « 45 s ». */
  function duree(s){if(!Number.isFinite(s)||s<0)return '';const m=Math.floor(s/60),r=Math.round(s-60*m);return m?`${m} min${r?` ${r} s`:''}`:`${r} s`;}
- return {VERSION,DEFAULTS,LIBELLE,ZONE,ORDRE_ZONES,plage,selection,optionsSelection,ecartRail,poseCalculee,confiance,juger,skipOmbre,captureVide,duree};
+ return {VERSION,DEFAULTS,LIBELLE,ZONE,ORDRE_ZONES,plage,selection,optionsSelection,ecartRail,poseCalculee,confiance,soutienS1,juger,skipOmbre,captureVide,duree};
 });

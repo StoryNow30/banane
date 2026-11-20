@@ -53,7 +53,7 @@
 
  /* Réglages lus d'un fichier : chaque valeur invalide ou absente prend celle du défaut (une correction invalide : fermée), et chaque
   * champ de sécurité invalide est nommé dans `invalides`. `source` : d'où ils viennent. */
- function reglages(fichier,source='defaut'){
+ function reglagesBase(fichier,source='defaut'){
   const f=fichier&&typeof fichier==='object'&&!Array.isArray(fichier)?fichier:null;
   if(!f||f.format!==DEFAUT.format)return {...reglages(DEFAUT,'defaut'),refus:f?'format':null};
   const liste=(v,d,ok)=>Array.isArray(v)&&v.length&&v.every(ok)?v.slice():d.slice();
@@ -92,6 +92,18 @@
     diffVerticaleMaxMm:nombre(c.diffVerticaleMaxMm,0,100)?c.diffVerticaleMaxMm:DEFAUT.coherence.diffVerticaleMaxMm,
     ecartementMaxMm:nombre(c.ecartementMaxMm,0,100)?c.ecartementMaxMm:DEFAUT.coherence.ecartementMaxMm},
    zones};}
+ /* CH-152-D2-REGLAGES — Les nouvelles options n'apparaissent que si elles sont écrites : les réglages historiques gardent leur forme exacte. */
+ function reglages(fichier,source='defaut'){
+  const r=reglagesBase(fichier,source),f=fichier&&typeof fichier==='object'&&!Array.isArray(fichier)?fichier:null;
+  if(!f||f.format!==DEFAUT.format)return r;
+  if(f.confianceAstarMin!==undefined){if(nombre(f.confianceAstarMin,0,100))r.confianceAstarMin=f.confianceAstarMin;else r.invalides.push('confianceAstarMin');}
+  if(f.admettreS1Soutenu!==undefined){if(typeof f.admettreS1Soutenu==='boolean')r.admettreS1Soutenu=f.admettreS1Soutenu;else r.invalides.push('admettreS1Soutenu');}
+  for(const z of [...ZONES,...ZONES_OPTION]){const y=f.zones?.[z];if(!y||typeof y!=='object'||Array.isArray(y))continue;
+   if(y.confianceAstarMin!==undefined){if(nombre(y.confianceAstarMin,0,100))r.zones[z]={...r.zones[z],confianceAstarMin:y.confianceAstarMin};else r.invalides.push(`zones.${z}.confianceAstarMin`);}
+   if(y.bloquerAstarZero!==undefined){if(typeof y.bloquerAstarZero==='boolean')r.zones[z]={...r.zones[z],bloquerAstarZero:y.bloquerAstarZero};else r.invalides.push(`zones.${z}.bloquerAstarZero`);}}
+  return r;
+ }
+ /* FIN CH-152-D2-REGLAGES */
  /* La passe peut-elle corriger avec ces réglages ? Oui seulement pour le fichier proposé, lu sans refus et sans champ invalide. */
  function correctionPermise(r){
   if(!r||typeof r!=='object')return {ok:false,raison:'réglages illisibles'};
@@ -101,6 +113,28 @@
   if(r.invalides.length)return {ok:false,raison:`réglages invalides : ${r.invalides.slice(0,6).join(', ')}`};
   return {ok:true,raison:null};}
 
+ /* CH-152-D2-QUALIFIANT — Zéro S1 non calibré et zéro A* ne portent plus le même verdict. `null` = confiance admise. */
+ const confianceDe=j=>j?.confianceAstar&&typeof j.confianceAstar==='object'?j.confianceAstar:j?.confiance;
+ const refusConfiance=raison=>({corriger:false,regle:'confiance',raison});
+ function qualifierConfiance(j,Z={},R={}){
+  const conf=confianceDe(j),z=Z&&typeof Z==='object'?Z:{},r=R&&typeof R==='object'?R:{};
+  const min=z.confianceMin||0,local=z.confianceAstarMin||r.confianceAstarMin||0;
+  const seuil=Math.max(min,local);
+  for(const s of SIDES){const c=conf?.[s],nom=s==='left'?'gauche':'droit';
+   if(!Number.isFinite(c))return refusConfiance(`confiance du rail ${nom} ${c==='s1'?'non calibrée (S1)':'absente'}`);
+   const sentinelle=j?.s1?.[s]===true&&c===0,marque=j?.s1Soutenu?.[s],soutenu=marque===true||marque===undefined&&!!j?.poseCalculee?.[s];
+   if(sentinelle&&soutenu){
+    if(r.admettreS1Soutenu===true)continue;             // option explicite : elle lève aussi l'ancien confianceMin
+    if(c>=min)continue;                                // confianceAstarMin et bloquerAstarZero visent A*, pas la sentinelle S1
+   }
+   if(c<seuil||z.bloquerAstarZero===true&&c===0){
+    const astar=z.confianceAstarMin!==undefined||r.confianceAstarMin!==undefined||z.bloquerAstarZero===true?'confiance A*':'confiance';
+    if(z.bloquerAstarZero===true&&c===0&&seuil===0)return refusConfiance(`${astar} du rail ${nom} 0 refusée (bloquerAstarZero)`);
+    return refusConfiance(`${astar} du rail ${nom} ${virgule(c)} sous ${virgule(seuil)}`);
+   }}
+  return null;
+ }
+ /* FIN CH-152-D2-QUALIFIANT */
  /* Le jugement de la règle. Entrée : {jugement, zone, role, skipOmbre, ecrit, ecartementMm, ecartementRefMm}. */
  function juger(entree,R=DEFAUT){
   const e=entree&&typeof entree==='object'?entree:{},j=e.jugement,non=(regle,raison)=>({corriger:false,regle,raison});
@@ -126,10 +160,9 @@
   if(!SIDES.every(s=>['lat','vert'].every(a=>Number.isFinite(ec[s]?.[a]))))return non('pose','écart par rail illisible');
   const pire=Math.max(...SIDES.flatMap(s=>[Math.abs(ec[s].lat),Math.abs(ec[s].vert)]));
   if(!(pire>=Z.seuilMm))return non('seuil',`écart ${virgule(pire)} mm sous le seuil de la zone ${e.zone} (${virgule(Z.seuilMm)} mm)`);
-  const conf=j.confiance;
-  for(const s of SIDES){const c=conf?.[s];
-   if(!Number.isFinite(c))return non('confiance',`confiance du rail ${s==='left'?'gauche':'droit'} ${c==='s1'?'non calibrée (S1)':'absente'}`);
-   if(c<Z.confianceMin)return non('confiance',`confiance du rail ${s==='left'?'gauche':'droit'} ${virgule(c)} sous ${virgule(Z.confianceMin)}`);}
+  /* CH-152-D2-BOUCLE — La garde commune est testable indépendamment ; le motif historique reste inchangé sans option A*. */
+  const conf=confianceDe(j),refusConf=qualifierConfiance(j,Z,R);if(refusConf)return refusConf;
+  /* FIN CH-152-D2-BOUCLE */
   const V=R.voie||DEFAUT.voie,C=R.coherence||DEFAUT.coherence;
   for(const s of SIDES)if(!(Math.abs(ec[s].lat)<=V.lateralMaxMm))
    return non('voie',`rail ${s==='left'?'gauche':'droit'} déplacé de ${virgule(Math.abs(ec[s].lat))} mm en travers (plus de ${virgule(V.lateralMaxMm)} mm : autre voie possible)`);
@@ -142,5 +175,5 @@
    const ref=e.ecartementRefMm,g=Number.isFinite(e.ecartementBrutMm)?e.ecartementBrutMm:e.ecartementMm,d=Math.abs(g-ref);
    if(!(d<=C.ecartementMaxMm))return non('coherence',`écartement ${virgule(e.ecartementMm)} mm, à ${virgule(d)} mm de la référence ${virgule(ref)} mm`);}
   return {corriger:true,regle:'ok',raison:`zone ${e.zone}, écart ${virgule(pire)} mm (seuil ${virgule(Z.seuilMm)}), confiance ${SIDES.map(s=>virgule(conf[s])).join(' / ')}, rails cohérents`};}
- return {DEFAUT,ZONES,ZONES_OPTION,ETAGES,VARIANTES,LATERAL_MAX_MM,reglages,correctionPermise,juger};
+ return {DEFAUT,ZONES,ZONES_OPTION,ETAGES,VARIANTES,LATERAL_MAX_MM,reglages,correctionPermise,qualifierConfiance,juger};
 });
