@@ -12,7 +12,7 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/etat-morceaux.js','src/storage.js','src/journal-index.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/relecture-signal.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/recherche-large.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/ancre-trajectoire.js','src/gestes-vue.js','src/deplacement-vue.js','src/serie-captures-vides.js','src/voie-b1-ecart.js','src/garde-voie-ombre.js','src/serrage-lot-ombre.js','src/voie-sure-ombre.js','src/telecommande.js','src/reinitialisation.js');
+ 'src/gcv1-export.js','src/engine.js','src/etat-morceaux.js','src/storage.js','src/journal-index.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/relecture-signal.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/recherche-large.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/ancre-trajectoire.js','src/decision-lot-partagee.js','src/gestes-vue.js','src/deplacement-vue.js','src/serie-captures-vides.js','src/voie-b1-ecart.js','src/garde-voie-ombre.js','src/serrage-lot-ombre.js','src/voie-sure-ombre.js','src/telecommande.js','src/reinitialisation.js');
 /* CH-058 : le store est équipé de l'index du journal en mémoire (src/journal-index.js) : les étapes qui relisaient TOUT
  * IndexedDB lisent seulement les objets utiles. Aucune écriture d'index en base, aucune montée de version. */
 /* Types d'événements indexés : ceux que lisent les étapes bornées ci-dessous et src/correction-liste.js (parité sur les journaux
@@ -1783,29 +1783,66 @@ async function commandLot(proposal,lotObservation){
   if(VR&&b?.id){if(dvMemoire?.batchId!==b.id)dvMemoire=VR.creerMemoire(b.id);VR.noterDecisionReelle(dvMemoire,id,lotObservation);}}catch{/* jamais bloquant */}
  if(deplacerVueReglage()&&command.action!=='lot'&&/(^|-)hors-vue-(left|right)$/.test(command.reason||'')){
   const essai=await deplacerVuePlanifier({lotObservation,proposal,before,capture,command,reglage:deplacerVueReglage()});if(essai.command)command=essai.command;}
- /* 4.9.5.13 (L1) : cible hors de la vue, quel que soit l'étage : la vue est amenée sur la cible (pré-vol), puis la pose est faite. */
- if(profilL1()&&!deplacerVueReglage()&&command.action!=='lot'&&/(^|-)hors-vue-(left|right)$/.test(command.reason||'')){
-  const id=engine.s.before?.identity??null,ctx=l1Contexte,cap=ctx&&id&&ctx.identity.cut===id.cut?ctx.lotArgs.capture:null;
-  const cc=profilL1se()&&lotObservation.positions?await l1eCorrigerChaine(cap,id,lotObservation.positions):null;
-  if(cc)lotObservation.l1eChaine={correction:cc.correction};
-  const obs=cc&&cc.correction.appliquee?{...lotObservation,positions:cc.positions}:lotObservation;
-  const essai=await deplacerVuePlanifier({lotObservation:obs,proposal,before,capture,command,reglage:reglageVueL1()});if(essai.command)command=profilL1s()?{...essai.command,l1s:'vue'}:essai.command;
-  if(cc&&command.action==='lot'&&command.l1s==='vue')lotObservation.l1eChaine.positions=obs.positions;}
- /* 5.0 : chemin d'activation des règles métier, COUPÉ par défaut ; il ne peut que transformer une validation en différé. */
- command=reglesMetierCommande(command,lotObservation,proposal,before);
- if(command.action==='lot'&&command.l1s==='vue'&&lotObservation.l1eChaine?.positions){const id=engine.s.before?.identity??null,ctx=l1Contexte;
-  if(ctx&&id&&ctx.identity.cut===id.cut)l1eTransporter(ctx.lotArgs.capture,id,lotObservation.l1eChaine.positions);}
- /* 4.9.5.13 (L1) : un cut que la chaîne ne pose pas passe à la GCV2 (src/gcv2-l1.js). */
- if(profilL1())command=await l1Commande({command,lotObservation,proposal,before,capture});
- /* CH-034 : recherche large sur le nuage capturé (réglage `lot.rechercheLarge`, ÉTEINT), avant la garde R3 : différer ou remplacer une pose que le lot allait valider. */
- command=rechercheLargeCommande(command,lotObservation,proposal,before,capture);
- /* CH-019 : garde « après un différé », en DERNIER : elle ne peut que transformer une validation en différé. */
- command=gardeApresDiffereCommande(command,lotObservation,proposal);
-  /* CH-121 : étage final d'ajustement de la pose sur le profil du rail (levier `ajustementFin` de src/gcv2-l1.js, COUPÉ), avant le refus d'ancre, comme au banc. */
- if(ajEssai===null)await ajustementHauteurEtat();
- command=ajustementFinCommande(command,lotObservation,proposal,before,capture);
-  /* CH-124 : refus d'ancre (levier `ancre`, livré allumé en Vision 18), en DERNIER : il ne peut que transformer une validation en différé. */
- if(ancreAllumee())command=await ancreCommande(command,lotObservation,proposal,before);
+ /* CH-146 : sous le profil livré L1-se, toute la décision du cut est déléguée au module partagé `src/decision-lot-partagee.js`. */
+ if(profilL1se()&&globalThis.BananeDecisionLotPartagee){
+  if(ajEssai===null)await ajustementHauteurEtat();
+  const D=globalThis.BananeDecisionLotPartagee,G=globalThis.BananeGcv2L1,VR=globalThis.BananeVoieRecentree,Sh=globalThis.BananeGCV1Shadow;
+  const id=engine.s.before?.identity??null,ctx=l1Contexte,suivre=!!(id&&passeDiffReglage().mode!=='off'),cmd0=command;l1Contexte=null;l1PoseEnAttente=null;
+  let zSuivi=null;if(suivre)try{zSuivi=l1Zone(id);}catch{zSuivi=null;}
+  const capL1=ctx&&id&&ctx.identity.cut===id.cut?ctx.lotArgs.capture:null;
+  const contexteValide=!!(ctx&&id&&ctx.identity.cut===id.cut&&capture&&typeof Sh?.scientificProposeBothAvecReservoir==='function');
+  const res=await D.deciderCutL1se({
+   capture:capL1,nuage:capture,proposal,runtimeRails:proposal.rails,before,
+   decisionLot:lotObservation,commandeInitiale:command,autoriserL1sVue:!deplacerVueReglage(),contexteValide,
+   anchors:ctx?ctx.anchors:[],identity:id,
+   cameras:L.viewCameras(capture),camerasLarges:VR?.camerasLarges(capture),
+   decideCutL1:()=>L.decideCut({...ctx.lotArgs,anchors:ctx.anchors,options:{...G.REGLE.lotOptions}}),
+   obtenirScience:()=>Sh.scientificProposeBothAvecReservoir(ctx.lotArgs.capture),
+   obtenirZone:()=>l1Zone(id),
+   obtenirVoisins:()=>l1Voisins(engine.s.batch,id),
+   obtenirVoisinsTransport:()=>G.LEVIERS_LIVRES?.transport?l1eTransportDe(id).slice():undefined,
+   obtenirModele:()=>l1Modele(),
+   obtenirReference:async()=>globalThis.BananeGcv2L1e.referenceEcartement(await l1eTable(id.part),id.cut),
+   obtenirVoieListe:async()=>await l1eVoieListe(ctx.lotArgs.capture,id),
+   validerVue:async({etape,decision,positions,command:cmd})=>etape==='gcv2'?await l1PlanVue(capture,positions,id):await deplacerVuePlanifier({lotObservation:decision,proposal,before,capture,command:cmd,reglage:reglageVueL1()}),
+   appliquerReglesMetier:cmd=>reglesMetierCommande(cmd,lotObservation,proposal,before),
+   transporter:(cap,ident,pos)=>l1eTransporter(cap,ident,pos),
+   suivreReste:(r,obs)=>{if(!suivre)return;const pose=!!(r&&(r.action==='lot'||r.action==='engine'&&['left','right'].every(s=>r.rails?.[s]?.status==='candidate')));
+    if(pose||obs?.l1?.commande?.sansValider)l1ResteOter(id);
+    else l1ResteNoter(id,{identity:{part:id.part,cut:id.cut,frameId:id.frameId??null},zone:zSuivi?.zone??'abords',adv:zSuivi?.adv??[],regle:cmd0?.reason==='regles-metier'||r?.reason==='regles-metier'||obs?.l1?.motif==='regle-metier'});},
+   etapesSw:{
+    rechercheLarge:cmd=>rechercheLargeCommande(cmd,lotObservation,proposal,before,capture),
+    gardeApresDiffere:cmd=>gardeApresDiffereCommande(cmd,lotObservation,proposal),
+    ajustementFin:cmd=>ajustementFinCommande(cmd,lotObservation,proposal,before,capture),
+    ancre:async cmd=>ancreAllumee()?await ancreCommande(cmd,lotObservation,proposal,before):cmd,
+   },
+  });
+  command=res.command;
+ }else{
+  /* 4.9.5.13 (L1) : cible hors de la vue, quel que soit l'étage : la vue est amenée sur la cible (pré-vol), puis la pose est faite. */
+  if(profilL1()&&!deplacerVueReglage()&&command.action!=='lot'&&/(^|-)hors-vue-(left|right)$/.test(command.reason||'')){
+   const id=engine.s.before?.identity??null,ctx=l1Contexte,cap=ctx&&id&&ctx.identity.cut===id.cut?ctx.lotArgs.capture:null;
+   const cc=profilL1se()&&lotObservation.positions?await l1eCorrigerChaine(cap,id,lotObservation.positions):null;
+   if(cc)lotObservation.l1eChaine={correction:cc.correction};
+   const obs=cc&&cc.correction.appliquee?{...lotObservation,positions:cc.positions}:lotObservation;
+   const essai=await deplacerVuePlanifier({lotObservation:obs,proposal,before,capture,command,reglage:reglageVueL1()});if(essai.command)command=profilL1s()?{...essai.command,l1s:'vue'}:essai.command;
+   if(cc&&command.action==='lot'&&command.l1s==='vue')lotObservation.l1eChaine.positions=obs.positions;}
+  /* 5.0 : chemin d'activation des règles métier, COUPÉ par défaut ; il ne peut que transformer une validation en différé. */
+  command=reglesMetierCommande(command,lotObservation,proposal,before);
+  if(command.action==='lot'&&command.l1s==='vue'&&lotObservation.l1eChaine?.positions){const id=engine.s.before?.identity??null,ctx=l1Contexte;
+   if(ctx&&id&&ctx.identity.cut===id.cut)l1eTransporter(ctx.lotArgs.capture,id,lotObservation.l1eChaine.positions);}
+  /* 4.9.5.13 (L1) : un cut que la chaîne ne pose pas passe à la GCV2 (src/gcv2-l1.js). */
+  if(profilL1())command=await l1Commande({command,lotObservation,proposal,before,capture});
+  /* CH-034 : recherche large sur le nuage capturé (réglage `lot.rechercheLarge`, ÉTEINT), avant la garde R3 : différer ou remplacer une pose que le lot allait valider. */
+  command=rechercheLargeCommande(command,lotObservation,proposal,before,capture);
+  /* CH-019 : garde « après un différé », en DERNIER : elle ne peut que transformer une validation en différé. */
+  command=gardeApresDiffereCommande(command,lotObservation,proposal);
+   /* CH-121 : étage final d'ajustement de la pose sur le profil du rail (levier `ajustementFin` de src/gcv2-l1.js, COUPÉ), avant le refus d'ancre, comme au banc. */
+  if(ajEssai===null)await ajustementHauteurEtat();
+  command=ajustementFinCommande(command,lotObservation,proposal,before,capture);
+   /* CH-124 : refus d'ancre (levier `ancre`, livré allumé en Vision 18), en DERNIER : il ne peut que transformer une validation en différé. */
+  if(ancreAllumee())command=await ancreCommande(command,lotObservation,proposal,before);
+ }
  lotObservation.command={action:command.action,reason:command.reason,...(command.gaugeMm!=null?{gaugeMm:command.gaugeMm}:{}),...(command.ndc?{ndc:command.ndc}:{}),...(command.deplacerVue?{deplacerVue:command.deplacerVue}:{}),...(command.l1s?{l1s:command.l1s}:{}),...(command.ajustementFin?{ajustementFin:true,actionAvantAjustement:command.avantAjustement.action}:{})};
  lotObservation.applied=command.action==='lot';
  /* « La ligne » : le panneau dessine « posé par la voie » les cuts traités que
@@ -1823,23 +1860,21 @@ async function commandLot(proposal,lotObservation){
  * qui pose (« lot », ou « engine » aux deux rails candidats), dans la vue courante (ni vue déplacée ni vue amenée), est relue rail par rail sur son nuage ; si
  * l'étage bouge un rail, la commande refaite par `commander` (écartement admissible, cible dans la vue) devient une commande « lot » ; sinon rien ne change.
  * Le journal garde, en millimètres du repère profil de la pose de départ, la pose d'avant, celle d'après et ce que l'étage a lu (`lotObservation.ajustementFin`). */
-function ajustementFinCommande(command,lotObservation,proposal,before,capture){const G=globalThis.BananeGcv2L1,K=globalThis.BananeCore3,L=globalThis.BananeLotDecision,SIDES=['left','right'];
+function ajustementFinCommande(command,lotObservation,proposal,before,capture){const G=globalThis.BananeGcv2L1,K=globalThis.BananeCore3,L=globalThis.BananeLotDecision,D=globalThis.BananeDecisionLotPartagee,SIDES=['left','right'];
  try{
-  const R=ajustementFinReglage();if(!profilL1se()||!R||!capture?.rails||!before||!proposal?.rails)return command;
+  const R=ajustementFinReglage();if(!profilL1se()||!R||!D||!capture?.rails||!before||!proposal?.rails)return command;
   const pose=command.action==='lot'||command.action==='engine'&&SIDES.every(s=>command.rails?.[s]?.status==='candidate');
   if(!pose||command.deplacerVue||command.l1s==='vue')return command;
   /* `seulChaine` : poses de la chaîne seulement (ni GCV2, ni L1-s, ni pose remplacée par la recherche large). */
   if(R.seulChaine&&(command.l1s||command.reason==='gcv2-l1'||command.rechercheLarge))return command;
   const x=K.expectedPoses({rails:before},command.action==='lot'?command.rails:proposal.rails),positions=Object.fromEntries(SIDES.map(s=>[s,x[s].positionSceneRelative.slice(0,3)]));
-  const decal=Object.fromEntries(SIDES.map(s=>[s,G.decalage(before[s],positions[s])]));if(!SIDES.every(s=>Array.isArray(decal[s])))return command;
-  const a=G.ajusterPoseFinale(capture,decal,R);if(!a.ajuste)return command;
-  const pos=Object.fromEntries(SIDES.map(s=>[s,L.positionOf(before[s],a.decal[s].map(v=>v/1000))]));
-  const cg=G.commander({positions:pos,runtimeRails:proposal.rails,before,expectedPoses:K.expectedPoses,cameras:L.viewCameras(capture),valider:true});
-  if(cg.action!=='lot'||cg.vue!=='dans'){lotObservation.ajustementFin={refus:cg.reason||'vue',info:a.info};return command;}
+  const af=D.ajusterPoseFin({capture,before,runtimeRails:proposal.rails,cameras:L.viewCameras(capture),positions,source:'lot',vue:null,reglage:R,ajuster:(cap,decal)=>G.ajusterPoseFinale(capture,decal,R)});
+  if(!af||(!af.ajuste&&!af.refus))return command;
+  if(af.refus){lotObservation.ajustementFin={refus:af.refus,info:af.info};return command;}
   /* `voisinsDecision` : le voisin de la GCV2 (`l1Voisins`) gardera la pose d'avant l'étage, pas la pose écrite. */
   if(R.voisinsDecision){const b=engine.s.batch,id=engine.s.before?.identity;if(b&&id){b.ajustementsFin=b.ajustementsFin||{};b.ajustementsFin[id.cut]=Object.fromEntries(SIDES.map(s=>[s,positions[s].slice(0,3)]));}}
-  lotObservation.ajustementFin={avant:decal,apres:Object.fromEntries(SIDES.map(s=>[s,G.decalage(before[s],pos[s])])),info:a.info,commandeAvant:command.action};
-  return {...command,action:'lot',rails:cg.rails,gaugeMm:cg.gaugeMm,ajustementFin:true,avantAjustement:command};
+  lotObservation.ajustementFin={avant:af.decalAvant,apres:af.decal,info:af.info,commandeAvant:command.action};
+  return {...command,action:'lot',rails:af.commande.rails,gaugeMm:af.commande.gaugeMm,ajustementFin:true,avantAjustement:command};
  }catch(e){lotObservation.ajustementFin={erreur:String(e?.message||e).slice(0,160)};return command;}}
 /* 5.0 (D-147, fiches/DEPLACER_VUE.md) — DÉPLACER LA VUE. Réglage `deplacerVue`, COUPÉ PAR DÉFAUT : coupé, rien de ce qui suit ne
  * s'exécute et les commandes sont celles d'avant, octet pour octet (tests/deplacer-vue-sw.test.cjs). Actif, pour un cut que le
@@ -2107,19 +2142,21 @@ async function ancreEtat(part){const A=globalThis.BananeAncreTrajectoire,LM=glob
  return ancreLot.etat;}
 function ancreFantomes(b,identity){const cle=(b?.id||'')+'|'+identity.part+'|'+(identity.frameId??null);if(ancreFant.cle!==cle)ancreFant={cle,voisins:[]};return ancreFant.voisins;}
 async function ancreCommande(command,lotObservation,proposal,before){
- try{const SIDES=['left','right'],L=globalThis.BananeLotDecision,K=globalThis.BananeCore3,A=globalThis.BananeAncreTrajectoire,identity=engine.s.before?.identity??null;
+ try{const SIDES=['left','right'],L=globalThis.BananeLotDecision,K=globalThis.BananeCore3,D=globalThis.BananeDecisionLotPartagee,identity=engine.s.before?.identity??null;
   const valide=!!command&&(command.action==='lot'||command.action==='engine'&&SIDES.every(s=>command.rails?.[s]?.status==='candidate'));
   if(!valide||!before||!Number.isInteger(identity?.cut))return command;
   const E=await ancreEtat(identity.part);if(!E)return command;
   const expected=K.expectedPoses({rails:before},command.rails),positions=Object.fromEntries(SIDES.map(s=>[s,expected[s].positionSceneRelative.slice(0,3)]));
-  const j=A.juger(E,identity.cut,{rails:before},positions);
-  lotObservation.ancre=j;
-  if(j.refus!==true)return command;
   /* Ce que le livré aurait fait de cette pose : appui tenu (même règle que `holdLotAnchor`), voisine de la GCV2 (pose de la chaîne, jamais une pose de L1). */
   /* Vision 18 (aj5 à l'essai, relecture de CH-124) : une commande refaite par l'étage d'ajustement se juge comme celle d'avant (même règle que `holdLotAnchor`), et
    * sa voisine fantôme porte la pose de la DÉCISION (`b.ajustementsFin`, levier `voisinsDecision`), pas la pose ajustée. Sans ajustement, rien ne change. */
   const cmdA=command.avantAjustement?{...command,action:command.avantAjustement.action}:command,pd=engine.s.batch?.ajustementsFin?.[identity.cut];
   const appui=cmdA.l1s||cmdA.rechercheLarge==='remplacer'?false:L.commandsPositions(lotObservation,cmdA)||lotObservation.l1?.etat==='valider'&&cmdA.action==='lot'&&cmdA.reason==='gcv2-l1';
+  const ja=D.jugerAncre({etatAncre:E,cut:identity.cut,before,positions,positionsDecision:pd,appui});
+  if(!ja)return command;
+  const j=ja.jugement;
+  lotObservation.ancre=j;
+  if(ja.refus!==true)return command;
   const deL1=!!(command.l1s||command.reason==='gcv2-l1');
   lotObservation.ancre={...j,commande:{action:command.action,reason:command.reason??null,...(command.l1s?{l1s:command.l1s}:{})},appui:!!appui};
   if(!deL1&&profilL1s())ancreFantomes(engine.s.batch,identity).push({identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},positions:pd?{left:pd.left.slice(0,3),right:pd.right.slice(0,3)}:positions,rails:K.clone(Object.fromEntries(SIDES.map(s=>[s,before[s]])))});
@@ -2134,11 +2171,10 @@ function l1eTransporter(capture,identity,positions){const G=globalThis.BananeGcv
  l1eTransportDe(identity).push({identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},positions:{left:positions.left.slice(0,3),right:positions.right.slice(0,3)},rails:capture.rails});}
 /* Sous L1-se, une pose de la chaîne refaite par L1-s (vue amenée, ou options de L1) passe par la correction d'écartement de la GCV2
  * (`corrigerPoseChaine`, comme le banc). Rend { positions (corrigées ou non), correction } ou null (pas L1-se, capture absente, panne). */
-async function l1eCorrigerChaine(capture,identity,positions){const G=globalThis.BananeGcv2L1,SIDES=['left','right'];
- try{if(!profilL1se()||!capture?.rails||!positions||!identity)return null;
-  const decal=Object.fromEntries(SIDES.map(s=>[s,G.decalage(capture.rails[s],positions[s])]));if(!SIDES.every(s=>Array.isArray(decal[s])))return null;
-  const ref=globalThis.BananeGcv2L1e.referenceEcartement(await l1eTable(identity.part),identity.cut),cc=G.corrigerPoseChaine(capture,decal,ref);
-  return {positions:cc.correction.appliquee?G.positionsDe(capture,{left:{decal:cc.decal.left},right:{decal:cc.decal.right}}):positions,correction:cc.correction};}
+async function l1eCorrigerChaine(capture,identity,positions){const D=globalThis.BananeDecisionLotPartagee;
+ try{if(!profilL1se()||!D||!capture?.rails||!positions||!identity)return null;
+  const ref=globalThis.BananeGcv2L1e.referenceEcartement(await l1eTable(identity.part),identity.cut);
+  return D.corrigerChaine({capture,positions,reference:ref});}
  catch{return null;}}
 const ETAGES_L1=['first-pass','window','choice','crossing'];
 function reglageVueL1(){return {...(globalThis.BananeSettings?.deplacerVue||{}),actif:true,etages:ETAGES_L1,regle:'aucune'};}
@@ -2265,14 +2301,11 @@ function passeDiffRechercheLarge(r,positions){
   return RL.resumer(d);}
  catch(e){journalerSimple('recherche-large',{identity:{part:r?.identity?.part??null,cut:r?.identity?.cut??null},etat:'erreur',passe:true,message:String(e?.message||e).slice(0,160)});return null;}}
 /* CH-121 : étage final d'ajustement sur une pose de la passe (levier `ajustementFin`, coupé : null). Rend { positions, decal } ajustés, ou null (rien ne change). */
-function passeDiffAjustementFin(r,positions){const G=globalThis.BananeGcv2L1,K=globalThis.BananeCore3,L=globalThis.BananeLotDecision,SIDES=['left','right'];
- try{const R=ajustementFinReglage();if(!R||R.seulChaine||!r?.capture?.rails||!positions)return null;
-  const before=r.capture.rails,decal=Object.fromEntries(SIDES.map(s=>[s,G.decalage(before[s],positions[s])]));if(!SIDES.every(s=>Array.isArray(decal[s])))return null;
-  const a=G.ajusterPoseFinale(r.capture,decal,R);if(!a.ajuste)return null;
-  const pos=Object.fromEntries(SIDES.map(s=>[s,L.positionOf(before[s],a.decal[s].map(v=>v/1000))]));
-  const cg=G.commander({positions:pos,runtimeRails:r.runtimeRails,before,expectedPoses:K.expectedPoses,cameras:L.viewCameras(r.cloud),valider:true});
-  if(cg.action!=='lot'||cg.vue!=='dans')return null;
-  return {positions:pos,decal:Object.fromEntries(SIDES.map(s=>[s,G.decalage(before[s],pos[s]).map(v=>Math.round(v*100)/100)]))};
+function passeDiffAjustementFin(r,positions){const G=globalThis.BananeGcv2L1,L=globalThis.BananeLotDecision,D=globalThis.BananeDecisionLotPartagee,SIDES=['left','right'];
+ try{const R=ajustementFinReglage();if(!R||R.seulChaine||!D||!r?.capture?.rails||!positions)return null;
+  const af=D.ajusterPoseFin({capture:r.capture,before:r.capture.rails,runtimeRails:r.runtimeRails,cameras:L.viewCameras(r.cloud),positions,source:'gcv2',vue:null,reglage:R,ajuster:(cap,decal)=>G.ajusterPoseFinale(r.capture,decal,R)});
+  if(!af||!af.ajuste)return null;
+  return {positions:af.positions,decal:Object.fromEntries(SIDES.map(s=>[s,af.decal[s].map(v=>Math.round(v*100)/100)]))};
  }catch{return null;}}
 function passeDiffGarde(rg,b,identity,decal){return globalThis.BananeGardePasseAppuis.juger({cut:identity.cut,decal,cutsNormaux:l1Voisins(b,identity).map(v=>v.identity.cut)},rg.garde);}
 async function l1Commande(args){
@@ -2343,40 +2376,42 @@ async function passeDiffOmbre(b,rg,vue,rep=null){
   vue.differes=vue.ecrites+restes.length;   /* cumulés sur les relances : un cut écrit n'est plus un reste */
   const cleT=(b.id||'')+'|'+b.scope.part+'|'+(restes[0]?.identity.frameId??null);transport=(l1eTransport.cle===cleT?l1eTransport.poses:[]).slice();anchors=(b.lotObservation?.anchors||[]).slice();poses=[];
   E=await passeDiffDebut(b,rg,vue,restes,transport,anchors,cleT);}
- /* Les leviers de la passe ne valent que le temps d'un appel (synchrone) : un lot qui démarre pendant les attentes garde les siens. */
- const avant=G.leviersActifs(),decider=a=>{G.reglerLeviers({...avant,...rg.leviers});try{return G.deciderDiffere(a);}finally{G.reglerLeviers(avant);}};
+ /* CH-146 : chaque décision d'un reste en ombre est déléguée au module partagé `src/decision-lot-partagee.js`. */
  for(let passe=passe0;passe<=rg.passes;passe++){let n=passe===passe0?n0:0;
   if(E.passe!==passe){E.passe=passe;E.index=0;E.n=0;await passeDiffSauver(E);}
   for(let i=passe===passe0?i0:0;i<restes.length;i++){const r=restes[i];if(r.etat!=='differe')continue;
    try{
     if(!r.capture&&!await passeDiffCharger(r)){r.etat='sans-nuage';await passeDiffNoter(E,i,r,n,null);continue;}
     const ref=globalThis.BananeGcv2L1e.referenceEcartement(await l1eTable(r.identity.part),r.identity.cut);
-    const g=decider({capture:r.capture,science:r.science,appuis:anchors.slice(),options:{...G.REGLE.lotOptions},voisins:l1Voisins(b,r.identity),voisinsTransport:transport.slice(),
-     zone:r.zone,plagesADV:r.adv,modele:l1Modele(),regle:G.REGLE_E,reference:ref,voieListe:await l1eVoieListe(r.capture,r.identity)});
-    if(g.decision.etat!=='valider'){r.motif=g.decision.motif??null;await passeDiffNoter(E,i,r,n,null);journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,l1:G.resumer(g)});
+    const vl=await l1eVoieListe(r.capture,r.identity),R=ajustementFinReglage();
+    const res=await globalThis.BananeDecisionLotPartagee.deciderRestePasse({
+     capture:r.capture,science:r.science,runtimeRails:r.runtimeRails,before:r.capture.rails,
+     cameras:L.viewCameras(r.cloud),camerasLarges:VR.camerasLarges(r.cloud),
+     appuis:anchors,voisins:()=>l1Voisins(b,r.identity),voisinsTransport:transport.slice(),
+     zone:r.zone,plagesADV:r.adv,modele:l1Modele(),reference:ref,voieListe:vl,
+     leviersPasse:rg.leviers,gardeAppuis:rg.garde,
+     rechercheLarge:()=>globalThis.BananeRechercheLarge?.reglage(globalThis.BananeSettings?.lot?.rechercheLarge),
+     ajustementFin:R,ajuster:(cap,decal)=>G.ajusterPoseFinale(r.capture,decal,R),
+     obtenirEtatAncre:()=>ancreAllumee()?ancreEtat(r.identity.part):null,
+     transport,transporter:true,passe,
+     surErreurRechercheLarge:e=>journalerSimple('recherche-large',{identity:{part:r?.identity?.part??null,cut:r?.identity?.cut??null},etat:'erreur',passe:true,message:String(e?.message||e).slice(0,160)}),
+    });
+    if(res.decision!=='poserait'){
+     r.motif=res.motif;
+     if(res.etape==='ancre'){r.etat='refus-ancre';n++;
+      await passeDiffNoter(E,i,r,n,{transportSeul:true,cut:r.identity.cut,passe,i,identity:res.entreeTransport.identity,positions:res.entreeTransport.positions,rails:railsReduits(r.capture.rails)});
+      journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:'ancre',decal:res.decal,garde:res.garde,ancre:res.ancre,l1:res.l1});continue;}
+     await passeDiffNoter(E,i,r,n,null);
+     journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,
+      ...(res.decal?{decal:res.decal}:{}),...(res.garde?{garde:res.garde}:{}),...(res.rechercheLarge?{rechercheLarge:res.rechercheLarge}:{}),l1:res.l1});
      /* CH-055 : l'ombre « b1-ecart » sur le reste laissé « rien » (consignée seulement, jamais écrite). */
-     if(passe===passe0)await b1EcartPasse(r,b,passe,anchors);continue;}
-    const cg=G.commander({positions:g.positions,runtimeRails:r.runtimeRails,before:r.capture.rails,expectedPoses:K.expectedPoses,cameras:L.viewCameras(r.cloud),camerasLarges:VR.camerasLarges(r.cloud),valider:true});
-    if(cg.action!=='lot'){r.motif='commande:'+(cg.reason??'refus');await passeDiffNoter(E,i,r,n,null);journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,l1:G.resumer(g)});continue;}
-    const decal=Object.fromEntries(SIDES.map(s=>[s,G.decalage(r.capture.rails[s],g.positions[s]).map(v=>Math.round(v*100)/100)])),garde=passeDiffGarde(rg,b,r.identity,decal);
-    if(garde.bloque){r.motif='garde-appuis';await passeDiffNoter(E,i,r,n,null);journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,decal,garde,l1:G.resumer(g)});continue;}
-    /* CH-034 : recherche large sur le nuage (réglage `lot.rechercheLarge`, ÉTEINT ; `passe:true`), mode « différer » seulement : une pose de la passe qui n'est aucune paire
-     * forte du nuage, ou concurrencée loin d'elle par une paire au moins aussi bonne, n'est pas écrite (motif `recherche-large`). Une panne laisse la pose. */
-    const rl=passeDiffRechercheLarge(r,g.positions);
-    if(rl&&rl.etat==='differer'){r.motif='recherche-large';await passeDiffNoter(E,i,r,n,null);journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,decal,garde,rechercheLarge:rl,l1:G.resumer(g)});continue;}
-    /* CH-124 : la pose de la passe passe par le même refus d'ancre ; refusée, elle reste au transport et comptée comme le livré (sans ricochet), mais n'est ni posée ni reprise. */
-    {const Ea=ancreAllumee()?await ancreEtat(r.identity.part):null,ja=Ea?globalThis.BananeAncreTrajectoire.juger(Ea,r.identity.cut,{rails:r.capture.rails},g.positions):null;
-     if(ja&&ja.refus===true){const idT={part:r.identity.part,cut:r.identity.cut,frameId:r.identity.frameId??null};
-      transport.push({identity:idT,positions:g.positions,rails:r.capture.rails});r.etat='refus-ancre';r.motif='ancre';n++;
-      await passeDiffNoter(E,i,r,n,{transportSeul:true,cut:r.identity.cut,passe,i,identity:idT,positions:g.positions,rails:railsReduits(r.capture.rails)});
-      journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:'ancre',decal,garde,ancre:ja,l1:G.resumer(g)});continue;}}
-    transport.push({identity:{part:r.identity.part,cut:r.identity.cut,frameId:r.identity.frameId??null},positions:g.positions,rails:r.capture.rails});
+     if(res.etape==='gcv2'&&passe===passe0)await b1EcartPasse(r,b,passe,anchors);
+     continue;}
     r.etat='pose-ombre';n++;
-    /* CH-121 : même étage final (levier `ajustementFin`, coupé) sur la pose de la passe, après la garde A ; le transport garde la pose de la décision, comme au banc. */
-    const pf=passeDiffAjustementFin(r,g.positions),posePasse=pf?pf.positions:g.positions,decalPasse=pf?pf.decal:decal;
+    const posePasse=res.positions,decalPasse=res.decal;
     poses.push({cut:r.identity.cut,passe,decal:decalPasse,r,positions:posePasse});
     await passeDiffNoter(E,i,r,n,{cut:r.identity.cut,passe,decal:decalPasse,positions:posePasse,i,identity:{part:r.identity.part,cut:r.identity.cut,frameId:r.identity.frameId??null},rails:railsReduits(r.capture.rails)});
-    journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'poserait',decal:decalPasse,...(pf?{ajustementFin:{avant:decal}}:{}),garde,l1:G.resumer(g)});
+    journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'poserait',decal:decalPasse,...(res.ajustementFin?{ajustementFin:{avant:res.ajustementFin.avant}}:{}),garde:res.garde,l1:res.l1});
    }catch(e){
     /* Panne après l'entrée au transport et avant la pose (comme avant : le cut reste au transport, sans pose). */
     const seul=r.etat==='pose-ombre'&&!poses.some(p=>p.r===r)&&transport.at(-1)?.identity?.cut===r.identity.cut;

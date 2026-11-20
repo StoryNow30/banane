@@ -192,7 +192,8 @@ const RUST_LIDAR=['lidar-rust.js'];
 const PRECHAUFFAGE=['prechauffage.js','prechauffage-boite.js','prechauffage-anticipation.js'];
 /* CH-124 (D-355, Vision 18) : l'ancre indépendante, module de DÉCISION pur (axe de la voie relevée déduit de la trajectoire du véhicule de mesure, par la liste d'ESV).
  * Lue par le service worker (`ancreCommande`, en dernier dans la commande du lot) et par le banc ; levier `ancre` de src/gcv2-l1.js, livré allumé. */
-const ANCRE_TRAJECTOIRE=['ancre-trajectoire.js'];
+/* CH-146 (Lot B1, D-381) : le module pur partagé d'orchestration de la décision du lot L1-se et de la 2e passe entre le banc et le service worker (0 décision changée). */
+const ANCRE_TRAJECTOIRE=['ancre-trajectoire.js','decision-lot-partagee.js'];
 /* CH-080 (D-309, Vision 6) : le branchement du préchauffage passe à l'observateur UNE ligne de plus (`cible` ou `suivante`) et la cible du service worker
  * (`expected.prechauffage`) à `apresCapture` ; ni pose ni validation. Retiré avant CH-077. */
 /* CH-081 (D-311, Vision 8) : le branchement passe `premiere` à l'observateur et la vue de Potree (lecture seule) à `apresCapture` ; ni pose ni validation. Retiré avant CH-080. */
