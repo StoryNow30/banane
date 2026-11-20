@@ -43,8 +43,21 @@
    if(!values.length)return NaN;const v=values.slice().sort((a,b)=>a-b);
    return v[Math.min(v.length-1,Math.floor(p*v.length))];
  }
+ /* CH-147 (Lot B2) — MÉMOÏSATION EXACTE AU BIT PRÈS (`template` et projection des points de `bandOffsets`).
+  * Appelée 50 à 100 fois par cut différé sur la même paire `(pointsSceneRelative, rail)`, la projection 4×4 des ~10 000 points
+  * et la discrétisation du contour U50 ne dépendent ni de `delta` ni de `bandMm`. On les garde dans des WeakMap indexés par les
+  * références d'objets, revérifiés par `Object.is` sur les 16 coefficients de `sceneRelativeToProfileLocal` et sur les longueurs
+  * des tableaux pour qu'aucune mutation ne puisse fausser la sortie. Les opérations IEEE-754 et l'ordre des points restent identiques. */
+ const memeTableau=(a,b)=>{if(!Array.isArray(a)||!Array.isArray(b)||a.length!==b.length)return false;
+   for(let i=0;i<a.length;i++)if(!Object.is(a[i],b[i]))return false;return true;};
+ const cacheTemplate=new WeakMap(),cachePoints=new WeakMap();
  /* Le contour du champignon dans le repère profil, tel que GCV1 le lit. */
  function template(rail){
+   const mat=rail?.sceneRelativeToProfileLocal;
+   if(rail&&typeof rail==='object'&&Array.isArray(mat)&&mat.length===16){
+     const hit=cacheTemplate.get(rail);
+     if(hit&&hit.contours===rail.profileContours&&(rail.profileContours?.length??-1)===hit.contoursLen&&memeTableau(mat,hit.mat))return hit.tpl;
+   }
    const contour=rail?.profileContours?.reduce((a,b)=>(b.verticesSceneRelative?.length||0)>(a?.verticesSceneRelative?.length||0)?b:a,null);
    if(!contour)return null;
    const shape=contour.verticesSceneRelative.map(p=>C.point(rail.sceneRelativeToProfileLocal,p));
@@ -60,7 +73,28 @@
    const tops=[],faces=[];
    for(let u=0;u<=width+1e-9;u+=STEP){const near=head.filter(p=>Math.abs(p[0]-u)<.004);tops.push(near.length?Math.max(...near.map(p=>p[1])):null);}
    for(let z=0;z>=-.04-1e-9;z-=STEP){const near=head.filter(p=>Math.abs(p[1]-z)<.004);faces.push(near.length?Math.min(...near.map(p=>p[0])):null);}
-   return {sign,width,topAt:u=>u<0||u>width?null:tops[Math.round(u/STEP)]??null,faceAt:z=>z>0||z<-.04?null:faces[Math.round(-z/STEP)]??null};
+   const tpl={sign,width,topAt:u=>u<0||u>width?null:tops[Math.round(u/STEP)]??null,faceAt:z=>z>0||z<-.04?null:faces[Math.round(-z/STEP)]??null};
+   if(Array.isArray(mat)&&mat.length===16)cacheTemplate.set(rail,{contours:rail.profileContours,contoursLen:rail.profileContours?.length??-1,mat:mat.slice(),tpl});
+   return tpl;
+ }
+ function pointsLocauxFiltres(points,vis,rail){
+   const mat=rail?.sceneRelativeToProfileLocal;
+   let parRail=Array.isArray(mat)&&mat.length===16?cachePoints.get(points):null;
+   if(parRail){
+     const hit=parRail.get(rail);
+     if(hit&&hit.ptsLen===points.length&&hit.vis===vis&&(vis?.length??-1)===hit.visLen&&memeTableau(mat,hit.mat))return hit;
+   }
+   const tmp1=[],tmp2=[];
+   for(let i=0;i<points.length;i++){
+     if(vis?.[i]===false)continue;
+     const src=points[i];if(!Array.isArray(src)||!src.every(Number.isFinite))continue;
+     const q=C.point(mat,src);
+     if(!(Math.abs(q[0])<=.5&&Math.abs(q[1])<.18&&Math.abs(q[2])<.10))continue;
+     tmp1.push(q[1]);tmp2.push(q[2]);
+   }
+   const out={ptsLen:points.length,vis,visLen:vis?.length??-1,mat:Array.isArray(mat)?mat.slice():null,q1:Float64Array.from(tmp1),q2:Float64Array.from(tmp2)};
+   if(Array.isArray(mat)&&mat.length===16){if(!parRail){parRail=new WeakMap();cachePoints.set(points,parRail);}parRail.set(rail,out);}
+   return out;
  }
  /* Écarts des points au gabarit posé au delta publié : verticaux sur le dessus,
   * latéraux sur le flanc. Ce sont les seules entrées du calage. */
@@ -70,12 +104,9 @@
    if(!Array.isArray(delta)||delta.length!==3||!delta.every(Number.isFinite))return {ok:false,reason:'delta-invalid'};
    const bu=t.sign*delta[1],bz=delta[2],band=cfg.bandMm/1000,top=[],face=[];
    const points=capture.pointsSceneRelative||[];
-   for(let i=0;i<points.length;i++){
-     if(capture.visibleByClipBoxes?.[i]===false)continue;
-     const src=points[i];if(!Array.isArray(src)||!src.every(Number.isFinite))continue;
-     const q=C.point(rail.sceneRelativeToProfileLocal,src);
-     if(!(Math.abs(q[0])<=.5&&Math.abs(q[1])<.18&&Math.abs(q[2])<.10))continue;
-     const lu=t.sign*q[1]-bu,lz=q[2]-bz;
+   const {q1,q2}=points.length?pointsLocauxFiltres(points,capture.visibleByClipBoxes,rail):{q1:[],q2:[]};
+   for(let i=0;i<q1.length;i++){
+     const lu=t.sign*q1[i]-bu,lz=q2[i]-bz;
      if(lu>.012&&lu<t.width-.012&&Math.abs(lz)<band){const z=t.topAt(lu);if(z!==null&&Math.abs(lz-z)<band)top.push((lz-z)*1000);}
      if(lz<-.009&&lz>-.034&&Math.abs(lu)<band){const u=t.faceAt(lz);if(u!==null&&Math.abs(lu-u)<band)face.push((lu-u)*1000);}
    }

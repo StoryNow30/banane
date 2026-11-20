@@ -145,7 +145,9 @@
    if(topAnchors.length<3||faceAnchors.length<3)return {ok:false,reason:'Surfaces du profil non identifiées.'};
    const us=points.map(p=>p[0]).slice().sort((a,b)=>a-b);
    const zs=points.map(p=>p[1]).slice().sort((a,b)=>a-b);
-   return {ok:true,sign,width,points,topAnchors,faceAnchors,head,
+   const tries=points.slice().sort((p,q)=>p[0]-q[0]),px=new Float64Array(tries.length),py=new Float64Array(tries.length);
+   for(let i=0;i<tries.length;i++){px[i]=tries[i][0];py[i]=tries[i][1];}
+   return {ok:true,sign,width,points,px,py,topAnchors,faceAnchors,head,
      uMedian:us[us.length>>1],zMedian:zs[zs.length>>1],pointsLocal:points.length};
  }
 
@@ -196,8 +198,14 @@
  function topRowsAt(frame,u,z){
    const lo=u+.012,hi=u+frame.width-.012;
    if(!(hi>lo))return 0;
+   const px=frame.px,py=frame.py,band=Candidate.DEFAULTS.topBand;
+   if(px&&py){
+     let a=0,b=px.length;while(a<b){const m=(a+b)>>1;if(px[m]<=lo)a=m+1;else b=m;}
+     let n=0;for(let i=a;i<px.length&&px[i]<hi;i++)if(Math.abs(py[i]-z)<band)n++;
+     return n;
+   }
    let n=0;
-   for(const p of frame.points)if(p[0]>lo&&p[0]<hi&&Math.abs(p[1]-z)<Candidate.DEFAULTS.topBand)n++;
+   for(const p of frame.points)if(p[0]>lo&&p[0]<hi&&Math.abs(p[1]-z)<band)n++;
    return n;
  }
  function characterize(frame,u,z,uCenters,knownLoss){
@@ -411,10 +419,52 @@
    avecReservoir=true;
    try{return scientificProposeBoth(capture);}finally{avecReservoir=false;}
  }
+ /* CH-147 (Lot B2) — CACHE PAR CAPTURE / RAIL DE V4.6 ET DE `scientificRail`, IDENTIQUE AU BIT PRÈS.
+  * `cloneExact` préserve `-0`, `NaN`, `Infinity` et `undefined` (contrairement à JSON.stringify). Les entrées sont indexées par
+  * `WeakMap(pointsSceneRelative) -> WeakMap(rail)` et validées sur `visibleByClipBoxes`, `profileContours` et les 16 coefficients
+  * de `sceneRelativeToProfileLocal` (par `Object.is`), plus `partialFlank`, `convention` et `conventionPlafond` pour `scientificRail`. */
+ function cloneExact(v){
+   if(v===null||typeof v!=='object')return v;
+   if(Array.isArray(v)){const a=new Array(v.length);for(let i=0;i<v.length;i++)a[i]=cloneExact(v[i]);return a;}
+   const o={};for(const k of Object.keys(v))o[k]=cloneExact(v[k]);return o;
+ }
+ const memeTableau=(a,b)=>{if(!Array.isArray(a)||!Array.isArray(b)||a.length!==b.length)return false;
+   for(let i=0;i<a.length;i++)if(!Object.is(a[i],b[i]))return false;return true;};
+ const cacheV46=new WeakMap(),cacheSci=new WeakMap();
+ const cleRailValide=(hit,pts,vis,rail,mat)=>!!hit&&hit.ptsLen===pts.length&&hit.vis===vis&&(vis?.length??-1)===hit.visLen&&
+   hit.contours===rail.profileContours&&(rail.profileContours?.length??-1)===hit.contoursLen&&memeTableau(mat,hit.mat);
+ function v46Propose(capture,side){
+   const pts=capture?.pointsSceneRelative,rail=capture?.rails?.[side],mat=rail?.sceneRelativeToProfileLocal,vis=capture?.visibleByClipBoxes;
+   const cacheable=Array.isArray(pts)&&pts.length>0&&rail&&typeof rail==='object'&&Array.isArray(mat)&&mat.length===16;
+   if(cacheable){
+     const hit=cacheV46.get(pts)?.get(rail);
+     if(cleRailValide(hit,pts,vis,rail,mat))return cloneExact(hit.val);
+   }
+   const val=V46.propose(capture,side);
+   if(cacheable){
+     let m=cacheV46.get(pts);if(!m){m=new WeakMap();cacheV46.set(pts,m);}
+     m.set(rail,{ptsLen:pts.length,vis,visLen:vis?.length??-1,contours:rail.profileContours,contoursLen:rail.profileContours?.length??-1,mat:mat.slice(),val:cloneExact(val)});
+   }
+   return val;
+ }
  function scientificRail(capture,side){
-   const v46p=V46.propose(capture,side),v46=compactProposal(v46p);v46.motif=motifOf(v46);
+   const pts=capture?.pointsSceneRelative,rail=capture?.rails?.[side],mat=rail?.sceneRelativeToProfileLocal,vis=capture?.visibleByClipBoxes;
+   const plafond=typeof globalThis!=='undefined'?globalThis.BananeSettings?.conventionPlafond:undefined;
+   const cacheable=Array.isArray(pts)&&pts.length>0&&rail&&typeof rail==='object'&&Array.isArray(mat)&&mat.length===16;
+   if(cacheable){
+     const hit=cacheSci.get(pts)?.get(rail);
+     if(cleRailValide(hit,pts,vis,rail,mat)&&hit.partialFlank===partialFlank&&hit.convention===convention&&Object.is(hit.plafond,plafond)){
+       const out=cloneExact(hit.val);if(!avecReservoir)delete out._reservoir;return out;
+     }
+   }
+   const v46p=v46Propose(capture,side),v46=compactProposal(v46p);v46.motif=motifOf(v46);
    const frame=prepareFrame(capture,side);
-   if(!frame.ok)return {ok:false,side,reason:frame.reason,v46,astar:null,next:null,s1Activated:false,s1Changed:false,publishedWeak:false};
+   if(!frame.ok){
+     const ko={ok:false,side,reason:frame.reason,v46,astar:null,next:null,s1Activated:false,s1Changed:false,publishedWeak:false};
+     if(cacheable){let m=cacheSci.get(pts);if(!m){m=new WeakMap();cacheSci.set(pts,m);}
+       m.set(rail,{ptsLen:pts.length,vis,visLen:vis?.length??-1,contours:rail.profileContours,contoursLen:rail.profileContours?.length??-1,mat:mat.slice(),partialFlank,convention,plafond,val:cloneExact(ko)});}
+     return ko;
+   }
    let coarse=[],meta={uCenters:[0]};
    const astarP=Candidate.propose(capture,side,{lab:{...aStarLab(frame),...(partialFlank?{partialFaceKeep:true}:{}),onCoarse(c,m){coarse=c;meta=m;}}});
    const astar=compactProposal(astarP);astar.motif=motifOf(astar);
@@ -445,7 +495,7 @@
      conventionCalibration=CONVENTION.calibrate(capture,side,next.delta);
      if(conventionCalibration.applied){next.rawDelta=next.delta;next.delta=conventionCalibration.delta.slice();}
    }
-   return {ok:true,side,...(avecReservoir?{_reservoir:{pool:reduced.pool,lmin,sign:frame.sign}}:{}),
+   const complet={ok:true,side,_reservoir:{pool:reduced.pool,lmin,sign:frame.sign},
      frame:{sign:frame.sign,width:round6(frame.width),pointsLocal:frame.pointsLocal,uMedian:round6(frame.uMedian),
        uSeed:aStarLab(frame).uSeeds[0],zMedian:frame.zMedian},
      v46,astar,next,
@@ -455,6 +505,10 @@
      s1Activated:!!pub.activated,s1Changed:!!pub.changed,publishedWeak,partialFlank,partialFlankUsed,s1AmbiguityPreserved:ambiguityPreserved,
      convention,conventionCalibration,
      deltaV46Next:hypotDelta(v46.delta,nextDelta)};
+   if(cacheable){let m=cacheSci.get(pts);if(!m){m=new WeakMap();cacheSci.set(pts,m);}
+     m.set(rail,{ptsLen:pts.length,vis,visLen:vis?.length??-1,contours:rail.profileContours,contoursLen:rail.profileContours?.length??-1,mat:mat.slice(),partialFlank,convention,plafond,val:cloneExact(complet)});}
+   if(!avecReservoir)delete complet._reservoir;
+   return complet;
  }
  /* ÉTAGE A — garde d'écartement de la PAIRE PUBLIÉE.
   *
