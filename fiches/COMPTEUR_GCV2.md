@@ -2,11 +2,11 @@
 
 Généré par `node tools/compteur-gcv2.cjs` (D-188). **Un cut corrigé = un cut appris** (l'opérateur). Les SKIP ne sont pas comptés. Aucune limite : on ne s'arrête pas à 1 000 ou 1 500 cuts (l'opérateur).
 
-**Cuts corrigés : 6 857** (dont 4 552 de plus de 5 mm, 2 711 de plus de 10 mm). Avec les cuts validés tels quels (1 416) et les cuts visités sans action d'au moins 0,6 s (9 863) : **18 136 cuts apprenables**.
+**Cuts corrigés : 6 956** (dont 4 616 de plus de 5 mm, 2 742 de plus de 10 mm). Avec les cuts validés tels quels (1 482) et les cuts visités sans action d'au moins 0,6 s (10 110) : **18 548 cuts apprenables**.
 
 | File | Corrigés | Validés tels quels | Visités sans action | Apprenables |
 |---|---:|---:|---:|---:|
-| En apprentissage (en file) | 4 719 | 893 | 8 500 | 14 112 |
+| En apprentissage (en file) | 4 818 | 959 | 8 747 | 14 524 |
 | Appris (GCV2 entraînée) | 2 138 | 523 | 1 363 | 4 024 |
 
 | Projet | Partie | État | Cuts à l'Écho | Corrigés | dont > 5 mm | dont > 10 mm | Validés tels quels | Visités sans action | SKIP (non comptés) | Sans référence |
@@ -113,5 +113,14 @@ Généré par `node tools/compteur-gcv2.cjs` (D-188). **Un cut corrigé = un cut
 | ? (à confirmer) | 13 | en-file | 10 | 4 | 3 | 2 | 5 | 1 | 0 | 0 |
 | ? (à confirmer) | 14 | en-file | 57 | 13 | 7 | 6 | 7 | 28 | 0 | 9 |
 | ? (à confirmer) | 15 | en-file | 52 | 12 | 6 | 4 | 8 | 24 | 1 | 7 |
+| ? (à confirmer) | 28 | en-file | 13 | 6 | 5 | 2 | 6 | 0 | 0 | 1 |
+| ? (à confirmer) | 29 | en-file | 85 | 29 | 19 | 5 | 31 | 17 | 0 | 8 |
+| ? (à confirmer) | 30 | en-file | 333 | 57 | 36 | 22 | 26 | 224 | 5 | 21 |
+| ? (à confirmer) | 31 | en-file | 15 | 7 | 4 | 2 | 2 | 4 | 1 | 1 |
+| ? (à confirmer) | 32 | en-file | 6 | 0 | 0 | 0 | 1 | 2 | 1 | 2 |
+| ? (à confirmer) | 33 | en-file | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| ? (à confirmer) | 34 | en-file | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| ? (à confirmer) | 35 | en-file | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| ? (à confirmer) | 36 | en-file | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 
 Une partie lue en plusieurs Échos (sessions, reprises) compte chaque cut une fois, d'après son dernier état observé.
