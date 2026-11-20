@@ -1198,6 +1198,114 @@
    "cadre": "echo-pendant-lot",
    "etat": "en-file",
    "note": "Lot du 18/11 (Vision 20, build a19c5ed5) : Écho automatique en deltas, parties 6 à 15. D-379 : réservées, en file seulement."
+  },
+  {
+   "id": "lot19-p28",
+   "projet": "?",
+   "projetCertain": false,
+   "partie": 28,
+   "dossiers": [
+    "2026-11-19_v21_lot-et-echo-parties28-36/raw"
+   ],
+   "cadre": "echo-pendant-lot",
+   "etat": "en-file",
+   "note": "Lot du 19/11 (Vision 21, build 8e62c5dd) : Écho automatique pendant le lot, parties 28 à 36. Export de 10:34 non retenu (doublons) ; archive de 10:46."
+  },
+  {
+   "id": "lot19-p29",
+   "projet": "?",
+   "projetCertain": false,
+   "partie": 29,
+   "dossiers": [
+    "2026-11-19_v21_lot-et-echo-parties28-36/raw"
+   ],
+   "cadre": "echo-pendant-lot",
+   "etat": "en-file",
+   "note": "Lot du 19/11 (Vision 21, build 8e62c5dd) : Écho automatique pendant le lot, parties 28 à 36. Export de 10:34 non retenu (doublons) ; archive de 10:46."
+  },
+  {
+   "id": "lot19-p30",
+   "projet": "?",
+   "projetCertain": false,
+   "partie": 30,
+   "dossiers": [
+    "2026-11-19_v21_lot-et-echo-parties28-36/raw"
+   ],
+   "cadre": "echo-pendant-lot",
+   "etat": "en-file",
+   "note": "Lot du 19/11 (Vision 21, build 8e62c5dd) : Écho automatique pendant le lot, parties 28 à 36. Export de 10:34 non retenu (doublons) ; archive de 10:46."
+  },
+  {
+   "id": "lot19-p31",
+   "projet": "?",
+   "projetCertain": false,
+   "partie": 31,
+   "dossiers": [
+    "2026-11-19_v21_lot-et-echo-parties28-36/raw"
+   ],
+   "cadre": "echo-pendant-lot",
+   "etat": "en-file",
+   "note": "Lot du 19/11 (Vision 21, build 8e62c5dd) : Écho automatique pendant le lot, parties 28 à 36. Export de 10:34 non retenu (doublons) ; archive de 10:46."
+  },
+  {
+   "id": "lot19-p32",
+   "projet": "?",
+   "projetCertain": false,
+   "partie": 32,
+   "dossiers": [
+    "2026-11-19_v21_lot-et-echo-parties28-36/raw"
+   ],
+   "cadre": "echo-pendant-lot",
+   "etat": "en-file",
+   "note": "Lot du 19/11 (Vision 21, build 8e62c5dd) : Écho automatique pendant le lot, parties 28 à 36. Export de 10:34 non retenu (doublons) ; archive de 10:46."
+  },
+  {
+   "id": "lot19-p33",
+   "projet": "?",
+   "projetCertain": false,
+   "partie": 33,
+   "dossiers": [
+    "2026-11-19_v21_lot-et-echo-parties28-36/raw"
+   ],
+   "cadre": "echo-pendant-lot",
+   "etat": "en-file",
+   "note": "Lot du 19/11 (Vision 21, build 8e62c5dd) : Écho automatique pendant le lot, parties 28 à 36. Export de 10:34 non retenu (doublons) ; archive de 10:46."
+  },
+  {
+   "id": "lot19-p34",
+   "projet": "?",
+   "projetCertain": false,
+   "partie": 34,
+   "dossiers": [
+    "2026-11-19_v21_lot-et-echo-parties28-36/raw"
+   ],
+   "cadre": "echo-pendant-lot",
+   "etat": "en-file",
+   "note": "Lot du 19/11 (Vision 21, build 8e62c5dd) : Écho automatique pendant le lot, parties 28 à 36. Export de 10:34 non retenu (doublons) ; archive de 10:46."
+  },
+  {
+   "id": "lot19-p35",
+   "projet": "?",
+   "projetCertain": false,
+   "partie": 35,
+   "dossiers": [
+    "2026-11-19_v21_lot-et-echo-parties28-36/raw"
+   ],
+   "cadre": "echo-pendant-lot",
+   "etat": "en-file",
+   "note": "Lot du 19/11 (Vision 21, build 8e62c5dd) : Écho automatique pendant le lot, parties 28 à 36. Export de 10:34 non retenu (doublons) ; archive de 10:46."
+  },
+  {
+   "id": "lot19-p36",
+   "projet": "?",
+   "projetCertain": false,
+   "partie": 36,
+   "dossiers": [
+    "2026-11-19_v21_lot-et-echo-parties28-36/raw"
+   ],
+   "cadre": "echo-pendant-lot",
+   "etat": "en-file",
+   "note": "Lot du 19/11 (Vision 21, build 8e62c5dd) : Écho automatique pendant le lot, parties 28 à 36. Export de 10:34 non retenu (doublons) ; archive de 10:46."
   }
  ]
 }
