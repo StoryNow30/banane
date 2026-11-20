@@ -53,7 +53,7 @@ test('réglages : quatre réglages hors de l’écran, cases d’origine inchang
   const p=await page.evaluate(()=>({pal:document.getElementById('ui5').dataset.palette,fond:getComputedStyle(document.querySelector('#ui5 .sg-fen')).backgroundColor,marque:window.__marque,garde:window.__ecrits.some(o=>o.banane51Palette==='signal')}));
   assert.deepEqual(p,{pal:'signal',fond:'rgb(8, 9, 11)',marque:1,garde:true});
   assert.deepEqual(await cases(),avant,'les cases d’origine gardent leur valeur');
-  assert.deepEqual(await page.evaluate(a=>[...new Set(window.__appels)].filter(x=>!a.includes(x)),appels),[],'aucune sorte de message nouvelle');
+  assert.deepEqual(await page.evaluate(a=>[...new Set(window.__appels)].filter(x=>!a.includes(x)),appels),['reinitialiser-etat'],'seule la lecture CH-149 est ajoutée dans Réglages');
   assert.deepEqual(erreurs,[]);
  }finally{await nav.close();}
 });

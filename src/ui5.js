@@ -5,8 +5,8 @@
  * vient d'écrire (un INSTANTANÉ), dessine Signal (src/signal-rendu.js) et, quand on clique dessus, CLIQUE le bouton
  * d'origine du panneau (`data-act="legacy:<id>"`). Conséquences voulues :
  *   - aucune commande ni aucun export de plus ou de moins : c'est le même gestionnaire qui répond ;
- *   - AUCUN message au service worker depuis ce fichier (un essai le vérifie sur le source) ; il écrit seulement son propre choix
- *     d'interface (`banane51Interface`) dans chrome.storage.local, et demande la taille de sa fenêtre à chrome.windows ;
+ *   - aucun message métier nouveau : les autres clics restent ceux du panneau d'origine. CH-149 ajoute seulement les deux lectures/actions
+ *     `reinitialiser-etat` et `reinitialiser-extension` dans Réglages ; les choix d'interface restent dans chrome.storage.local ;
  *   - D-250 : « Signal » (src/signal-rendu.js) est la présentation du départ (src/ui5-variante.js). Le panneau d'avant n'est plus proposé : il reste
  *     le moteur caché de la page. Ses « détails techniques » (santé de la collecte, exports de diagnostic, journal, résumé de la partie) restent
  *     atteignables : la feuille de réglages les montre en déplaçant ses propres éléments dans une couche, puis les remet à leur place.
@@ -25,12 +25,59 @@
   const TAILLE = { signal: [600, 760], mix: [600, 760] };
   const lireVariante = v => ['cadran', 'riche'].includes(v) ? 'mix' : v;
   const rendu = () => variante === 'mix' && root.ArianeMixRendu ? root.ArianeMixRendu : S5;
-  const ui = { last: '', pauseLot: null, q: '', pi: 0, focusQ: false, tiroir: false, couche: null, sel: null, note: '', onglet: null, details: false, stats: false, palette: 'glacier', vueLot: 'instrument' };
+  const ui = { last: '', pauseLot: null, q: '', pi: 0, focusQ: false, tiroir: false, couche: null, sel: null, note: '', onglet: null, details: false, stats: false, palette: 'glacier', vueLot: 'instrument', reinitConfirme: false, reinitEnCours: false, reinitErreur: '' };
   const examines = { lot: null, cles: new Set() };
+  const reinitEtat = { cle: '', quand: 0, enCours: false, valeur: null };
   let variante = defaut, hote = null, gcv2Base = null, secours = false;
   const $ = id => D.getElementById(id);
   const txt = id => { const e = $(id); return e ? String(e.textContent || '').trim() : ''; };
   const visible = id => { const e = $(id); return !!e && !e.hidden; };
+
+  /* CH-149 : la feuille Réglages demande l'état de la remise à zéro au service worker. Le premier rendu reste synchrone :
+   * une activité visible la refuse prudemment ; au repos, le bouton ne disparaît pas en attendant la réponse. */
+  const ECHO_ACTIF_REINIT = ['STARTING', 'RUNNING', 'PAUSED', 'PAUSED_ADAPTER_UNRESPONSIVE'];
+  function occupeReinit(s) {
+    const b = s?.batch, p = s?.passeDifferes;
+    return ['RUNNING', 'MANUAL_TAKEOVER'].includes(b?.state) || !!s?.busy || !!s?.task
+      || ECHO_ACTIF_REINIT.includes(s?.native?.status) || ECHO_ACTIF_REINIT.includes(s?.manual?.status)
+      || ['lot', 'passe', 'relecture', 'changement'].includes(s?.fileParties?.etat)
+      || ['calcul', 'ecriture'].includes(p?.etat) || ['preparation', 'en-cours', 'en-pause'].includes(s?.relecture?.etat) || visible('relecture-arreter')
+      || $('goto-cut-etat')?.dataset?.etat === 'en-cours'
+      || !!(s?.intent || s?.reconcileRequired || s?.applied || (s?.deferIntent && s?.deferIntent.phase !== 'FINALIZED'));
+  }
+  const defautReinit = s => { const occupe = occupeReinit(s); return { actif: !occupe, refus: occupe ? 'Une activité ou une écriture incertaine est en cours.' : null }; };
+  const cleReinit = s => JSON.stringify([s?.batch?.id, s?.batch?.state, !!s?.busy, !!s?.task, s?.native?.status, s?.manual?.status,
+    s?.fileParties?.etat, s?.passeDifferes?.etat, !!s?.intent, !!s?.reconcileRequired, !!s?.applied, s?.deferIntent?.phase,
+    s?.relecture?.etat, visible('relecture-arreter'), $('goto-cut-etat')?.dataset?.etat]);
+  async function appelerReinit(action, args = {}) {
+    const r = await root.chrome?.runtime?.sendMessage?.({ kind: 'panel', action, args });
+    if (!r) throw Error('Ariane ne répond pas. Rouvre la fenêtre.');
+    if (r.error) throw Error(r.error);
+    return r.result;
+  }
+  async function relireReinit(attendue) {
+    reinitEtat.enCours = true;
+    try {
+      const r = await appelerReinit('reinitialiser-etat');
+      if (attendue === reinitEtat.cle) {
+        if (r && typeof r.permis === 'boolean') reinitEtat.valeur = { actif: r.permis, refus: r.permis ? null : String(r.refus || 'Réinitialisation indisponible pour l’instant.') };
+        /* Une ancienne maquette peut répondre {} : garder le défaut synchrone, mais ne jamais relire en boucle. */
+        reinitEtat.quand = Date.now();
+      }
+    } catch (e) {
+      if (attendue === reinitEtat.cle) {
+        reinitEtat.valeur = { actif: false, refus: `État de la réinitialisation indisponible : ${String(e?.message || e).slice(0, 160)}` };
+        reinitEtat.quand = Date.now();
+      }
+    } finally { reinitEtat.enCours = false; maj(false); }
+  }
+  function reinitDuPanneau(s) {
+    const cle = cleReinit(s);
+    if (cle !== reinitEtat.cle) { reinitEtat.cle = cle; reinitEtat.valeur = defautReinit(s); reinitEtat.quand = 0; }
+    if (!reinitEtat.valeur) reinitEtat.valeur = defautReinit(s);
+    if (ui.couche === 'reglages' && !reinitEtat.enCours && Date.now() - reinitEtat.quand >= 1000) void relireReinit(cle);
+    return { ...reinitEtat.valeur };
+  }
 
   /* ---------------------------------------------------------------- instantané */
   const ORDRE_ORBITE = ['start-batch', 'resume', 'retry', 'manual-takeover', 'manual-completion', 'close-uncertain', 'pause', 'export-tout', 'new-batch', 'relecture-acquitter', 'relecture-arreter', 'relecture-lancer', 'passe-differes-lancer', 'explicit-skip', 'stop'];
@@ -313,7 +360,7 @@
       relecture: { ligne: visible('relecture-ligne') ? txt('relecture-ligne') : '', actif: visible('relecture-arreter'), interrompue: visible('relecture-interrompue') ? txt('relecture-interrompue') : '' },
       echo: { visites: txt('native-count') || '0', corriges: echo.corriges, valides: echo.valides },
       echoRows: echo.echoRows,
-      reglages: rg, relectureModifiable: visible('relecture-choix-champ'), exportTexte: txt('export-status'),
+      reglages: rg, relectureModifiable: visible('relecture-choix-champ'), exportTexte: txt('export-status'), reinit: reinitDuPanneau(s),
       onglets: n ? [...(n.options || [])].filter(o => o.value).map(o => ({ valeur: o.value, texte: o.textContent })) : [], ongletChoisi: n?.value || '', connexionNote: txt('tabs-note'),
       gcv2: gcv2Base,
       file: fileDuPanneau(s),
@@ -560,11 +607,17 @@
       if (!go || !cible || go.disabled || !Number.isInteger(part) || !Number.isInteger(cut)) { noter('Ouverture indisponible pour l’instant.'); return; }
       cible.value = `${part}:${cut}`; cliquer('correction-ouvrir'); noter(`Ouverture du cut ${cut} dans ESV…`); return;
     }
-    else if (quoi === 'palette' || quoi === 'reglages' || quoi === 'esv' || quoi === 'file' || quoi === 'menu') { ui.couche = ui.couche === quoi ? null : quoi; ui.q = ''; ui.pi = 0; ui.focusQ = ui.couche === 'palette'; }
-    else if (quoi === 'fermer') { ui.couche = null; ui.q = ''; ui.pi = 0; ui.focusQ = false; }
-    else if (quoi === 'tech') { ui.couche = null; ouvrirTech(); }
+    else if (quoi === 'reinit-demander') { const r = reinitDuPanneau(root.ArianePanel.state() || {}); if (r.actif && !ui.reinitEnCours) { ui.reinitConfirme = true; ui.reinitErreur = ''; } }
+    else if (quoi === 'reinit-annuler') { if (!ui.reinitEnCours) { ui.reinitConfirme = false; ui.reinitErreur = ''; } }
+    else if (quoi === 'reinit-confirmer') { void confirmerReinit(); return; }
+    else if (quoi === 'palette' || quoi === 'reglages' || quoi === 'esv' || quoi === 'file' || quoi === 'menu') {
+      ui.couche = ui.couche === quoi ? null : quoi; ui.q = ''; ui.pi = 0; ui.focusQ = ui.couche === 'palette';
+      if (ui.couche !== 'reglages') { ui.reinitConfirme = false; ui.reinitErreur = ''; }
+    }
+    else if (quoi === 'fermer') { ui.couche = null; ui.q = ''; ui.pi = 0; ui.focusQ = false; ui.reinitConfirme = false; ui.reinitErreur = ''; }
+    else if (quoi === 'tech') { ui.couche = null; ui.reinitConfirme = false; ui.reinitErreur = ''; ouvrirTech(); }
     /* CH-111 : la feuille d'appairage de la télécommande (src/telecommande-panneau.js), posée à part ; Réglages se referme. */
-    else if (quoi === 'telecommande') { ui.couche = null; void root.ArianeTelecommandePanneau?.ouvrir?.(); }
+    else if (quoi === 'telecommande') { ui.couche = null; ui.reinitConfirme = false; ui.reinitErreur = ''; void root.ArianeTelecommandePanneau?.ouvrir?.(); }
     else if (quoi === 'examiner') { if (examines.cles.has(v)) examines.cles.delete(v); else examines.cles.add(v); void garderExamines(); }
     else if (quoi === 'ouvrir') {
       /* Revue T21 (D5) : un différé ou un vert appartient au LOT ; ESV peut afficher une autre partie (le moteur refuse alors, WRONG_PART, et le dit). */
@@ -583,6 +636,18 @@
       else choisir(nom, val);
     }
     maj(true);
+  }
+  async function confirmerReinit() {
+    const r = reinitDuPanneau(root.ArianePanel.state() || {});
+    if (!ui.reinitConfirme || !r.actif || ui.reinitEnCours) return;
+    ui.reinitEnCours = true; ui.reinitErreur = ''; maj(true);
+    try {
+      const resultat = await appelerReinit('reinitialiser-extension', { confirme: true });
+      if (resultat?.reinitialise !== true) throw Error('La remise à zéro n’a pas été confirmée par Ariane.');
+      root.location?.reload?.();
+    } catch (e) {
+      ui.reinitEnCours = false; ui.reinitErreur = String(e?.message || e).slice(0, 300); reinitEtat.quand = 0; maj(true);
+    }
   }
 
   /* ---------------------------------------------------------------- actions */

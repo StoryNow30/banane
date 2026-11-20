@@ -608,7 +608,15 @@
     const L = H.slice(0, 12).map(p => `<div class="sg-hist"><span class="sg-mono">${esc(p.part ?? '—')}</span><span>${esc(FIN[p.fin] || p.fin || '')}${p.cibles != null ? ` · ${esc(p.cibles)} ciblés` : ''}${p.poses != null ? ` · ${esc(p.poses)} posés` : ''}${p.differes != null ? ` · ${esc(p.differes)} à poser` : ''}${Number.isInteger(p.sautes) ? ` · ${esc(p.sautes)} ${pl(p.sautes, 'sauté')}` : ''}${p.depart?.ignores ? ` · ${esc(p.depart.ignores)} sautés au départ` : ''}</span><small>${esc(jour(p.startedAt))}</small></div>`).join('');
     return `<div class="sg-reg sg-reg-bloc"><span class="sg-lib"><span>Parties traitées</span><small>Gardées même après un vidage du cache</small></span></div>${L || '<div class="sg-vide sg-petit">Aucune partie enregistrée pour l’instant.</div>'}`;
   }
-  function feuilleHtml(snap) {
+  /* CH-149 : la remise à zéro complète reste dans une zone séparée, avec une confirmation dessinée (jamais window.confirm). */
+  function reinitialisationHtml(snap, u) {
+    const r = snap.reinit || {}, actif = r.actif === true, enCours = u.reinitEnCours === true || r.enCours === true;
+    const confirme = (u.reinitConfirme === true || r.confirme === true) && actif, erreur = u.reinitErreur || r.erreur || '';
+    const explication = 'Remise à zéro complète : efface le cache, l’historique et tous les réglages locaux, comme à la première ouverture.';
+    if (confirme) return `<div class="sg-danger-zone sg-reinit" data-k="reinit-confirmation"><div class="sg-reinit-texte"><span role="alert">Tout ce qui n’a pas été téléchargé et tous tes réglages locaux seront effacés.</span>${erreur ? `<small role="alert">${esc(erreur)}</small>` : ''}</div><div class="sg-reinit-actions"><button type="button" data-act="sg:reinit-confirmer"${enCours ? ' disabled' : ''}>Confirmer la remise à zéro</button><button type="button" class="sg-annuler" data-act="sg:reinit-annuler"${enCours ? ' disabled' : ''}>Annuler</button></div></div>`;
+    return `<div class="sg-danger-zone sg-reinit" data-k="reinit-normal"><div class="sg-reinit-texte"><span>${esc(explication)}${!actif && r.refus ? ` ${esc(r.refus)}` : ''}</span>${erreur ? `<small role="alert">${esc(erreur)}</small>` : ''}</div><div class="sg-reinit-actions"><button type="button" data-act="sg:reinit-demander"${actif && !enCours ? '' : ' disabled'}>Réinitialiser l’extension…</button></div></div>`;
+  }
+  function feuilleHtml(snap, u = {}) {
     const r = snap.reglages || {}, g = snap.sig || {};
     const sel = (nom, valeurs, courant, aide) => `<select data-sel="${esc(nom)}" aria-label="${esc(aide)}">${valeurs.map(([v, l]) => `<option value="${esc(v)}"${v === courant ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select>`;
     const seg = (nom, valeurs, courant, aide) => `<span class="sg-seg" role="group" aria-label="${esc(aide)}"><i class="sg-pouce" aria-hidden="true"></i>${valeurs.map(([v, l]) => `<button type="button" aria-pressed="${v === courant}" data-act="sg:choix:${esc(nom)}:${esc(v)}">${esc(l)}</button>`).join('')}</span>`;
@@ -628,7 +636,7 @@
  ${r.ajustement === null || r.ajustement === undefined ? '' : ligne('Hauteur des poses', 'Ajuster la hauteur des poses sur le dessus du rail · allumé par défaut (D-367), vaut dès le cut suivant', seg('ajustement', [['non', 'Coupé'], ['oui', 'Allumé']], r.ajustement ? 'oui' : 'non', 'À l’essai : ajuster la hauteur des poses sur le dessus du rail'))}
  ${snap.gcv2 ? `<div class="sg-reg"><span class="sg-lib"><span>Exemples d’apprentissage</span><small>cuts corrigés dans les Échos archivées, tous projets · au ${esc(snap.gcv2.date)} · ne mesure aucune qualité</small></span><span class="sg-mono">${esc(snap.gcv2.total)}</span></div>` : ''}
  ${historiqueHtml(g.historique)}
- <div class="sg-bas"><button type="button" class="sg-lien" data-act="sg:tech">${ic('liste')}<span>Détails techniques : santé de la collecte, exports de diagnostic, journal, résumé de la partie</span></button>${snap.exportTexte ? `<p class="sg-meta">${esc(snap.exportTexte)}</p>` : ''}${discard ? `<div class="sg-danger-zone"><span>Séance Écho : supprime ses données, avec confirmation.</span><button type="button" data-act="legacy:native-discard"${discard.actif ? '' : ' disabled'}>Abandonner la séance Écho…</button></div>` : ''}</div></div></div>`;
+ <div class="sg-bas"><button type="button" class="sg-lien" data-act="sg:tech">${ic('liste')}<span>Détails techniques : santé de la collecte, exports de diagnostic, journal, résumé de la partie</span></button>${snap.exportTexte ? `<p class="sg-meta">${esc(snap.exportTexte)}</p>` : ''}${discard ? `<div class="sg-danger-zone"><span>Séance Écho : supprime ses données, avec confirmation.</span><button type="button" data-act="legacy:native-discard"${discard.actif ? '' : ' disabled'}>Abandonner la séance Écho…</button></div>` : ''}${reinitialisationHtml(snap, u)}</div></div></div>`;
   }
 
   /* ------------------------------------------------------------------ écran */
@@ -943,7 +951,7 @@
   }
   function rendre(snap, ui) {
     const s = snap || {}, u = ui || {}, m = modele(s, u);
-    const couches = boite => u.couche === 'palette' ? paletteHtml(s, u) : u.couche === 'reglages' ? feuilleHtml(s) : u.couche === 'esv' ? esvHtml(s) : u.couche === 'menu' ? menuHtml(s, m) : boite && u.couche === 'file' ? boiteFileHtml(s) : '';
+    const couches = boite => u.couche === 'palette' ? paletteHtml(s, u) : u.couche === 'reglages' ? feuilleHtml(s, u) : u.couche === 'esv' ? esvHtml(s) : u.couche === 'menu' ? menuHtml(s, m) : boite && u.couche === 'file' ? boiteFileHtml(s) : '';
     const fen = (activite, etat, t, corps, pied, extra = '', vue = '') => `<div class="sg-fen" data-activite="${activite}" data-etat="${esc(etat)}" data-teinte="${t}"${vue ? ` data-vue="${vue}"` : ''}>${barreHtml(s, m, u)}<div class="sg-page">${corps}</div>${pied}${extra}</div>`;
     if (u.onglet === 'correction' && !s.correction) {
       /* L'Aurore sans liste : l'onglet est toujours là (01/11, remarque de l'opérateur « où est le 4e onglet ? »), il dit ce qui le remplit. */

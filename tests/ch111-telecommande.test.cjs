@@ -45,7 +45,7 @@ test('chiffrement : le relais ne voit que le canal et du chiffré ; trafiqué, a
 
 test('ordres : liste fermée, chacun vers l’action du bouton du panneau ; jamais skip, start, retry, goto-cut, écriture',()=>{
  assert.deepEqual({...T.ORDRES},{'lot-pause':'pause','lot-reprendre':'resume','lot-arreter':'stop','relecture-pause':'relecture-pause',
-  'relecture-reprendre':'relecture-reprendre','relecture-arreter':'relecture-arreter','constellation-arreter':'file-arreter'});
+  'relecture-reprendre':'relecture-reprendre','relecture-arreter':'relecture-arreter','constellation-arreter':'file-arreter','reinitialiser-extension':'reinitialiser-extension'});
  assert.ok(Object.isFrozen(T.ORDRES));
  for(const a of Object.values(T.ORDRES))assert.ok(!/skip|start|retry|goto|ecrire|apply|valid|demarrer|manual|close|cancel/.test(a),a);});
 
@@ -87,7 +87,7 @@ test('liste blanche : la vue ne porte que des entiers et des mots fermés, rien 
  assert.deepEqual(v.constellation,{etat:'lot',rang:1,n:5,partie:12});
  assert.deepEqual(v.passe2,{etat:'ecriture',ecrites:3,demandees:9});
  assert.equal(v.activite,'orbite');assert.equal(v.connexion,'prete');assert.equal(v.version,null,'version : mot hors liste fermée, non envoyée');
- assert.deepEqual(v.boutons,{'lot-pause':false/* relecture et deuxième passe vivantes : le panneau ne l'offre pas */,'lot-reprendre':false,'lot-arreter':true,'relecture-pause':false,'relecture-reprendre':true,'relecture-arreter':true,'constellation-arreter':true});});
+ assert.deepEqual(v.boutons,{'lot-pause':false/* relecture et deuxième passe vivantes : le panneau ne l'offre pas */,'lot-reprendre':false,'lot-arreter':true,'relecture-pause':false,'relecture-reprendre':true,'relecture-arreter':true,'constellation-arreter':true,'reinitialiser-extension':false});});
 
 test('liste blanche : états d’alerte (mots fermés), valeurs inconnues ramenées à « autre », entiers hors bornes à null',()=>{
  const base=etatCharge(),cas=[['PAUSED_ADAPTER_UNRESPONSIVE',null,'esv-muet'],['PAUSED_UNRESOLVED_RAIL',null,'rail-non-resolu'],['PAUSED','low-confidence','faible-confiance'],

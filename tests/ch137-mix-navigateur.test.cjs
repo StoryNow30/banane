@@ -45,7 +45,8 @@ test('CH-137 : le pied « Vider le cache » de Mix envoie le même message que l
    if(variante==='signal'){await page.evaluate(()=>window.ArianeUi5.agir('sg:menu'));await page.waitForTimeout(200);}
    const avant=(await page.evaluate(()=>window.__appels)).length,actif=await page.$eval(sel,e=>!e.disabled);
    if(actif){await page.click(sel);await page.waitForTimeout(400);}
-   res[variante]={actif,appels:(await page.evaluate(()=>window.__appels)).slice(avant).filter(a=>a!=='view'&&a!=='list-tabs')};
+   /* `fiches-depart` est relu périodiquement toutes les 5 s par panel.js : il ne décrit pas l'action du bouton comparée ici. */
+   res[variante]={actif,appels:(await page.evaluate(()=>window.__appels)).slice(avant).filter(a=>a!=='view'&&a!=='list-tabs'&&a!=='fiches-depart')};
    assert.deepEqual(erreurs,[],variante);await ctx.close();
   }
   assert.ok(res.signal.actif&&res.signal.appels.length>0,'le clic envoie bien un message (sinon l’essai ne prouverait rien)');assert.equal(res.mix.actif,res.signal.actif,'même garde');assert.deepEqual(res.mix.appels,res.signal.appels,'mêmes messages');
