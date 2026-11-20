@@ -62,27 +62,36 @@ Direction (c) de D-357, ouverte parce que A4 a établi que la relecture active (
   - en Constellation, utiliser directement `suivant-dernier` quand Ariane sait qu'elle a laissé des différés (évite les **8 refus sur 8 parties à différés** vus le 19/11 matin et les 6 sur 9 du 18/11, ~10 s chacun) ;
   - passer `pilote.modeRapide` de `'echantillon50'` à `'toujours'` : sur le 19/11 matin, les 124 captures témoins en mode `reference` (2,16 %) ont pris **3 921 ms en médiane (527,8 s = 8,8 min)** contre **180 ms** pour les 5 619 captures `rapide`, pour exactement les mêmes points LiDAR (**−8,4 min**, 0 risque géométrique) ;
   - dans `poserPuisVerifier` (relecture et 2e passe), remplacer le sondage lent `select()` (`80 ms × 3`) en mode `tout-recentre` (**695 ms** en médiane sur 507 poses = **352,6 s**, contre 5 ms dans le lot) par `selectImage()` + `gauche-recentre` (rail droit déjà centré posé en direct dans le canevas visible, puis rail gauche recentré à l'image : **~45 ms**, **−5,4 min**, 0 clic hors canevas).
-- **D5 — Fiabiliser `deplacerVue` et supprimer l'aller-retour de `preVol` (défaut critique découvert sur le lot `4972d7b1` de la partie 1, cut 35, le 19/11 après-midi)** :
-  - **Constat mesuré (ÉTABLI)** : au cut 1/35 (`ndcAvant = [-1.023, 0.037]`), le pré-vol `amenerDansLaVue(..., essai: true)` a réussi en 1 734 ms (`gain = 1,5`, `ndcApres = [-0.69, 0.037]`) puis a remis la vue ; mais lors du second glisser identique dans `apply()`, la caméra d'ESV a violemment dérivé en Y (`ndcApres = [0.337, -10.32]`, `gain = 38,984`) **après** que le rail gauche avait déjà été cliqué et posé, ce qui a jeté `Vue ESV non amenée sur la cible du rail droit (gestes-epuises) : le rail gauche est déjà posé, rien n'est validé. État à réconcilier` et **arrêté tout le lot en `ERROR`** au bout de 23 poses (obligeant l'opérateur à relancer un second lot `ddc24bd4`).
+- **D5 — Fiabiliser `deplacerVue` et supprimer l'aller-retour de `preVol` (défaut critique découvert sur le premier lot de la partie 1, cut 35, le 19/11 après-midi)** :
+  - **Constat mesuré (ÉTABLI)** : au cut 1/35 (`ndcAvant = [-1.023, 0.037]`), le pré-vol `amenerDansLaVue(..., essai: true)` a réussi en 1 734 ms (`gain = 1,5`, `ndcApres = [-0.69, 0.037]`) puis a remis la vue ; mais lors du second glisser identique dans `apply()`, la caméra d'ESV a violemment dérivé en Y (`ndcApres = [0.337, -10.32]`, `gain = 38,984`) **après** que le rail gauche avait déjà été cliqué et posé, ce qui a jeté `Vue ESV non amenée sur la cible du rail droit (gestes-epuises) : le rail gauche est déjà posé, rien n'est validé. État à réconcilier` et **arrêté tout le lot en `ERROR`** au bout de 23 poses (obligeant l'opérateur à relancer un second lot sur la partie 1).
   - **Correctif double** : (1) supprimer le pré-vol séparé (`preVol: false`), qui double tous les gestes de caméra et a coûté **179,9 s** (50 appels) le matin et **44,4 s** (25 appels) sur la partie 1 ; (2) dans `apply()`, amener la vue ou traiter d'abord le rail hors-vue **avant** de cliquer le premier rail, et détecter immédiatement toute dérive orthogonale anormale d'un glisser (`|ΔndcY| > 0,5` pour `py = 0`) pour refaire un `select(side)` propre ou différer le cut **sans qu'aucun rail n'ait été déplacé** (0 lot arrêté en `ERROR`).
-- **D6 — Débloquer la 2e passe des différés sur les cibles hors-vue et le décompte du plafond de 10** :
-  - **Constat mesuré (ÉTABLI)** : le 19/11 matin en partie 34 (lot `48fd632d`, 36 différés), la 2e passe a décidé **22 poses valides**, a coupé sa liste aux 10 premières avant la boucle (`background.js` l. 2399), et a essuyé **10 refus consécutifs avant pose** (`cible hors de la vue : cette passe ne déplace pas la vue`, l. 2482) → **0 cut écrit sur 22 décidés** !
-  - **Correctif** : autoriser `deplacerVue` dans `passeDiffPoser` (avec les mêmes gardes et la même relecture à 1 mm qu'en 1re passe, où 6 out-of-view ont encore été écrits avec succès en 2e passe sur la partie 1 quand ils tenaient dans la vue) et compter le plafond `ecritureMax: 10` uniquement sur les cuts réellement **écrits** (`resultat === 'ecrit'`), jamais sur les refus avant pose (D-363).
+- **D6 — Débloquer la 2e passe des différés sur les cibles hors-vue, le décompte du plafond de 10 et les restes d'ancre** :
+  - **Constat mesuré (ÉTABLI)** : le 19/11 matin sur le second lot de la partie 34 (36 différés), la 2e passe a décidé **22 poses valides**, a coupé sa liste aux 10 premières avant la boucle (`background.js` l. 2399), et a essuyé **10 refus consécutifs avant pose** (`cible hors de la vue : cette passe ne déplace pas la vue`, l. 2482) → **0 cut écrit sur 22 décidés** ! En outre, sur le second lot de la partie 1 (31 différés), **11 différés refusés par l'ancre N** (`defer:ancre`) ont été omis de la 2e passe (`differes: 20`) parce que `l1ResteOter` (l. 2284) tourne avant `ancreCommande` (l. 1808).
+  - **Correctif** : autoriser `deplacerVue` dans `passeDiffPoser` (avec les mêmes gardes et la même relecture à 1 mm qu'en 1re passe), compter le plafond `ecritureMax: 10` uniquement sur les cuts réellement **écrits** (`resultat === 'ecrit'`), jamais sur les refus avant pose (D-363), et conserver dans `l1Restes` les cuts transformés en différés par `ancreCommande`.
 
-### Chantiers inscrits au programme d'Ariane 6 par D-380 (règle précise validée sur chaque ticket)
+### Chantiers inscrits au programme d'Ariane 6 par D-380 et D-381
+- **Bouton « Réinitialiser l'extension » dans les Réglages (CH-149, D-381, validé par l'opérateur)** : remettre intégralement l'extension dans l'état de sa première ouverture (`IndexedDB` `clouds`/`events`/`records` + index, `chrome.storage.local`, `chrome.storage.session`, liaison télécommande, bandeau ESV et mémoire vive du service worker, puis rechargement du panneau sur Glacier sombre avec le bandeau « Réglages neufs sur ce poste »), accessible en Glacier, Mix et Télécommande, avec confirmation en deux clics et garde stricte interdisant la remise à zéro pendant toute activité ou écriture incertaine.
 - **Plafond de la deuxième passe** (aujourd'hui 10 écritures par lot, D-259) : mesurer et proposer son relèvement ou son conditionnement à la sûreté du motif (sur les 12 cuts écrits par la 2e passe le 19/11 matin et revus en Écho : **10 validés par l'opérateur** dont 5 sans retouche et 5 retouchés de 1,6 à 4,8 mm seulement, **0 mauvaise voie**, et **2 passés en SKIP** par l'opérateur sur des coupes sans rail lisible : 29/8419 et 31/2204).
 - **Règle SKIP bornée** (D-319, D-320) : définir les cas stricts (comme les coupes 29/8419 et 31/2204 passées en SKIP en Écho) ou le maintien de l'interdiction avant toute écriture de SKIP.
 - **Panneau latéral intégré de Chrome** (`sidePanel`, D-272) : sortir de la fenêtre popup pour fondre la barre de fenêtre.
 - **Réglages d'un poste à l'autre** : synchronisation (`chrome.storage.sync`) ou export et import de profil.
 - **Banc de rejeu complet** (D-273).
 
-## 5. Le calendrier, avec le passage de la main
-| Semaine | OpenCode | Intégrateur (Claude, puis OpenCode à l'étape 3) |
+## 5. Ordonnancement d'exécution des chantiers (D-381, validé le 20/11)
+| Ticket | Lot / Axe | Objet |
 |---|---|---|
-| 1 (dès le VPS prêt) | CH-131 : refabriquer la Vision 20 à l'identique | Vision 21 ; tickets A1 à A4 |
-| 2 | A1, A2 (scripts, aucun code d'Ariane) | Relit, juge, présente A1 à l'opérateur |
-| 3 à 4 | A3, A4 ; intégration de la Vision 22 sous relecture (étape 3) | Lot B (relu par le modèle le plus fort) |
-| 5 et suite | Lot C, un levier à la fois ; la main entière à l'étape 4 (décision de l'opérateur) | Relecture à la demande |
+| **CH-146** | B1 | Un seul code de décision partagé entre `tools/banc-differes.cjs` et `background.js` (**0 décision changée**) |
+| **CH-147** | B2 | Accélération géométrique au bit près : cache V4.6 par capture + élagage CH-065 sur `src/geometry.js` + `WeakMap` dans `src/placement-convention.js` (**0 bit changé**) |
+| **CH-148** | B3 | Allègement IPC & stockage : capture légère en relecture/passe, fin du double `JSON.stringify`, nuage en RAM par cut, pli de `adapter-progress` et espacement de `reprisePoser` |
+| **CH-149** | Réglages | Bouton « Réinitialiser l'extension » comme à la première ouverture (Glacier, Mix, Télécommande), avec garde d'inactivité et d'incertitude |
+| **CH-150** | D5 + D6 | Suppression de `preVol`, sécurisation de `deplacerVue` avant tout clic de rail (correctif cut 1/35), `deplacerVue` en 2e passe, plafond de 10 sur les seuls écrits et maintien des `defer:ancre` dans `l1Restes` |
+| **CH-151** | D4 + D3 | `modeRapide: 'toujours'`, `selectImage` + `gauche-recentre` en relecture/passe, cut déjà `valid` inchangé sans attente de 6 s (cut 2475), `suivant-dernier` direct avec différés |
+| **CH-152** | D1 + D2 | Filtre des visites de relecture sans correction via `liste-memoire.js` + signaux du lot (`garde-voie`), et séparation sentinelle S1 / confiance A* |
+| **CH-153** | C1 + C0 | Pool et graines de `pairesRecentrees` autour de l'axe (`gA`) + `voieListe` + `garde-voie` |
+| **CH-154** | C2 + C4 | Choix de la voie par l'axe en aiguillage et reprise `N+` sur les refus d'ancre |
+| **CH-155** | C3 | Fenêtre de `Conv.bandOffsets` centrée sur la pose candidate + travers départagé par l'axe + évaluation de `conventionPlafond: 'vertical'` |
+| **CH-156** | C5 | Sens de l'ancre par `TrajAzimuth` sur parties rectilignes + garde de courbure longitudinale sur 5 coupes |
+| **CH-157** | C6 | Réentraînement complet de la GCV2 sur les 6 956 corrigés / 18 548 apprenables avec le trait `ecartAxeMm` |
 
 ## 6. Ce que l'opérateur a décidé pour lancer (19/11, D-378)
 1. Plan et ordre **validés tels quels** (A → B → C → D).
