@@ -7,7 +7,7 @@
  * ici, et ne citent que des numéros.
  *
  * Pouvoir : le rendu peut dessiner d'autres boutons que ceux du téléphone. `filtrer` retire du HTML tout bouton dont l'action n'est ni une navigation
- * locale (onglets, tiroir, détails, menu) ni un des 7 ordres de CH-111 OFFERT par Ariane à cet instant (`vue.boutons`), et ôte l'action des autres
+ * locale (onglets, tiroir, détails, menu) ni un des ordres OFFERTS par Ariane à cet instant (les 7 ordres de CH-111 et, depuis CH-149, la remise à zéro confirmée) (`vue.boutons`), et ôte l'action des autres
  * éléments. `ordreDe` traduit l'action d'un bouton en ordre ; la page n'envoie rien d'autre, et le service worker garde sa liste fermée et ses refus.
  * Jamais SKIP, jamais une validation, une pose, un départ ni une ouverture de cut dans ESV depuis le téléphone. */
 (function (root, factory) {
@@ -15,18 +15,19 @@
   if (typeof module === 'object' && module.exports) module.exports = api; else root.ArianeTelecommandeInstantane = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
-  const SCHEMA = 2;
+  const SCHEMA = 3;
   /* Action d'un bouton du rendu -> ordre de la télécommande (liste fermée de src/telecommande.js `ORDRES`). */
   const ACTES = Object.freeze({
     'pause': 'lot-pause', 'legacy:pause': 'lot-pause', 'legacy:resume': 'lot-reprendre', 'legacy:stop': 'lot-arreter',
     'legacy:relecture-pause': 'relecture-pause', 'legacy:relecture-reprendre': 'relecture-reprendre',
     'legacy:relecture-arreter': 'relecture-arreter', 'legacy:relecture-arreter-pause': 'relecture-arreter',
-    'legacy:file-secondaire': 'constellation-arreter' });
+    'legacy:file-secondaire': 'constellation-arreter', 'sg:reinit-confirmer': 'reinitialiser-extension' });
   /* Navigation locale du téléphone : ne part jamais vers Ariane. */
   /* `sg:stats` : le bilan et les départs des parties, derrière l'icône d'en-tête de la Constellation (CH-129, D-362). */
   /* CH-134 : `sg:vue-lot` (la vue « fil » du lot) n'y est pas : la vue réduite ne porte pas la liste des derniers cuts (`fil: []` ci-dessous), le
    * téléphone n'aurait qu'un fil vide à montrer ; le bouton est donc retiré par `filtrer` et le téléphone garde la vue instrument. */
-  const NAVIGATION = Object.freeze(['mode:automatic', 'mode:native', 'sg:onglet-file', 'sg:onglet-correction', 'sg:tiroir', 'sg:details', 'sg:fermer', 'sg:menu', 'sg:stats']);
+  const NAVIGATION = Object.freeze(['mode:automatic', 'mode:native', 'sg:onglet-file', 'sg:onglet-correction', 'sg:tiroir', 'sg:details', 'sg:fermer', 'sg:menu', 'sg:stats',
+    'sg:reglages', 'sg:reinit-demander', 'sg:reinit-annuler']);
   const ordreDe = (act, vue) => { const o = Object.hasOwn(ACTES, act) ? ACTES[act] : null; return o && vue?.boutons?.[o] === true ? o : null; };
   const permis = (act, vue) => NAVIGATION.includes(act) || ordreDe(act, vue) !== null;
   /* Le HTML du rendu, sans les actions non permises : bouton retiré, autre élément privé de son action. */
@@ -48,6 +49,9 @@
       : al === 'repris-main' ? `Le cut ${cut} t’est rendu : corrige-le dans ESV, sur l’ordinateur.`
       : al === 'erreur' ? 'Le lot s’est arrêté sur une erreur. Regarde le panneau sur l’ordinateur.' : 'Le lot attend ta décision, sur l’ordinateur.'; };
   const CONNEXION = { prete: 'ready', absente: 'no-tab', muette: 'unavailable', reconnexion: 'reconnecting' };
+  const REINIT_REFUS = { lot: 'Un lot Orbite est en cours.', echo: 'Écho est actif.', correction: 'Une session Mes corrections est active.',
+    incertain: 'Un résultat ou une écriture incertaine reste à contrôler dans ESV.', occupe: 'Ariane travaille encore : termine l’activité en cours.',
+    autre: 'Réinitialisation indisponible pour l’instant.' };
   const ECHO_ETAT = { demarrage: 'Démarrage de la collecte', cours: 'Collecte en cours', pause: 'Collecte en pause', muet: 'ESV ne répond plus', terminee: 'Séance terminée', 'a-terminer': 'Séance à terminer' };
   const FILE_ETAT = { lot: ['lot en cours', 'Pose de la partie'], passe: ['rattrapage', 'Rattrapage de la partie'], relecture: ['relecture', 'Relecture de la partie'], changement: ['passage', 'Passage à la partie suivante'],
     fin: ['terminée', 'Toutes les parties prévues sont faites'], arret: ['arrêtée', 'La Constellation s’est arrêtée'] };
@@ -113,6 +117,7 @@
       lot: { etat: '', finPartie: '' }, relPause, relChiffres, relecture: { ligne: relPause?.ligne || '', actif: !!relPause?.arreter, interrompue: '' },
       echo: { visites: String(E.vus ?? 0), corriges: E.corriges ?? 0, valides: E.valides ?? 0 }, echoRows: [],
       reglages: {}, relectureModifiable: false, exportTexte: 'sur l’ordinateur', onglets: [], ongletChoisi: '', connexionNote: '', gcv2: null,
+      reinit: { actif: v.reinit?.actif === true, refus: v.reinit?.actif === true ? null : REINIT_REFUS[v.reinit?.refus] || REINIT_REFUS.autre },
       file, correction, ar,
       sig: { activite, statuts: {}, allure: {}, echo: { mediane: null, marques: [] }, connexion: { statut: connexion, tabId: null, nomme: connexion === 'ready', reconnect: null },
         onglet: connexion === 'ready' ? (esv.partie != null ? `ESV · partie ${esv.partie}` : 'ESV') : '', historique: null, goto: { present: false, actif: false, raison: '', etat: '', texte: '' },

@@ -866,3 +866,11 @@ body.ui5:has(#ui5.u-signal[data-palette="signal"]:not([data-theme="clair"])){bac
 @media (max-width:339px){#ui5.u-signal .sg-fen .sg-tu-etat .sg-phrase{font-size:17px}}
 /* les actions : une bande collée en bas */
 #ui5.u-signal .sg-fen[data-activite="orbite"][data-vue="fil"] .sg-actions{border-top:1px solid var(--trait)}
+
+/* CH-149 : la remise à zéro et ses deux boutons restent dans la feuille, de 320 à 720 px, sans texte tronqué ni collision. */
+#ui5.u-signal .sg-danger-zone.sg-reinit{flex-direction:column;align-items:stretch;gap:12px;overflow:hidden}
+#ui5.u-signal .sg-reinit-texte{display:flex;flex-direction:column;gap:6px;min-width:0;overflow-wrap:anywhere;line-height:1.45}
+#ui5.u-signal .sg-reinit-texte small{color:var(--crit-tx)}
+#ui5.u-signal .sg-reinit-actions{display:flex;flex-wrap:wrap;gap:8px;min-width:0;max-width:100%}
+#ui5.u-signal .sg-reinit-actions button{flex:1 1 180px;max-width:100%;height:auto;min-height:36px;padding:8px 13px;white-space:normal;line-height:1.25}
+#ui5.u-signal .sg-reinit-actions .sg-annuler{color:var(--tx2)}

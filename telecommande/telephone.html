@@ -76,7 +76,7 @@ button{background:none;border:0;cursor:pointer}
 <div class="voile" id="menu" hidden><div class="feuille" role="dialog" aria-modal="true" aria-label="Télécommande">
  <p>Télécommande</p><small>Ariane travaille sur l’ordinateur. D’ici : suivre, mettre en pause, reprendre, arrêter. Rien n’est posé ni validé depuis le téléphone.</small>
  <div class="ligne"><span>Liaison</span><b id="m-liaison"></b></div><div class="ligne"><span>Dernier état</span><b id="m-dernier"></b></div><div class="ligne"><span>Page du relais</span><b id="m-page"></b></div>
- <div class="boutons"><button class="pilule danger" id="oublier">Oublier ce téléphone</button><button class="pilule second" id="menu-fermer">Fermer</button></div></div></div>
+ <div class="boutons"><button class="pilule second" id="menu-reglages">Réglages</button><button class="pilule danger" id="oublier">Oublier ce téléphone</button><button class="pilule second" id="menu-fermer">Fermer</button></div></div></div>
 <div class="avis" id="avis" role="status" aria-live="polite"></div>
 
 <script src="/signal-rendu.js"></script>
@@ -110,10 +110,10 @@ function avis(t,ton){const a=$('avis');a.textContent=t;a.dataset.ton=ton||'';a.c
 
 /* ——— Le panneau : l'instantané fabriqué d'après la vue d'Ariane, dessiné par le rendu du panneau, filtré (seuls les onglets et les ordres offerts). */
 const NOM={'lot-pause':'Pause','lot-reprendre':'Reprendre','lot-arreter':'Arrêter le lot','relecture-pause':'Pause de la relecture','relecture-reprendre':'Reprendre la relecture',
- 'relecture-arreter':'Arrêter la relecture','constellation-arreter':'Arrêter la Constellation'};
+ 'relecture-arreter':'Arrêter la relecture','constellation-arreter':'Arrêter la Constellation','reinitialiser-extension':'Remise à zéro'};
 const CONFIRMER={'lot-arreter':['Arrêter le lot ?','Le lot s’arrête après le cut en cours. Il se relance depuis l’ordinateur.'],
  'relecture-arreter':['Arrêter la relecture ?','Les cuts déjà relus restent comme ils sont.'],'constellation-arreter':['Arrêter la Constellation ?','La file de parties s’arrête ; elle se reprend depuis l’ordinateur.']};
-const ui={onglet:null,vue:null,couche:null,tiroir:false,details:false,stats:false,note:''};
+const ui={onglet:null,vue:null,couche:null,tiroir:false,details:false,stats:false,note:'',reinitConfirme:false};
 const clair=()=>window.matchMedia?.('(prefers-color-scheme: light)').matches;
 function horsLigne(){return !Number.isFinite(dernierEtatH)||!arianePresente||Date.now()-dernierEtatH>HORS_LIGNE_MS;}
 function liaison(){return !D?'connexion':!relaisOk&&(ws||dejaOuvert)?'injoignable':!relaisOk?'connexion':horsLigne()?'hors':'direct';}
@@ -129,16 +129,21 @@ function afficher(){const v=dernierEtat||{};if(ui.onglet!=='file')ui.stats=false
  hote.dataset.theme=clair()?'clair':'sombre';if(ui.details)hote.dataset.details='1';else delete hote.dataset.details;
  /* Hors ligne ou en attente d'un accusé : les ordres sont grisés (les onglets restent). */
  const bloque=!!enAttente||horsLigne();
- for(const b of hote.querySelectorAll('button[data-act]')){const o=I.ordreDe(b.dataset.act,v);if(o){b.dataset.ordre=o;b.disabled=bloque;}}}
+ for(const b of hote.querySelectorAll('button[data-act]')){const o=I.ordreDe(b.dataset.act,v);if(o){b.dataset.ordre=o;b.disabled=bloque;}
+  if(b.dataset.act==='sg:reinit-demander'||b.dataset.act==='sg:reinit-confirmer')b.disabled=bloque||v.reinit?.actif!==true;}}
 setInterval(afficher,1000);window.matchMedia?.('(prefers-color-scheme: light)').addEventListener?.('change',afficher);
 hote.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el||el.disabled||el.getAttribute('aria-disabled')==='true')return;const act=el.dataset.act,v=dernierEtat||{};
- if(act==='mode:automatic'||act==='mode:native'){ui.onglet=null;ui.vue=act==='mode:native'?'echo':'orbite';ui.tiroir=false;}
- else if(act==='sg:onglet-file'||act==='sg:onglet-correction'){ui.onglet=act==='sg:onglet-file'?'file':'correction';ui.tiroir=false;}
+ if(act==='mode:automatic'||act==='mode:native'){ui.onglet=null;ui.vue=act==='mode:native'?'echo':'orbite';ui.tiroir=false;ui.reinitConfirme=false;}
+ else if(act==='sg:onglet-file'||act==='sg:onglet-correction'){ui.onglet=act==='sg:onglet-file'?'file':'correction';ui.tiroir=false;ui.reinitConfirme=false;}
  else if(act==='sg:tiroir')ui.tiroir=!ui.tiroir;
  else if(act==='sg:stats')ui.stats=!ui.stats;/* CH-129 : bilan et départs de la Constellation, comme au panneau (src/ui5.js) */
  else if(act==='sg:details')ui.details=!ui.details;
- else if(act==='sg:fermer'){ui.couche=null;ui.tiroir=false;}
- else if(act==='sg:menu')return ouvrirMenu();
+ else if(act==='sg:reglages'){ui.couche='reglages';ui.reinitConfirme=false;}
+ else if(act==='sg:reinit-demander'){if(v.reinit?.actif===true)ui.reinitConfirme=true;}
+ else if(act==='sg:reinit-annuler')ui.reinitConfirme=false;
+ else if(act==='sg:reinit-confirmer'){const o=I.ordreDe(act,v);if(!o)return;ui.reinitConfirme=false;envoyerOrdre(o);return;}
+ else if(act==='sg:fermer'){ui.couche=null;ui.tiroir=false;ui.reinitConfirme=false;}
+ else if(act==='sg:menu'){ui.reinitConfirme=false;return ouvrirMenu();}
  else{const o=I.ordreDe(act,v);if(!o)return;/* jamais : le filtre a retiré ce bouton */if(CONFIRMER[o])confirmer(o);else envoyerOrdre(o);return;}
  afficher();});
 
@@ -147,6 +152,7 @@ function confirmer(k){const [t,s]=CONFIRMER[k];$('conf-titre').textContent=t;$('
 function ouvrirMenu(){const l=liaison();$('m-liaison').textContent={direct:'en direct',hors:'Ariane hors ligne',injoignable:'relais injoignable',connexion:'connexion…'}[l];
  $('m-dernier').textContent=dernierEtatH?heure(dernierEtatH):'—';$('m-page').textContent='schéma '+I.SCHEMA+(dernierEtat&&I.pagePerimee(dernierEtat)?' · à redéployer':'');$('menu').hidden=false;}
 $('menu-fermer').onclick=()=>{$('menu').hidden=true;};
+$('menu-reglages').onclick=()=>{$('menu').hidden=true;ui.couche='reglages';ui.reinitConfirme=false;afficher();};
 function numero(){const n=Math.max((Number(M.get('ariane-n'))||0)+1,Date.now());M.set('ariane-n',String(n));return n;}
 async function envoyerOrdre(k){if(!D||!ws||ws.readyState!==1||enAttente){avis('Ordre non envoyé : pas de liaison avec le relais.','crit');return;}
  const n=numero();enAttente={n,k,minuterie:setTimeout(()=>{if(enAttente?.n===n){enAttente=null;avis('Ariane n’a pas répondu à « '+NOM[k]+' ».','crit');afficher();}},ATTENTE_ACCUSE_MS)};
@@ -156,7 +162,11 @@ const MOTIFS={rejeu:'ordre déjà reçu.',perime:'ordre trop ancien : vérifie q
  'pas-d-onglet-esv':'aucun onglet ESV choisi sur l’ordinateur.','esv-muet':'ESV ne répond pas.','pas-en-pause':'rien n’est en pause.','deja-en-pause':'déjà en pause.','rien-a-reprendre':'rien à reprendre.',
  'deja-arrete':'déjà arrêté.','reglage-eteint':'réglage éteint dans le panneau.','a-controler':'un cut est à contrôler dans ESV, sur l’ordinateur.','occupe':'Ariane est occupée : réessaie dans un instant.',autre:'regarde le panneau sur l’ordinateur.'};
 function accuse(a){if(enAttente&&a.pour===enAttente.n){clearTimeout(enAttente.minuterie);enAttente=null;}
- const nom=NOM[a.ordre]||'Ordre';if(a.resultat==='accepte')avis('« '+nom+' » : fait.');else avis('« '+nom+' » refusé : '+(MOTIFS[a.motif]||MOTIFS.autre)+(Number.isInteger(a.cut)?' (cut '+a.cut+')':''),'crit');afficher();}
+ const nom=NOM[a.ordre]||'Ordre';
+ if(a.ordre==='reinitialiser-extension'&&a.resultat==='accepte'){
+  M.del('ariane-code');M.del('ariane-n');D=null;try{ws?.close();}catch{}ws=null;ui.couche=null;ui.reinitConfirme=false;
+  $('appairage').hidden=false;document.body.dataset.liaison='non-appaire';avis('Remise à zéro faite. Scanne le nouveau QR code affiché sur l’ordinateur.');afficher();return;}
+ if(a.resultat==='accepte')avis('« '+nom+' » : fait.');else avis('« '+nom+' » refusé : '+(MOTIFS[a.motif]||MOTIFS.autre)+(Number.isInteger(a.cut)?' (cut '+a.cut+')':''),'crit');afficher();}
 
 /* ——— Liaison avec le relais : reconnexion seule (attente croissante), et tout de suite au retour sur la page (iOS coupe les sockets en arrière-plan). */
 function connecter(){clearTimeout(reco);if(!D)return;if(ws&&ws.readyState<2)return;

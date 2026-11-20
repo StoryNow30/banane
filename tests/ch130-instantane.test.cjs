@@ -2,7 +2,7 @@
 /* CH-130 (D-361) — LE PANNEAU COMPLET SUR LE TÉLÉPHONE : la vue réduite d'Ariane -> l'instantané (src/telecommande-instantane.js) -> le RENDU DU PANNEAU
  * (src/signal-rendu.js, sans copie) -> le filtre des actions. Sur des états fabriqués comme ceux du service worker, dans les quatre onglets :
  *  - le rendu ne lève jamais ; la barre porte les quatre onglets (Orbite, Écho, Constellation, Aurore) ;
- *  - il ne reste que des navigations locales et les ordres OFFERTS par Ariane à cet instant ; chacun devient un des 7 ordres de CH-111 ;
+ *  - il ne reste que des navigations locales et les ordres OFFERTS par Ariane à cet instant ; chacun devient un des ordres permis par CH-111 et CH-149 ;
  *  - aucun bouton d'écriture, de départ, de SKIP, de validation ni d'ouverture de cut ne survit, même si le rendu en dessine un. */
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const T=require('../src/telecommande.js'),S5=require('../src/signal-rendu.js'),I=require('../src/telecommande-instantane.js');

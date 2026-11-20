@@ -38,7 +38,8 @@ const sansPatch=(dossier,table)=>(f,t)=>{const c=table[f];if(!c||!t.includes(c[1
 /* CH-094 : après une pause « écriture non confirmée », la reprise repasse la porte ; patchs déclarés de la même façon (chantiers/CH-094/engine.patch
  * et engine-baseline.patch, posés PAR-DESSUS ceux de CH-091) : ils sont retirés d'abord, puis ceux de CH-091, puis ceux de CH-086. */
 const CH094={'src/engine.js':['engine.patch','fenetreRestee'],'audit/v4.6.0-engine-baseline.json':['engine-baseline.patch','previousHashCH094']};
-const sansCH094=sansPatch('CH-094',CH094),sansCH091=(f,t)=>sansPatch('CH-091',CH091)(f,sansCH094(f,t)),sansCH086=(f,t)=>sansPatch('CH-086',CH086)(f,sansCH091(f,t));
+const CH147={'src/placement-convention.js':['placement-convention.patch','pointsLocauxFiltres']};
+const sansCH147=sansPatch('CH-147',CH147),sansCH094=(f,t)=>sansPatch('CH-094',CH094)(f,sansCH147(f,t)),sansCH091=(f,t)=>sansPatch('CH-091',CH091)(f,sansCH094(f,t)),sansCH086=(f,t)=>sansPatch('CH-086',CH086)(f,sansCH091(f,t));
 /* CH-096 (D-319) : trois défauts de l'adaptateur et du noyau corrigés par patchs déclarés de la même façon (chantiers/CH-096/adapter-page.patch :
  * l'arrêt pendant une pose recliquée n'est plus rattrapé, `validerMajEspace` reçoit son suivi ; chantiers/CH-096/core.patch : « Niveau de détail non
  * stabilisé. » suivi d'une erreur de lecture reste passager). Posés en DERNIER : retirés d'abord, avant tout autre retrait. Aucun ne change une pose,
@@ -129,6 +130,8 @@ const STOCKAGE_NEUF=['stockage-neuf.js'];
 /* CH-135 (D-368) : le rendu « Cadran » (src/cadran-rendu.js) a été retiré par CH-137 (D-371).
  * CH-137 (D-372) : le rendu « Mix » du panneau (interface alternative choisie dans les Réglages) ; même modèle et mêmes ordres que Glacier ; ni pose, ni validation, ni lot. */
 const MIX=['mix-rendu.js'];
+/* CH-149 : remise à zéro hors lot, sans aucun appel au moteur de pose. */
+const REINITIALISATION=['reinitialisation.js'];
 /* CH-017 : la file de parties (machine à états pure), lue par le service worker seulement quand `file.actif` est allumé (éteinte à la livraison) ;
  * elle ne lit ni ne commande la pose ; le lot qu'elle démarre est le lot ordinaire. */
 const FILE_PARTIES=['file-parties.js'];
@@ -249,7 +252,7 @@ test('la pose et le lot lisent la test 8 : octets identiques, ou AST identique p
  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);
  assert.ok(fs.existsSync(path.join(racine,'src/raison-correction.js')),'le seul fichier de src/ en plus');
- const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE,...HISTORIQUE,...GARDE_PASSE,...SKIP_OMBRE,...FILE_PARTIES,...GARDE_APRES_DIFFERE,...CORRECTION,...RECHERCHE_LARGE,...SERIE_VIDES,...FILE_PRIORITAIRE,...RECONSTRUCTION,...VOIE_B1_ECART,...CH079,...CH114,...ETAT_MORCEAUX,...JOURNAL_INDEX,...SIGNAL_RELECTURE,...RUST_LIDAR,...PRECHAUFFAGE,...TELECOMMANDE,...ANCRE_TRAJECTOIRE,...STOCKAGE_NEUF,...MIX].sort());
+ const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE,...HISTORIQUE,...GARDE_PASSE,...SKIP_OMBRE,...FILE_PARTIES,...GARDE_APRES_DIFFERE,...CORRECTION,...RECHERCHE_LARGE,...SERIE_VIDES,...FILE_PRIORITAIRE,...RECONSTRUCTION,...VOIE_B1_ECART,...CH079,...CH114,...ETAT_MORCEAUX,...JOURNAL_INDEX,...SIGNAL_RELECTURE,...RUST_LIDAR,...PRECHAUFFAGE,...TELECOMMANDE,...ANCRE_TRAJECTOIRE,...STOCKAGE_NEUF,...MIX,...REINITIALISATION].sort());
 });
 test('le moteur est celui de la baseline V4.6.0 (src/engine.js intact)',()=>{
  const base=require('../audit/v4.6.0-engine-baseline.json');

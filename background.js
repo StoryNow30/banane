@@ -12,7 +12,7 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/etat-morceaux.js','src/storage.js','src/journal-index.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/relecture-signal.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/recherche-large.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/ancre-trajectoire.js','src/decision-lot-partagee.js','src/gestes-vue.js','src/deplacement-vue.js','src/serie-captures-vides.js','src/voie-b1-ecart.js','src/garde-voie-ombre.js','src/serrage-lot-ombre.js','src/voie-sure-ombre.js','src/telecommande.js');
+ 'src/gcv1-export.js','src/engine.js','src/etat-morceaux.js','src/storage.js','src/journal-index.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/relecture-signal.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/recherche-large.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/ancre-trajectoire.js','src/decision-lot-partagee.js','src/gestes-vue.js','src/deplacement-vue.js','src/serie-captures-vides.js','src/voie-b1-ecart.js','src/garde-voie-ombre.js','src/serrage-lot-ombre.js','src/voie-sure-ombre.js','src/telecommande.js','src/reinitialisation.js');
 /* CH-058 : le store est équipé de l'index du journal en mémoire (src/journal-index.js) : les étapes qui relisaient TOUT
  * IndexedDB lisent seulement les objets utiles. Aucune écriture d'index en base, aucune montée de version. */
 /* Types d'événements indexés : ceux que lisent les étapes bornées ci-dessous et src/correction-liste.js (parité sur les journaux
@@ -52,7 +52,7 @@ const GCV1_ENGINE='geometry-candidate-v1',V46_ENGINE='v4.6';
  * partent dans le journal exporté (`transitionsLot`) : nom, identifiant du lot, état
  * du lot, heure. Rien d'autre (ni identité de cut, ni donnée d'ESV). */
 const TRANSITIONS_LOT=Object.freeze(['demarrage','pause','reprise','arret','fin-de-lot','rechargement','cut-suivant','differe','erreur']);
-const LECTURES_PANNEAU=['telecommande-etat','telecommande-code','view','build','passe-differes-reglage','cloud','journal-meta','dataset-meta','native-health','native-export-advice','brain-state','gcv1-shadow-state','gcv1-export-meta'];
+const LECTURES_PANNEAU=['telecommande-etat','telecommande-code','view','build','passe-differes-reglage','cloud','journal-meta','dataset-meta','native-health','native-export-advice','brain-state','gcv1-shadow-state','gcv1-export-meta','reinitialiser-etat'];
 const coordinateurLot={journal:[],
  transition(nom,f){if(!TRANSITIONS_LOT.includes(nom))throw Error('Transition du lot inconnue : '+nom);
   const b=engine?.s?.batch;this.journal.push({nom,lot:b?.id??null,etat:b?.state??null,at:new Date().toISOString()});if(this.journal.length>64)this.journal.shift();
@@ -4817,6 +4817,32 @@ async function demarrerLot(args){
   const autorise=BananeGeometryBrain.reglages().autoriserSelectionSansPause===true;
   BananeGeometryBrain.configure({selectionActive:!tente||autorise});
   retenirLotClos();await engine.startBatch(startArgs);return engine.view();}
+/* CH-149 (D-381) — remise à zéro : la garde est relue à chaque demande, les intentions de relecture comprises. */
+function contexteReinitialisation(intentionsRelecture=0){return {lotEnCours:engine.s.batch?.state??null,busy:engine.busy,task:engine.task,
+ repriseEnCours,retourCutEnCours,fileActive:fileActive(),passeEnCours:passeActive()||!!passeDiff.cours||!!passeDiff.ecriture,
+ relectureEnCours:relecture.passe?.etat??null,nativeActive:native.active(),manualActive:manual.active(),
+ intent:engine.s.intent,reconcileRequired:engine.s.reconcileRequired,deferPending:!!engine.deferPending?.(),applied:engine.s.applied,
+ intentionsRelecture,timingPending:timing?.pending?.size||0,graceObservations:graceObservations()};}
+async function refusReinitialisation(){const R=globalThis.ArianeReinitialisation;if(!R)return 'module de réinitialisation absent';
+ const intentions=await relectureIntentions();return R.refus(contexteReinitialisation(intentions.length));}
+/* Le moteur n'est PAS recréé : ses enveloppes (suivi du lot, mesure, coordination) restent branchées. Seul son état redevient vierge. */
+async function reinitialiserMemoireNeuve(){await store.getState(); /* réinitialise aussi connus/index dans le magasin encapsulé par l’index du journal */
+ selectedTab=null;repriseEnCours=false;retourCutEnCours=null;obsFins.clear();
+ engine.busy=false;engine.task=null;engine.ecrituresApresValidation=null;engine.enBase?.clear?.();engine.fenetre=null;
+ engine.s={schemaVersion:4,version:globalThis.BananeCore3.VERSION,sessionId:globalThis.BananeCore3.uid(),mode:'observation',collection:'IDLE',
+  before:null,after:null,lidarId:null,records:[],incomplete:[],proposal:null,snapshot:null,applied:null,validationStarted:false,batch:null,
+  notice:'Prêt. Sélectionne un onglet ESV.',events:[],settings:{...globalThis.BananeGeometry3.DEFAULTS}};
+ store.connus=new Map();store.index=new Set();finsLot.departs=[];finsLot.fins=[];finsLot.sig=new Map();finsLot.fin=new Map();coordinateurLot.journal.length=0;
+ clearTimeout(fileP.tic);fileP.tic=null;fileP.ticEnCours=false;fileP.demarrage=null;fileP.action=null;fileP.etat=null;
+ passeDiff.planifie.clear();passeDiff.cours=null;passeDiff.ecriture=null;passeDiff.vue=null;passeDiff.reprise=null;passeDiff.etat=null;
+ relecture.planifie.clear();relecture.passe=null;relecture.attente=null;relecture.tache=null;relecture.gen=0;ajEssai=null;
+ bandeau.on=false;bandeau.text='';bandeau.ton='';b1.repere=null;b1Depart.repere=null;b1.sansPaire=0;clearTimeout(b1Minuterie);b1Minuterie=null;b1File.length=0;
+ gsOmbre.batchId=null;gsOmbre.ecartements.clear();voieSure.mem=null;voieSure.premier=true;voieSure.zones.clear();voieSure.poses.clear();
+ l1Restes={cle:null,m:new Map()};l1eTransport={cle:null,poses:[]};}
+async function reinitialiserExtension(){const R=globalThis.ArianeReinitialisation;if(!R)throw Error('Réinitialisation indisponible (module absent).');
+ await R.executer({store,storageLocal:chrome.storage.local,storageSession:chrome.storage.session,
+  fermerTelecommande:async()=>{await telecommandePrete;if(telecommande){if(typeof telecommande.couperApresReponse==='function')await telecommande.couperApresReponse();else await telecommande.couper();}},reinitialiserMemoire:reinitialiserMemoireNeuve});
+ await syncLauncher().catch(()=>{});return {reinitialise:true};}
 async function dispatch(m){await ready;await passeDiffReveil;   /* T21d : une passe gardée est reprise (ou close) avant toute action du panneau */
  const {action,args={}}=m;
  /* CH-111 : appairage de la télécommande (réglages du panneau). Aucune de ces actions ne touche au lot ni à ESV. */
@@ -4962,8 +4988,8 @@ async function dispatch(m){await ready;await passeDiffReveil;   /* T21d : une pa
   throw Error('Le mode Correction a été retiré en 4.5.4. Utilise Écho.');
  if(action==='manual-end')return manual.end();
  if(action==='manual-download')return manual.dataset();
- if(native.active()&&!['cloud','native-download','native-health','native-export-advice','native-export-manifest','native-export-cles','journal-index-repli','native-export-plan','native-export-ack','native-discard','build'/* CH-097 : lecture du nom du paquet, demandée à chaque ouverture du panneau */].includes(action))throw Error('Écho est actif. Termine-le avant d’utiliser Mes corrections, l’assisté ou le pilote.');
- if(manual.active()&&!['cloud','journal','dataset'].includes(action))throw Error('Une session est active dans Mes corrections. Termine-la avant de piloter un lot ou d’utiliser l’assisté.');
+ if(native.active()&&!['cloud','native-download','native-health','native-export-advice','native-export-manifest','native-export-cles','journal-index-repli','native-export-plan','native-export-ack','native-discard','build','reinitialiser-etat','reinitialiser-extension'/* CH-097 : lecture du nom du paquet, demandée à chaque ouverture du panneau */].includes(action))throw Error('Écho est actif. Termine-le avant d’utiliser Mes corrections, l’assisté ou le pilote.');
+ if(manual.active()&&!['cloud','journal','dataset','reinitialiser-etat','reinitialiser-extension'].includes(action))throw Error('Une session est active dans Mes corrections. Termine-la avant de piloter un lot ou d’utiliser l’assisté.');
  if(action==='goto-cut')return allerAuCut(args);
  if(action==='relecture-lancer')return relectureLancer({auto:false,bornes:args});
  if(action==='pause')return coordinateurLot.transition('pause',async()=>{await engine.pause();return engine.view();});
@@ -5005,6 +5031,10 @@ async function dispatch(m){await ready;await passeDiffReveil;   /* T21d : une pa
   * événements d'Écho et de Correction ; même règle que le panneau (`lireStoreOrbite`) et tools/filtrer-journal.cjs. */
  if(action==='journal'){const o=await lotSeul();return {...timingMeta,format:'banane-test-journal-v4',version:VERSION,state:engine.view(),events:o.events,records:o.records,...o.scope,closureSummary:await closureExport(),transitionsLot};}
  if(action==='dataset'){const o=await lotSeul();return {...timingMeta,format:'banane-test-dataset-v4',version:VERSION,exportedAt:new Date().toISOString(),state:engine.view(),events:o.events,records:o.records,...o.scope,closureSummary:await closureExport(),cloudIds:await store.keys('clouds')};}
+ /* CH-149 : en fin de dispatch, après toutes les lectures d'état ; les deux actions revérifient la garde de sécurité. */
+ if(action==='reinitialiser-etat'){const refus=await refusReinitialisation();return {permis:refus===null,refus};}
+ if(action==='reinitialiser-extension'){if(args?.confirme!==true)throw Error('Confirmation requise pour réinitialiser Ariane.');
+  const refus=await refusReinitialisation();if(refus)throw Error('Réinitialisation refusée : '+refus+'.');return reinitialiserExtension();}
  return engine.locked(async()=>{
   let result;
   if(action==='settings'){
@@ -5039,10 +5069,13 @@ let swPret=false;ready.then(()=>{swPret=true;},()=>{});
 /* CH-111 (D-345) — TÉLÉCOMMANDE (src/telecommande.js). Éteinte tant que l'opérateur n'a pas appairé un téléphone : aucune socket, aucun minuteur.
  * Un ordre du téléphone (liste fermée du module) passe par `traiterPanneau`, le même chemin que le message `panel` du bouton : mêmes gardes, mêmes refus. */
 let telecommande=null;
-function telecommandeSources(){return {s:engine?.s,relecture:relecture?.passe??null,file:fileP.etat&&FPm()?FPm().vue(fileP.etat):null,passe:passeDiff.vue,echo:!!native?.running?.(),version:VERSION};}
+/* La vue chiffrée ne transporte qu'un motif fermé. Une intention seulement persistée est revérifiée par `reinitialiser-extension`. */
+function reinitTelecommande(){const R=globalThis.ArianeReinitialisation;if(!R)return {actif:false,refus:'autre'};const r=R.refus(contexteReinitialisation());
+ return {actif:r===null,refus:r===null?'aucun':/lot Orbite/.test(r)?'lot':/Écho/.test(r)?'echo':/Mes corrections/.test(r)?'correction':/incertaine/.test(r)?'incertain':'occupe'};}
+function telecommandeSources(){return {s:engine?.s,relecture:relecture?.passe??null,file:fileP.etat&&FPm()?FPm().vue(fileP.etat):null,passe:passeDiff.vue,echo:!!native?.running?.(),version:VERSION,reinit:reinitTelecommande()};}
 const telecommandePrete=ready.then(async()=>{const T=globalThis.BananeTelecommande;if(!T)return;
  telecommande=T.creer({stockage:chrome.storage.local,WS:globalThis.WebSocket,journal:journalerSimple,sources:telecommandeSources,chrome:T.versionChrome(globalThis.navigator?.userAgent),
-  executer:action=>new Promise(r=>traiterPanneau({kind:'panel',action,args:{}},r)).then(r=>{if(r.error)throw Error(r.error);return r.result;})});
+  executer:(action,args={})=>new Promise(r=>traiterPanneau({kind:'panel',action,args},r)).then(r=>{if(r.error)throw Error(r.error);return r.result;})});
  await telecommande.demarrer();}).catch(()=>{});
 async function telecommandeAction(action,args){await telecommandePrete;if(!telecommande)throw Error('Télécommande indisponible dans cette version.');
  if(action==='telecommande-etat')return telecommande.etat();

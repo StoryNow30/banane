@@ -42,7 +42,7 @@ async function ouvrirScene(nav, sc, { largeur = 600, hauteur = 760, variante = '
   const onglets = sc.onglets || [{ id: 1, title: 'ESV', pret: true, utilise: true, index: 0, windowId: 1, active: true }];
   await page.addInitScript(({ state, rel, fiches, onglets, file, stockage }) => {
     const rep = { view: state, 'list-tabs': onglets, 'choix-lot-etat': { clicHumain: 'tel-quel', regleGrappeDifferes: false }, 'raison-choix-etat': { actif: false, touches: 'chiffres' },
-      'relecture-choix-etat': { mode: 'corriger' }, 'relecture-etat': rel, 'bandeau-etat': { on: false }, 'fiches-depart': { fiches } }, st = { ...stockage };
+      'relecture-choix-etat': { mode: 'corriger' }, 'relecture-etat': rel, 'bandeau-etat': { on: false }, 'fiches-depart': { fiches }, 'reinitialiser-etat': { permis: true, refus: null } }, st = { ...stockage };
     window.__appels = []; window.__ecrits = []; window.__marque = Math.random();
     window.fetch = async () => ({ json: async () => ({ totaux: { tous: { corriges: 2731 } }, creeLe: '2026-10-20T08:00:00Z' }) });
     window.chrome = { runtime: { id: 'essai', getURL: p => new URL(p, location.href).href, connect: () => ({ onMessage: { addListener() {} }, onDisconnect: { addListener() {} } }),
