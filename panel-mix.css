@@ -737,3 +737,11 @@ body.ui5:has(#ui5.u-mix[data-theme="clair"]) #avis-stockage-neuf button{backgrou
 @media (max-width:560px){#ui5.u-mix:has(.sg-zone [data-k="relecture-bornes"]) .mx-reglette{display:none}
  #ui5.u-mix:has(.sg-zone [data-k="relecture-bornes"]) .mx-compte{margin-top:4px}
  #ui5.u-mix:has(.sg-zone [data-k="relecture-bornes"]) .sg-tu-etat{padding-top:16px}}
+
+/* CH-149 : mêmes actions qu'en Glacier, empilées si nécessaire dans la feuille Réglages de Mix. */
+#ui5.u-mix .sg-danger-zone.sg-reinit{flex-direction:column;align-items:stretch;gap:12px;overflow:hidden}
+#ui5.u-mix .sg-reinit-texte{display:flex;flex-direction:column;gap:6px;min-width:0;overflow-wrap:anywhere;line-height:1.45}
+#ui5.u-mix .sg-reinit-texte small{color:var(--incident)}
+#ui5.u-mix .sg-reinit-actions{display:flex;flex-wrap:wrap;gap:8px;min-width:0;max-width:100%}
+#ui5.u-mix .sg-reinit-actions button{flex:1 1 180px;max-width:100%;height:auto;min-height:40px;padding:8px 13px;white-space:normal;line-height:1.25}
+#ui5.u-mix .sg-reinit-actions .sg-annuler{color:var(--encre2)}

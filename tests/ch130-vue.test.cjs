@@ -25,9 +25,9 @@ function etat({lignes=6,parties=3}={}){const id={part:12,cut:345,frameId:UUID,pr
    reprise:{part:13,rang:1,reste:2,note:PROJET},
    bilan:Array.from({length:parties},(_,i)=>({part:12+i,rang:i,motifs:i?['fin-normale',PROJET]:['esv-muet'],resume:{poses:10+i,differes:i},passe:{issue:'finie',ecrits:i},relecture:{issue:'arretee',corriges:1},alertes:i===1?[{texte:'texte libre d’ESV'}]:[],...(i===2?{interrompue:true}:{})}))}};}
 
-test('detail : schéma 2, ESV, dernier cut, Écho, Constellation, Aurore ; mots fermés et entiers seulement',()=>{
+test('detail : schéma 3, ESV, dernier cut, Écho, Constellation, Aurore ; mots fermés et entiers seulement',()=>{
  const v=T.vueReduite(etat());propre(v);
- assert.equal(v.schema,2);
+ assert.equal(v.schema,3);
  const d=v.detail;
  assert.equal(d.dernier,341);assert.deepEqual(d.esv,{partie:12,cut:345});
  assert.deepEqual(d.echo,{etat:'cours',vus:3,corriges:1,valides:1});

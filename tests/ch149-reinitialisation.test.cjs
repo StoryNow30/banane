@@ -3,7 +3,7 @@
  * Module pur, service worker réel (API Chrome et IndexedDB simulés), rendus Glacier et Mix, actions de la feuille Réglages.
  * Toutes les données sont fabriquées pour ces essais. */
 const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm');
-const R=require('../src/reinitialisation.js'),SN=require('../src/stockage-neuf.js'),S=require('../src/signal-rendu.js'),M=require('../src/mix-rendu.js');
+const R=require('../src/reinitialisation.js'),SN=require('../src/stockage-neuf.js'),S=require('../src/signal-rendu.js'),M=require('../src/mix-rendu.js'),T=require('../src/telecommande.js'),I=require('../src/telecommande-instantane.js');
 const {production,memoire}=require('./helpers/perf-production.cjs'),{MemoryStore}=require('./fixtures.cjs'),{monter}=require('./helpers/ui5-page.cjs');
 
 const motif=(ctx,attendu)=>{const r=R.refus(ctx);assert.equal(typeof r,'string',JSON.stringify(ctx));assert.match(r,attendu);};
@@ -40,7 +40,7 @@ function stockageVidage(){const s=memoire();s.vidages=0;s.clear=async()=>{s.vida
 async function serviceWorker(){
  const store=new MemoryStore(),vidages={store:0};store.clearAll=async()=>{vidages.store++;store.clouds.clear();store.events.length=0;store.records.length=0;};
  const local=stockageVidage(),session=stockageVidage(),b=production({store,local,session});await b.api('view');await b.get('telecommandePrete');
- let coupe=0;const tc=b.get('telecommande'),couper=tc.couper.bind(tc);tc.couper=async()=>{coupe++;return couper();};
+ let coupe=0;const tc=b.get('telecommande'),couper=tc.couperApresReponse.bind(tc);tc.couperApresReponse=async()=>{coupe++;return couper();};
  return {b,store,local,session,vidages,coupe:()=>coupe};
 }
 
@@ -76,7 +76,7 @@ test('service worker : succès, tous les magasins et toute la mémoire vive revi
  assert.equal(e.s.schemaVersion,4);assert.equal(e.s.version,b.get('BananeCore3.VERSION'));assert.equal(typeof e.s.sessionId,'string');assert.notEqual(e.s.sessionId,'');
  assert.equal(e.s.mode,'observation');assert.equal(e.s.collection,'IDLE');assert.equal(e.s.batch,null);assert.equal(e.s.notice,'Prêt. Sélectionne un onglet ESV.');
  assert.deepEqual(JSON.parse(JSON.stringify(e.s.settings)),JSON.parse(JSON.stringify(b.get('BananeGeometry3.DEFAULTS'))));
- assert.deepEqual(fins.departs,[]);assert.deepEqual(fins.fins,[]);assert.equal(fins.sig.size,0);assert.equal(fins.fin.size,0);
+ assert.deepEqual(JSON.parse(JSON.stringify(fins.departs)),[]);assert.deepEqual(JSON.parse(JSON.stringify(fins.fins)),[]);assert.equal(fins.sig.size,0);assert.equal(fins.fin.size,0);
  assert.equal(b.get('fileP').etat,null);assert.equal(b.get('passeDiff').planifie.size,0);assert.equal(b.get('passeDiff').vue,null);assert.equal(b.get('passeDiff').etat,null);
  assert.equal(b.get('relecture').planifie.size,0);assert.equal(b.get('relecture').passe,null);assert.equal(b.get('relecture').attente,null);
  assert.equal(b.get('ajEssai'),null);assert.equal(b.get('bandeau').on,false);assert.equal(b.get('b1').repere,null);assert.equal(b.get('b1Depart').repere,null);
@@ -121,4 +121,79 @@ test('ui5 : avant la réponse du service worker, le rendu synchrone ne prétend 
  p.ctx.chrome.runtime.sendMessage=()=>new Promise(()=>{});p.ui.agir('sg:reglages');
  assert.deepEqual(JSON.parse(JSON.stringify(p.ui.instantane(etat).reinit)),{actif:true,refus:null});
  const cours={...etat,batch:{id:'lot',state:'RUNNING',processed:[],deferred:[]}};assert.equal(p.ui.instantane(cours).reinit.actif,false);assert.match(p.ui.instantane(cours).reinit.refus,/en cours/);
+});
+
+test('télécommande : la feuille Réglages offre la même confirmation, sans texte libre dans la vue chiffrée',()=>{
+ const source={s:{batch:null,connection:{status:'no-tab'}},relecture:null,file:null,passe:null,echo:false,reinit:{actif:true,refus:'aucun'}},v=T.vueReduite(source);
+ assert.deepEqual(JSON.parse(JSON.stringify(v.reinit)),{actif:true,refus:'aucun'});assert.equal(v.boutons['reinitialiser-extension'],true);
+ const snap=I.instantane(v),normal=I.filtrer(S.rendre(snap,{couche:'reglages'}),v);
+ assert.match(normal,/sg:reglages|sg:reinit-demander/);assert.ok(I.NAVIGATION.includes('sg:reinit-demander'));assert.equal(I.ordreDe('sg:reinit-demander',v),null);
+ const confirmation=I.filtrer(S.rendre(snap,{couche:'reglages',reinitConfirme:true}),v);
+ assert.match(confirmation,/sg:reinit-confirmer/);assert.match(confirmation,/sg:reinit-annuler/);assert.equal(I.ordreDe('sg:reinit-confirmer',v),'reinitialiser-extension');
+ const occupe=T.vueReduite({...source,s:{batch:{state:'RUNNING',scope:{},processed:[],deferred:[],skipped:[]},connection:{status:'ready'}},reinit:{actif:false,refus:'lot'}});
+ assert.equal(occupe.boutons['reinitialiser-extension'],false);assert.equal(I.ordreDe('sg:reinit-confirmer',occupe),null);
+ assert.match(I.instantane(occupe).reinit.refus,/lot Orbite/);
+ assert.equal(T.controlerOrdre({type:'ordre',n:1,h:Date.now(),ordre:'reinitialiser-extension'}).action,'reinitialiser-extension');
+});
+
+test('télécommande : l’accusé de remise à zéro part avant la coupure, avec confirme=true côté panneau',async()=>{
+ const sockets=[];class WS{constructor(url){this.url=url;this.readyState=0;this.envoyes=[];sockets.push(this);setTimeout(()=>{this.readyState=1;this.onopen?.();},0);}
+  send(x){if(this.readyState!==1)throw Error('fermée');this.envoyes.push(x);}close(){if(this.readyState===3)return;this.readyState=3;this.onclose?.({code:1000});}recevoir(x){this.onmessage?.({data:x});}}
+ const donnees={},stockage={get:async k=>Object.fromEntries([].concat(k).filter(x=>x in donnees).map(x=>[x,donnees[x]])),set:async o=>Object.assign(donnees,o),remove:async k=>{for(const x of [].concat(k))delete donnees[x];}};
+ const source={s:{batch:null,connection:{status:'no-tab'}},relecture:null,file:null,passe:null,echo:false,reinit:{actif:true,refus:'aucun'}};let args=null,t;
+ t=T.creer({stockage,WS,periodeMs:10,battementMs:1000,sources:()=>source,executer:async(action,a)=>{if(action==='reinitialiser-extension'){args=a;await t.couperApresReponse();}return {reinitialise:true};}});
+ const app=await t.appairer(['https:/','/relais-essai','.exemple','.test'].join(''));await new Promise(r=>setTimeout(r,30));const D=await T.deriver(await T.decoder(app.code)),s=sockets.at(-1),n=Date.now();
+ s.recevoir(JSON.stringify(await T.chiffrer(D,'t>a',{type:'ordre',n,h:n,ordre:'reinitialiser-extension'})));await new Promise(r=>setTimeout(r,50));
+ assert.deepEqual(JSON.parse(JSON.stringify(args)),{confirme:true});let acc=null;for(const x of s.envoyes){const o=await T.dechiffrer(D,'a>t',JSON.parse(x));if(o.type==='accuse'&&o.ordre==='reinitialiser-extension')acc=o;}
+ assert.equal(acc?.resultat,'accepte');assert.equal(acc?.pour,n);assert.equal(s.readyState,3);assert.equal(donnees.arianeTelecommande,undefined);
+});
+
+/* Mesure visuelle des deux états, dans les deux interfaces et les deux thèmes. Aucune capture : seulement des rectangles et des couleurs calculées. */
+const navigateur=require('./esv-maquette/navigateur.cjs'),CHROMIUM=navigateur.executable(),absent=navigateur.indisponible()||false,fs=require('node:fs'),path=require('node:path');
+test('navigateur : de 320 à 720 px, les deux thèmes gardent la zone et ses boutons sans débordement, avec un contraste suffisant',{skip:absent,timeout:90000},async()=>{
+ const {chromium}=require(navigateur.modulePlaywright()),{ouvrir,SC}=require('./helpers/signal-navigateur.cjs'),nav=await chromium.launch({executablePath:CHROMIUM}),defauts=[],ancienne=process.env.UI5_VARIANTE;
+ try{
+  for(const variante of ['signal','mix'])for(const largeur of [320,720])for(const theme of ['sombre','clair']){
+   process.env.UI5_VARIANTE=variante;const {page,erreurs}=await ouvrir(nav,SC.repos,{width:largeur,height:760});
+   await page.evaluate(t=>{document.documentElement.dataset.theme=t==='clair'?'light':'dark';window.ArianeUi5.agir('sg:reglages');},theme);await page.waitForTimeout(150);
+   for(const confirmation of [false,true]){
+    if(confirmation){await page.evaluate(()=>window.ArianeUi5.agir('sg:reinit-demander'));await page.waitForTimeout(80);}
+    const mesure=await page.evaluate(()=>{
+     const z=document.querySelector('#ui5 .sg-reinit'),boutons=[...z.querySelectorAll('button')],rect=e=>{const r=e.getBoundingClientRect();return {g:r.left,d:r.right,h:r.top,b:r.bottom,l:r.width,t:r.height};},zone=rect(z),rs=boutons.map(rect);
+     const rgb=s=>{const m=String(s).match(/[\d.]+/g)?.map(Number)||[];return [m[0]||0,m[1]||0,m[2]||0,m.length>3?m[3]:1];},fond=e=>{let couche=[0,0,0,0],n=e;while(n){const c=rgb(getComputedStyle(n).backgroundColor);if(c[3]){const a=c[3]+couche[3]*(1-c[3]);couche=[0,1,2].map(i=>(c[i]*c[3]+couche[i]*couche[3]*(1-c[3]))/a);couche.push(a);}if(couche[3]>=.999)return couche;n=n.parentElement;}return couche;};
+     const contraste=(a,b)=>{const L=c=>{const f=x=>{x/=255;return x<=.04045?x/12.92:((x+.055)/1.055)**2.4;};return .2126*f(c[0])+.7152*f(c[1])+.0722*f(c[2]);},x=L(a),y=L(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);},F=fond(z);
+     return {largeur:innerWidth,doc:document.documentElement.scrollWidth,zone,boutons:rs,contrasteTexte:contraste(rgb(getComputedStyle(z).color),F),contrasteBoutons:boutons.map(b=>contraste(rgb(getComputedStyle(b).color),F))};
+    });
+    const nom=`${variante} ${largeur} ${theme}${confirmation?' confirmation':''}`;
+    if(mesure.doc>largeur)defauts.push(nom+' : débordement horizontal du document');if(mesure.zone.g<0||mesure.zone.d>largeur)defauts.push(nom+' : zone hors fenêtre');
+    for(const [i,r] of mesure.boutons.entries()){if(r.g<mesure.zone.g-1||r.d>mesure.zone.d+1||r.l<20||r.t<20)defauts.push(nom+` : bouton ${i} mal contenu`);if(mesure.contrasteBoutons[i]<4.5)defauts.push(nom+` : contraste du bouton ${i} ${mesure.contrasteBoutons[i].toFixed(2)}`);}
+    for(let i=1;i<mesure.boutons.length;i++){const a=mesure.boutons[i-1],b=mesure.boutons[i];if(Math.min(a.d,b.d)>Math.max(a.g,b.g)&&Math.min(a.b,b.b)>Math.max(a.h,b.h))defauts.push(nom+' : boutons qui se recouvrent');}
+    if(mesure.contrasteTexte<4.5)defauts.push(nom+` : contraste du texte ${mesure.contrasteTexte.toFixed(2)}`);assert.deepEqual(erreurs,[],nom);
+   }
+   await page.close();
+  }
+ }finally{if(ancienne===undefined)delete process.env.UI5_VARIANTE;else process.env.UI5_VARIANTE=ancienne;await nav.close();}
+ assert.deepEqual(defauts,[]);
+});
+
+test('page réelle du téléphone : Réglages, annulation, confirmation et retour à l’appairage',{skip:absent,timeout:30000},async()=>{
+ const {chromium}=require(navigateur.modulePlaywright()),nav=await chromium.launch({executablePath:CHROMIUM}),page=await nav.newPage({viewport:{width:390,height:760}}),erreurs=[],RACINE=path.resolve(__dirname,'..');
+ page.on('pageerror',e=>erreurs.push(e.message));
+ const fichiers={'/signal-rendu.js':'src/signal-rendu.js','/telecommande-instantane.js':'src/telecommande-instantane.js','/panel-signal.css':'panel-signal.css'};
+ await page.route('**/*',route=>{const u=new URL(route.request().url()),f=fichiers[u.pathname];
+  if(u.pathname==='/')return route.fulfill({status:200,contentType:'text/html',body:fs.readFileSync(path.join(RACINE,'telecommande/telephone.html'),'utf8')});
+  if(f)return route.fulfill({status:200,contentType:f.endsWith('.css')?'text/css':'text/javascript',body:fs.readFileSync(path.join(RACINE,f),'utf8')});return route.fulfill({status:404,body:''});});
+ try{
+  await page.goto('https://relais-essai.exemple.test/');
+  await page.evaluate(()=>{D={};dernierEtat={schema:3,reinit:{actif:true,refus:'aucun'},boutons:{'reinitialiser-extension':true}};dernierEtatH=Date.now();arianePresente=true;relaisOk=true;
+   ws={readyState:1,close(){this.readyState=3;}};window.__ordre=null;envoyerOrdre=k=>{window.__ordre=k;};$('appairage').hidden=true;afficher();});
+  await page.click('#ui5 [data-act="sg:menu"]');await page.click('#menu-reglages');
+  await page.click('#ui5 [data-act="sg:reinit-demander"]');assert.equal(await page.locator('#ui5 [data-act="sg:reinit-confirmer"]').count(),1);
+  await page.click('#ui5 [data-act="sg:reinit-annuler"]');assert.equal(await page.locator('#ui5 [data-act="sg:reinit-confirmer"]').count(),0);
+  await page.click('#ui5 [data-act="sg:reinit-demander"]');await page.click('#ui5 [data-act="sg:reinit-confirmer"]');
+  assert.equal(await page.evaluate(()=>window.__ordre),'reinitialiser-extension');
+  await page.evaluate(()=>{localStorage.setItem('ariane-code','essai');localStorage.setItem('ariane-n','1');accuse({ordre:'reinitialiser-extension',resultat:'accepte',pour:1});});
+  assert.equal(await page.locator('#appairage').isVisible(),true);assert.equal(await page.evaluate(()=>localStorage.getItem('ariane-code')),null);
+  assert.match(await page.locator('#avis').textContent(),/nouveau QR code/);assert.deepEqual(erreurs,[]);
+ }finally{await page.close();await nav.close();}
 });

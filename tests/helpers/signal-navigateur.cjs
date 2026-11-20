@@ -18,7 +18,7 @@ async function ouvrir(nav,state,vue,hash='#automatic'){
  page.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource|net::ERR_FILE_NOT_FOUND/.test(m.text()))erreurs.push('console: '+m.text());});
  await page.addInitScript(({state,racine,variante})=>{
   const reponses={view:state,'list-tabs':[{id:1,title:'ESV',pret:true,utilise:true,index:0,windowId:1,active:true}],'choix-lot-etat':{clicHumain:'tel-quel',regleGrappeDifferes:false},'raison-choix-etat':{actif:false,touches:'chiffres'},
-   'relecture-choix-etat':{mode:'corriger'},'relecture-etat':{choix:'corriger',lot:null,passe:null},'bandeau-etat':{on:false},'fiches-depart':{fiches:[]}};
+   'relecture-choix-etat':{mode:'corriger'},'relecture-etat':{choix:'corriger',lot:null,passe:null},'bandeau-etat':{on:false},'fiches-depart':{fiches:[]},'reinitialiser-etat':{permis:true,refus:null}};
   const stockage=variante?{banane51Interface:variante}:{};window.__appels=[];window.__ecrits=[];
   window.fetch=async()=>({json:async()=>({totaux:{tous:{corriges:2731}},creeLe:'2026-10-20T08:00:00Z'})});
   window.chrome={runtime:{id:'essai',getURL:p=>new URL(p,location.href).href,connect:()=>({onMessage:{addListener(){}},onDisconnect:{addListener(){}}}),

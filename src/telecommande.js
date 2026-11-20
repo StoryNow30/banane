@@ -13,7 +13,8 @@
 'use strict';
 const CLE_APPAIRAGE='arianeTelecommande',CLE_NUMEROS='arianeTelecommandeN',VERSION_ENV=1,FENETRE_MS=30000,HORS_LIGNE_MS=30000;
 const ORDRES=Object.freeze(Object.assign(Object.create(null),{'lot-pause':'pause','lot-reprendre':'resume','lot-arreter':'stop',
- 'relecture-pause':'relecture-pause','relecture-reprendre':'relecture-reprendre','relecture-arreter':'relecture-arreter','constellation-arreter':'file-arreter'}));
+ 'relecture-pause':'relecture-pause','relecture-reprendre':'relecture-reprendre','relecture-arreter':'relecture-arreter','constellation-arreter':'file-arreter',
+ 'reinitialiser-extension':'reinitialiser-extension'}));
 const NOMS_ORDRES=Object.freeze(Object.keys(ORDRES));
 /* Mots permis dans la vue, par champ. Tout autre mot devient « autre » ; une valeur absente, null. */
 const L={
@@ -35,10 +36,12 @@ const L={
  statut:['a-faire','en-cours','vu','corrige','valide','autre'],groupe:['corriger','poser','autre'],
  issuePasse:['absente','finie','arretee','erreur','ombre','ecriture','interrompue','calcul','autre'],
  issueRelecture:['finie','arretee','interrompue','erreur','absente','non-lancee','en-cours','autre'],
+ /* CH-149 : motifs fermés de la remise à zéro ; jamais la phrase du service worker dans la vue. */
+ reinit:['aucun','lot','echo','correction','incertain','occupe','autre'],
  /* Codes des motifs de fin de partie (src/file-parties.js `MOTIFS`, libellés de src/signal-rendu.js `MOTIF_CLAIR`) ; un autre code : « autre ». */
  motifFile:['fin-normale','partie-sans-rouge','depart-sur-vert','passe-arretee','relecture-arretee','nombre-atteint','operateur','ecriture-incertaine','refus-lot',
   'lot-non-demarre','changement-impossible','commande-absente','onglet-ferme','selecteur-illisible','esv-muet','partie-changee-par-esv','retour-impossible','autre']};
-const SCHEMA=2;/* CH-130 : version de la forme de la vue ; la page du téléphone dit quand elle est plus ancienne qu'Ariane (relais à redéployer) */
+const SCHEMA=3;/* CH-130, puis CH-149 : version de la forme de la vue ; une page plus ancienne demande le redéploiement du relais */
 const CHROME_MIN=116;/* un WebSocket ne garde le service worker en vie qu'à partir de Chrome 116 (documentation de Chrome) */
 const MOTS=new Set([...Object.values(L).flat(),...NOMS_ORDRES,'inconnu']);
 const ent=(x,max=1e9)=>Number.isInteger(x)&&x>=0&&x<=max?x:null;
@@ -97,7 +100,8 @@ function vueAurore(s){const vide={etat:'aucune',echoOuverte:false,courant:null,c
   lignes:tout.slice(0,MAX_LIGNES).map(x=>[ent(x.part),ent(x.cut),mot(x.statut,L.statut),mot(x.groupe,L.groupe),ent(x.rails,2)??0]),tronque:Math.max(0,tout.length-MAX_LIGNES)};}
 function vueDetail(src){const s=src.s||{},b=s.batch,id=s.current?.identity,dp=Array.isArray(b?.processed)?b.processed.at(-1):null;
  return {dernier:cutDe(dp),esv:{partie:ent(id?.part),cut:ent(id?.cut)},echo:vueEcho(s.native),file:vueFile(src.file),aurore:vueAurore(s)};}
-function vueReduite(src={}){const s=src.s||{},b=s.batch,r=src.relecture,f=src.file,p=src.passe;
+function vueReinit(src){const r=src.reinit||{};return {actif:r.actif===true,refus:mot(r.refus??(r.actif===true?'aucun':'autre'),L.reinit)};}
+function vueReduite(src={}){const s=src.s||{},b=s.batch,r=src.relecture,f=src.file,p=src.passe,reinit=vueReinit(src);
  const lot=vueLot(s);
  const relecture={etat:r?mot(r.etat,L.relecture):'aucune',faits:ent(r?.faits),total:ent(r?.total),corriges:ent(r?.corriges),cut:ent(r?.cut),pauseRaison:mot(r?.pauseRaison,L.pauseRaison)};
  const constellation={etat:f?mot(f.etat,L.constellation):'aucune',rang:ent(f?.rang),n:ent(f?.n),partie:ent(f?.enCours?.part)};
@@ -112,9 +116,9 @@ function vueReduite(src={}){const s=src.s||{},b=s.batch,r=src.relecture,f=src.fi
   'relecture-pause':relecture.etat==='en-cours'&&r?.reprise===true&&r?.pauseDemandee!==true,
   'relecture-reprendre':relecture.etat==='en-pause',
   'relecture-arreter':relVivante,
-  'constellation-arreter':fileActive};
+  'constellation-arreter':fileActive,'reinitialiser-extension':reinit.actif};
  const activite=src.echo===true?'echo':ouvert||fileActive||relVivante||ecrit?'orbite':'repos';
- return {connexion:mot(CONNEXION[s.connection?.status]??s.connection?.status,L.connexion),activite,lot,relecture,constellation,passe2,boutons,
+ return {connexion:mot(CONNEXION[s.connection?.status]??s.connection?.status,L.connexion),activite,lot,relecture,constellation,passe2,boutons,reinit,
   version:MOTS.has(src.version)?src.version:null,schema:SCHEMA,detail:vueDetail(src)};}
 
 /* ——— Refus d'Ariane -> {code, cut} : un code de `L.refus` d'après la phrase (règles dans l'ordre), et le premier « cut N » qu'elle cite.
@@ -183,10 +187,11 @@ function creer({stockage,WS,executer,journal=()=>{},sources,chrome=null/* versio
   setT=root.setTimeout.bind(root),clearT=root.clearTimeout.bind(root)}){
  let A=null;/* appairage vivant : {relais, code, D} */
  const trop=Number.isInteger(chrome)&&chrome<CHROME_MIN?`Télécommande éteinte : il faut Chrome ${CHROME_MIN} ou plus récent (celui-ci : ${chrome}). Mets Chrome à jour.`:null;
- let ws=null,ouverte=false,tour=null,reco=null,essais=0,dernierTexte=null,dernierEnvoi=null,envoiN=0,recuN=0,file=Promise.resolve(),vie=0;
+ let ws=null,ouverte=false,tour=null,reco=null,essais=0,dernierTexte=null,dernierEnvoi=null,envoiN=0,recuN=0,file=Promise.resolve(),vie=0,coupure=null;
  const refusDits=new Map();
  const noter=(type,champs)=>{try{journal(type,champs);}catch{/* journal indisponible : l'ordre reste traité */}};
- const fermer=()=>{clearT(tour);clearT(reco);tour=reco=null;ouverte=false;const w=ws;ws=null;if(w){w.onopen=w.onmessage=w.onclose=w.onerror=null;try{w.close();}catch{/* déjà fermée */}}};
+ function fermerCapture(w){if(!w)return;if(coupure?.w===w){clearT(coupure.minuterie);coupure=null;}w.onopen=w.onmessage=w.onclose=w.onerror=null;try{w.close();}catch{/* déjà fermée */}}
+ const fermer=()=>{if(coupure)fermerCapture(coupure.w);clearT(tour);clearT(reco);tour=reco=null;ouverte=false;const w=ws;ws=null;if(w)fermerCapture(w);};
  const numero=()=>(envoiN=Math.max(envoiN+1,maintenant()));
  async function envoyer(clair){if(!A||!ws||!ouverte)return false;const env=await chiffrer(A.D,'a>t',{...clair,n:numero(),h:maintenant()});
   if(!ws||!ouverte)return false;try{ws.send(JSON.stringify(env));}catch{return false;}return true;}
@@ -214,12 +219,15 @@ function creer({stockage,WS,executer,journal=()=>{},sources,chrome=null/* versio
   if(c.ok||c.motif==='perime'||c.motif==='ordre-inconnu'){recuN=o.n;await stockage.set({[CLE_NUMEROS]:{recu:recuN}}).catch(()=>{});}
   if(!c.ok){noter('telecommande-ordre',{ordre:nom,resultat:'refuse',motif:c.motif});
    if(Number.isSafeInteger(o?.n))await envoyer({type:'accuse',pour:o.n,ordre:nom,resultat:'refuse',motif:c.motif});return;}
-  let resultat='accepte',refus=null,texte=null;
-  try{await executer(c.action);}catch(e){resultat='refuse';texte=String(e?.message||e);refus=codeRefus(texte);}
+  let resultat='accepte',refus=null,texte=null;const remise=c.action==='reinitialiser-extension',liaison=remise&&A&&ws?{D:A.D,ws}:null;
+  try{await executer(c.action,remise?{confirme:true}:{});}catch(e){resultat='refuse';texte=String(e?.message||e);refus=codeRefus(texte);}
   /* Journal local : le code ET la phrase d'Ariane (bornée) ; au téléphone : le code et le cut seulement. */
   noter('telecommande-ordre',{ordre:nom,resultat,motif:refus?'refus-ariane':null,...(refus?{refus:refus.code,cut:refus.cut,texte:texte.slice(0,300)}:{})});
-  await envoyer({type:'accuse',pour:o.n,ordre:nom,resultat,motif:refus?refus.code:null,cut:refus?refus.cut:null});
-  await envoyerEtat(true).catch(()=>{});}
+  const accuse={type:'accuse',pour:o.n,ordre:nom,resultat,motif:refus?refus.code:null,cut:refus?refus.cut:null};
+  /* CH-149 : la remise coupe la liaison dans le service worker. L'accusé utilise la liaison capturée, refermée au prochain tour par
+   * `couperApresReponse`, pour que le téléphone sache qu'il doit se réappairer au lieu de retenter indéfiniment l'ancienne clé. */
+  if(remise){if(liaison)try{const env=await chiffrer(liaison.D,'a>t',{...accuse,n:numero(),h:maintenant()});liaison.ws.send(JSON.stringify(env));}catch{/* liaison déjà close */}finally{fermerCapture(liaison.ws);}}
+  else{await envoyer(accuse);await envoyerEtat(true).catch(()=>{});}}
  async function charger(){const r=await stockage.get([CLE_APPAIRAGE,CLE_NUMEROS]);const a=r?.[CLE_APPAIRAGE];
   if(!a||typeof a.relais!=='string'||typeof a.code!=='string')return null;
   recuN=Number.isSafeInteger(r?.[CLE_NUMEROS]?.recu)?r[CLE_NUMEROS].recu:0;
@@ -233,6 +241,10 @@ function creer({stockage,WS,executer,journal=()=>{},sources,chrome=null/* versio
    await stockage.set({[CLE_APPAIRAGE]:{relais,code,depuis:new Date(maintenant()).toISOString()},[CLE_NUMEROS]:{recu:0}});
    noter('telecommande-appairee',{});connecter(v);return {code,lien:relais+'/#k='+code};},
   async couper(){vie++;fermer();A=null;recuN=0;dernierTexte=dernierEnvoi=null;await stockage.remove([CLE_APPAIRAGE,CLE_NUMEROS]);noter('telecommande-coupee',{});return this.etat();},
+  /* Seule la remise à zéro l'utilise : l'ordre en cours capture la socket et peut encore chiffrer son accusé avant ce tour de fermeture. */
+  async couperApresReponse(){vie++;clearT(tour);clearT(reco);tour=reco=null;const w=ws;ws=null;ouverte=false;
+   if(w)coupure={w,minuterie:setT(()=>fermerCapture(w),1000)}; /* secours hors téléphone : l'ordre en cours ferme lui-même après son accusé */
+   A=null;recuN=0;dernierTexte=dernierEnvoi=null;await stockage.remove([CLE_APPAIRAGE,CLE_NUMEROS]);noter('telecommande-coupee',{});return this.etat();},
   arreter(){vie++;fermer();},
   /* Pour le panneau : jamais la clé, sauf `code()` demandé pour réafficher le QR. */
   etat(){return {appairee:!!A,relais:A?A.relais:null,connectee:!!A&&ouverte,dernierEnvoi:dernierEnvoi?new Date(dernierEnvoi).toISOString():null,...(trop?{indisponible:trop}:{})};},
