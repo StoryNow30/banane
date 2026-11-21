@@ -51,6 +51,8 @@ const sansCH096=sansPatch('CH-096',CH096);
  * et toutes les autres commandes restent couverts par l'empreinte historique ; toute autre modification reste détectée. */
 const CH151={'src/adapter-page.js':['adapter-pose-rapide.patch','CH-151']};
 const sansCH151=sansPatch('CH-151',CH151);
+const CH150={'src/adapter-page.js':['adapter-deplacer-vue.patch','CH-150']};
+const sansCH150=sansPatch('CH-150',CH150);
 /* Forme 3 de l'empreinte du contrat d'ESV (12/11) : les écouteurs jQuery d'ESV ne sont plus hachés (faux avis « contrat changé » en fin de séance) ;
  * lecture seule au « Connecter », ni pose ni validation. Retiré pour comparer : l'adaptateur est celui d'avant. */
 const sansContrat3=t=>t.replace(/\n  \* Forme 3 \(12\/11, plainte de l'opérateur\)[^\n]*\n[^\n]*\n[^\n]*\*\//,'*/').replace(" Forme 2.*/"," Forme 2. */").replace('const FORME_CONTRAT=3,','const FORME_CONTRAT=2,')
@@ -293,7 +295,7 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
  for(const f of Object.keys(ECHO))assert.ok(REF.fichiers[f],f+' existait');
  /* L'adaptateur et la garde d'entrée (qui posent et valident) n'ont pas bougé : ils sont dans la liste comparée ci-dessus. */
  /* 4.9.5.13 : l'adaptateur de page ne change que par `vueFin` (lecture seule après la pose) : sans ces lignes, il est celui de la test 8. */
- const ap=sansCH151('src/adapter-page.js',sansPatchs(sansRustLidar(sansCH077(sansCH084v(sansCH096('src/adapter-page.js',sansContrat3(lire('src/adapter-page.js')))))))).replace("if(!vue){const fin=snapshot();fin.vueFin=vueFin(fin);return fin;}",'if(!vue)return snapshot();').replace('fin.vueFin=vueFin(fin);','')
+ const ap=sansCH151('src/adapter-page.js',sansPatchs(sansRustLidar(sansCH077(sansCH084v(sansCH096('src/adapter-page.js',sansContrat3(sansCH150('src/adapter-page.js',lire('src/adapter-page.js'))))))))).replace("if(!vue){const fin=snapshot();fin.vueFin=vueFin(fin);return fin;}",'if(!vue)return snapshot();').replace('fin.vueFin=vueFin(fin);','')
   .replace(/\n \/\* 4\.9\.5\.13 \(analyse du lot 2:19[\s\S]*?catch\(e\)\{return \{version:'vue-fin-v1',erreur:String\(e\?\.message\|\|e\)\.slice\(0,80\)\};\}\}/,'')
   /* T20a : relevé en lecture seule du sélecteur de parties, au ping de contrat (aucun clic, aucune écriture) : sans ces lignes, l'adaptateur est celui de la test 8. */
   .replace(/ \/\* T20a — RELEVÉ DU SÉLECTEUR DE PARTIES[\s\S]*?return \{status:'ok',current:c\.length===1\?c\[0\]\.part:null,parts\};\}\n/,'')
@@ -314,7 +316,8 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
 });
 test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la recapture des captures vides (coupée)',()=>{
  const S=require('../src/settings.js'),canon=v=>JSON.stringify(v,(k,x)=>typeof x==='function'?'<fn>':x);
- const {skipExplicite,echo,passeDifferesDefaut,file,relectureDefaut,relectureSignalEteint,relecturePause,validationSurPlace,ecrituresApresValidation,eveil,correctionEntreParties,rust,...reste000}=S,{repliCourt,imagesMin,...piloteSans}=reste000.pilote,reste00={...reste000,pilote:piloteSans},{deplacement:_dep,actif:_dvActif,...deplacerVueSans0}=reste00.deplacerVue,deplacerVueSans={actif:false,...deplacerVueSans0},reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,voieB1EcartOmbre,gardeVoieOmbre,serrageLotOmbre,signalEteint,chargement,reparationPotree,voieSureOmbre,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
+ const {skipExplicite,echo,passeDifferesDefaut,file,relectureDefaut,relectureSignalEteint,relecturePause,validationSurPlace,ecrituresApresValidation,eveil,correctionEntreParties,rust,...reste000}=S,{repliCourt,imagesMin,...piloteSans}=reste000.pilote,reste00={...reste000,pilote:piloteSans},deplacerVueSans=Object.fromEntries(Object.keys(reste00.deplacerVue).filter(k=>k!=='deplacement').map(k=>[k,k==='actif'?false:k==='preVol'?true:reste00.deplacerVue[k]])),reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,voieB1EcartOmbre,gardeVoieOmbre,serrageLotOmbre,signalEteint,chargement,reparationPotree,voieSureOmbre,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
+ assert.equal(S.deplacerVue.preVol,false,'CH-150 : aller-retour preVol coupé par défaut');
  /* D-296 (CH-064) : clé ajoutée au premier niveau, la lecture LiDAR en Rust, ALLUMÉE par défaut (accord de l'opérateur), sortie identique au bit près. */
  assert.deepEqual({...rust},{lidar:true},'D-296 : lecture LiDAR en Rust, allumée par défaut');
  /* CH-084 (D-313) : clé ajoutée au premier niveau, la fin de la fenêtre de Maj+Espace sur l'écriture vue, ALLUMÉE pour le lot d'essai (relecture seulement). */

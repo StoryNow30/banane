@@ -6,7 +6,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),crypto=re
 const {lot,neutre,decisions,metier,SCOPE,EsvVue,production,memoire,base,K,S,GOLDEN,h,versionGolden,ev,scopeDe,attendre,EsvTrou,lotDiffere,d112}=require('./helpers/lot-profil.cjs');
 
 for(const profil of ['L1-s','L1-se'])test(`profil « ${profil} » : cible de la chaîne hors de la vue → la vue est amenée (pré-vol), puis la pose est faite avec le plan`, async()=>{
- const x=await lot({profil:profil==='L1-se'?null:profil});
+ const x=await lot({profil:profil==='L1-se'?null:profil,reglage:{...S.deplacerVue,actif:false,preVol:true}});
  assert.equal(scopeDe(x.b).lotProfil,profil,'profil figé dans le scope (L1-se : le défaut, test 14)');
  /* 111 : posé et validé comme avant ; 112 (cible de la voie hors de la vue gauche) : pré-vol des deux rails, puis pose avec le plan. */
  assert.deepEqual(x.adapter.calls,['capture','apply','validate','next','capture','amenerDansLaVue','amenerDansLaVue','apply']);

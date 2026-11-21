@@ -9,8 +9,8 @@ const GOLDEN=require('./fixtures/lot-sans-vue-50-base.json');
 const ev=(b,type)=>b.store.events.filter(e=>e.type===type);
 let actif,refuse;
 before(async()=>{
- actif=await lot({reglage:{...S.deplacerVue,actif:true}});
- refuse=await lot({reglage:{...S.deplacerVue,actif:true},amener:{ok:false,raison:'camera-immobile'}});
+ actif=await lot({reglage:{...S.deplacerVue,actif:true,preVol:true}});
+ refuse=await lot({reglage:{...S.deplacerVue,actif:true,preVol:true},amener:{ok:false,raison:'camera-immobile'}});
 });
 
 test('réglage actif : plan de geste (dézoom), pré-vol par la page, pose avec la vue déplacée ; le cut 112 est posé (dernier cut du lot : posé sans validation, comme tout dernier cut)',()=>{
