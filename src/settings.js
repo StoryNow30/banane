@@ -110,8 +110,10 @@
      * sort d'après son numéro, reste en référence pour surveiller la qualité (validé le 13 octobre :
      * −64 % par cut sur le lot de 112 cuts de la 4.9.0.8, qualité identique). « tirage » reste lisible.
      * D-304 (opérateur, 08/11) : « echantillon50 », un cut sur cinquante en référence (témoin de qualité gardé, à moindre coût :
-     * les témoins à un sur dix prenaient 36 % du temps de capture le 08/11). « echantillon » reste lisible. */
-    modeRapide: 'echantillon50',
+     * les témoins à un sur dix prenaient 36 % du temps de capture le 08/11). « echantillon » reste lisible.
+     * D-380 / D-381 (CH-151) : « toujours », tous les cuts rapides. Supprimer les 124 captures témoins lentes du 19/11
+     * fait gagner 8,4 min pour les mêmes points LiDAR (3,92 s contre 180 ms en rapide) ; `repliCourt` et toutes les gardes sont conservés. */
+    modeRapide: 'toujours',
     /* D-157 (5.0) : `clicHumain`, le clic de pose du mode rapide (src/adapter-page.js, fiches/RAPIDE_HUMAIN.md).
      * La pose directe clique le rail gauche depuis la vue du rail droit : vers NDC −7, hors de la fenêtre, un clic
      * qu'aucun humain ne peut faire. 'tel-quel' (défaut) : comme avant, à l'octet près. 'gauche-recentre' : rail

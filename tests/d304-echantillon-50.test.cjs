@@ -15,12 +15,12 @@ test('un cut sur cinquante en référence, réparti sans paquets ; un sur dix re
   for(let c=0;c<5000;c++)if(ref(c)==='reference')assert.equal(T.REGLES.echantillon(c),'reference','un témoin à 1/50 est aussi un témoin à 1/10 : cut '+c);
 });
 
-function lidarPage(cut){const f=page(),pc=F.object([0,0,0],'PointCloudOctree'),n=F.object([0,0,0],'Points');
+function lidarPage(cut){const f=page({globals:{BananeSettings:{...S,pilote:{...S.pilote,modeRapide:'echantillon50'}}}}),pc=F.object([0,0,0],'PointCloudOctree'),n=F.object([0,0,0],'Points');
   n.geometry={attributes:{position:F.buffer([[0,.01,.01],[0,1.425,.01]])}};pc.material={clipBoxes:[],clipTask:0,clipMethod:0};pc.visibleNodes=[{sceneNode:n}];
   f.ctx.viewer.scene.pointclouds=[pc];f.ctx.Potree=F.enums;f.nodes.get('O2N3DCutDescription').textContent=`Cut ${cut} of part 23`;f.ctx.BananeLidar.capture=opts=>L.capture(opts);return f;}
 
-test('réglage livré (D-304) : la page suit la règle d’un sur cinquante et la consigne',async()=>{
-  assert.equal(S.pilote.modeRapide,'echantillon50');const ref=T.REGLES.echantillon50;
+test('D-380 / D-381 : le livré est « toujours » ; l’ancienne règle d’un sur cinquante reste rejouable et consignée',async()=>{
+  assert.equal(S.pilote.modeRapide,'toujours');const ref=T.REGLES.echantillon50;
   const cuts=[0,1,2,50,51,102,200];for(let c=0;c<400&&cuts.length<12;c++)if(ref(c)==='reference'&&!cuts.includes(c))cuts.push(c);
   for(const cut of cuts){const f=lidarPage(cut),out=await f.call('capture',await f.call('state'));
     assert.equal(out.readStrategy.lecture,ref(cut),`cut ${cut}`);assert.equal(out.readStrategy.regleLecture,'echantillon50');}

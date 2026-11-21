@@ -9,7 +9,12 @@ test.afterEach(fermer);
 
 async function jusquauChangement(M, reglage = {}) {
   await M.vie(); Object.assign(M.adapter, { gestes: true, ...reglage });
-  await M.demarrer(2); await M.partie(0);
+  await M.demarrer(2);
+  /* CH-151 : le lot simulé contient un différé fictif. Ces essais historiques vérifient l'ordre quand il ne reste
+   * rien à poser : déclarer ce différé écrit par la 2e passe (0 restant) ; le saut direct est couvert par CH-151. */
+  await M.jusqua(() => M.etat()?.partie?.lotId, 3000, 'lot initial');
+  M.b.get('passeDiff').vue = { lotId: M.etat().partie.lotId, mode: 'ecriture', etat: 'finie', ecrites: 1 };
+  await M.partie(0);
 }
 const tentatives = M => M.journal('file-parties-changement').filter(e => !e.retour);
 const sansDecision = M => assert.ok(!M.adapter.calls.some(c => /^(validate|skip|apply)/.test(c)), 'aucune validation, aucun SKIP, aucune pose : ' + M.adapter.calls.join(','));

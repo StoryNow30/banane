@@ -1,6 +1,6 @@
 'use strict';
 /* 5.0 (D-170 à D-176) — RELECTURE APRÈS LE LOT, service worker réel (tests/helpers/relecture-lot.cjs) : corriger : seuls les verts
- * PROUVÉS (statut lu dans ESV) qui passent la règle prudente sont posés, par la commande `apply` du lot (clic « tout-recentre »), puis
+ * PROUVÉS (statut lu dans ESV) qui passent la règle prudente sont posés, par la commande `apply` du lot (CH-151 : « gauche-recentre » + image), puis
  * validés par Maj+Espace, le geste de l'opérateur (revue, correction 4), qui valide SUR PLACE (D-179) : preuve = l'écriture « valid » de la
  * ligne ET le même cut toujours affiché ; la passe avance ensuite d'UN PAS vers le cut suivant. Jamais de pose juste après un saut par
  * la carte : le premier cut d'une plage est atteint par un pas (correction 3).
@@ -24,9 +24,9 @@ test('corriger : verts prouvés qui passent la règle, `apply` du lot puis Maj+E
    assert.equal(n?.action,'goToCut','après Maj+Espace, la passe avance (un pas)');assert.equal(n.args[1].chemin,'pas');assert.equal(n.args[0].cut,suite[i].args[0].cut+1,'vers le cut suivant');}}
  const apres=apresLot(b,lot);assert.deepEqual(posesApresSaut(apres),[],'aucune pose juste après un saut par la carte');
  for(const a of ['validateAndNext','validateInPlace','skipAndNext','next','nextWithoutDecision','restore'])assert.equal(apres.some(c=>c.action===a),false,a);
- /* Le chemin de la pose d'un rouge, clic « tout-recentre » (T-5 : jamais de clic direct) ; relu ; puis Maj+Espace. */
+ /* CH-151 : rail droit visible posé en direct, rail gauche recentré à l'image ; jamais de clic hors canevas. */
  const poses=apres.filter(c=>c.action==='apply');
- for(const c of poses){assert.deepEqual(j(c.args[2]),{clicHumain:'tout-recentre'});assert.ok(['left','right'].every(s=>Array.isArray(c.args[1][s].delta)&&c.args[1][s].delta.length===3));}
+ for(const c of poses){assert.deepEqual(j(c.args[2]),{clicHumain:'gauche-recentre',selectionImage:true});assert.ok(['left','right'].every(s=>Array.isArray(c.args[1][s].delta)&&c.args[1][s].delta.length===3));}
  const i=apres.findIndex(c=>c.action==='apply');assert.deepEqual(apres.slice(i-1,i+3).map(c=>c.action),['state','apply','state','validerMajEspace']);
  assert.deepEqual(j(apres.find(c=>c.action==='validerMajEspace').args.slice(1)),[{part:23,pageId:adapter.identity.pageId}],'aucune option : le simulateur échouerait');
  /* Aucune marque propre à la relecture dans ce qui part vers la page, lot compris (R7). */

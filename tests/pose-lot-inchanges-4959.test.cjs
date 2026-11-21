@@ -46,6 +46,11 @@ const sansCH147=sansPatch('CH-147',CH147),sansCH094=(f,t)=>sansPatch('CH-094',CH
  * une validation ni une commande d'un lot sans panne (tests/ch096-*.test.cjs). Toute autre modification de ces fichiers reste détectée. */
 const CH096={'src/adapter-page.js':['adapter-page.patch','CH-096'],'src/core.js':['core.patch','CH-096']};
 const sansCH096=sansPatch('CH-096',CH096);
+/* CH-151 (D-380 / D-381) : seule la relecture et la 2e passe demandent `gauche-recentre` + `selectionImage` à `apply`.
+ * Le patch déclaré (chantiers/CH-151/adapter-pose-rapide.patch) est retiré pour comparer : le chemin du lot (`tel-quel`)
+ * et toutes les autres commandes restent couverts par l'empreinte historique ; toute autre modification reste détectée. */
+const CH151={'src/adapter-page.js':['adapter-pose-rapide.patch','CH-151']};
+const sansCH151=sansPatch('CH-151',CH151);
 /* Forme 3 de l'empreinte du contrat d'ESV (12/11) : les écouteurs jQuery d'ESV ne sont plus hachés (faux avis « contrat changé » en fin de séance) ;
  * lecture seule au « Connecter », ni pose ni validation. Retiré pour comparer : l'adaptateur est celui d'avant. */
 const sansContrat3=t=>t.replace(/\n  \* Forme 3 \(12\/11, plainte de l'opérateur\)[^\n]*\n[^\n]*\n[^\n]*\*\//,'*/').replace(" Forme 2.*/"," Forme 2. */").replace('const FORME_CONTRAT=3,','const FORME_CONTRAT=2,')
@@ -288,7 +293,7 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
  for(const f of Object.keys(ECHO))assert.ok(REF.fichiers[f],f+' existait');
  /* L'adaptateur et la garde d'entrée (qui posent et valident) n'ont pas bougé : ils sont dans la liste comparée ci-dessus. */
  /* 4.9.5.13 : l'adaptateur de page ne change que par `vueFin` (lecture seule après la pose) : sans ces lignes, il est celui de la test 8. */
- const ap=sansPatchs(sansRustLidar(sansCH077(sansCH084v(sansCH096('src/adapter-page.js',sansContrat3(lire('src/adapter-page.js'))))))).replace("if(!vue){const fin=snapshot();fin.vueFin=vueFin(fin);return fin;}",'if(!vue)return snapshot();').replace('fin.vueFin=vueFin(fin);','')
+ const ap=sansCH151('src/adapter-page.js',sansPatchs(sansRustLidar(sansCH077(sansCH084v(sansCH096('src/adapter-page.js',sansContrat3(lire('src/adapter-page.js')))))))).replace("if(!vue){const fin=snapshot();fin.vueFin=vueFin(fin);return fin;}",'if(!vue)return snapshot();').replace('fin.vueFin=vueFin(fin);','')
   .replace(/\n \/\* 4\.9\.5\.13 \(analyse du lot 2:19[\s\S]*?catch\(e\)\{return \{version:'vue-fin-v1',erreur:String\(e\?\.message\|\|e\)\.slice\(0,80\)\};\}\}/,'')
   /* T20a : relevé en lecture seule du sélecteur de parties, au ping de contrat (aucun clic, aucune écriture) : sans ces lignes, l'adaptateur est celui de la test 8. */
   .replace(/ \/\* T20a — RELEVÉ DU SÉLECTEUR DE PARTIES[\s\S]*?return \{status:'ok',current:c\.length===1\?c\[0\]\.part:null,parts\};\}\n/,'')
@@ -350,7 +355,7 @@ test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la reca
  assert.equal(correctionEntreParties.actif,true,'Aurore entre les parties : allumée par défaut (CH-037, décision de l’opérateur du 01/11), sans effet sur le lot');
  assert.equal(passeDifferesDefaut,passeDifferes,'les valeurs livrées de la passe (seule clé ajoutée au premier niveau) sont celles du lot');
  /* D-304 (opérateur, 08/11) : seule valeur changée, le témoin de qualité à un cut sur cinquante ; le reste est l'empreinte d'avant. */
- assert.equal(S.pilote.modeRapide,'echantillon50','D-304 : témoin à un cut sur cinquante');
+ assert.equal(S.pilote.modeRapide,'toujours','D-380 / D-381 : tous les cuts rapides, repliCourt et gardes inchangés');
  /* CH-084 : deux réglages ajoutés au pilote, ALLUMÉS par D-315 (opérateur) : repli court à 600 ms, deux images ; le reste est l'empreinte d'avant. */
  assert.deepEqual({...repliCourt},{actif:true,silenceMs:600},'CH-084, D-315 : repli court allumé');assert.equal(imagesMin,2,'CH-084, D-315 : deux images');
  assert.equal(sha(canon(reste.pilote?{...reste,pilote:{...reste.pilote,modeRapide:'echantillon'}}:reste)),REF.reglages.reste,'réglages de la pose, du lot, de l\'export, de la relecture : inchangés');

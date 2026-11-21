@@ -12,14 +12,14 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/etat-morceaux.js','src/storage.js','src/journal-index.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/relecture-signal.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/recherche-large.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/ancre-trajectoire.js','src/decision-lot-partagee.js','src/gestes-vue.js','src/deplacement-vue.js','src/serie-captures-vides.js','src/voie-b1-ecart.js','src/garde-voie-ombre.js','src/serrage-lot-ombre.js','src/voie-sure-ombre.js','src/telecommande.js','src/reinitialisation.js');
+ 'src/gcv1-export.js','src/engine.js','src/etat-morceaux.js','src/storage.js','src/journal-index.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-filtre-liste.js','src/relecture-ombre.js','src/relecture-critere.js','src/relecture-signal.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/recherche-large.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/ancre-trajectoire.js','src/decision-lot-partagee.js','src/gestes-vue.js','src/deplacement-vue.js','src/serie-captures-vides.js','src/voie-b1-ecart.js','src/garde-voie-ombre.js','src/serrage-lot-ombre.js','src/voie-sure-ombre.js','src/telecommande.js','src/reinitialisation.js');
 /* CH-058 : le store est équipé de l'index du journal en mémoire (src/journal-index.js) : les étapes qui relisaient TOUT
  * IndexedDB lisent seulement les objets utiles. Aucune écriture d'index en base, aucune montée de version. */
 /* Types d'événements indexés : ceux que lisent les étapes bornées ci-dessous et src/correction-liste.js (parité sur les journaux
  * réels : tools/ch058-parite-index.cjs). Un type absent d'ici ne peut pas être lu par `lireTypes` (erreur explicite). */
 const TYPES_INDEXES=Object.freeze(['regles-metier-ombre','validation-accepted','correction-liste','correction-couverture','batch-started',
  'gcv1-shadow-observed','batch-stopped-at-end','relecture-debut','capture-abandoned','esv-observation','passe-differes-ecriture',
- 'garde-apres-differe','garde-apres-differe-suivant','relecture-ombre','correction-debut','correction-fin']);
+ 'garde-voie-ombre','garde-apres-differe','garde-apres-differe-suivant','relecture-ombre','correction-debut','correction-fin']);
 const store=globalThis.BananeJournalIndex?.equiper?BananeJournalIndex.equiper(new BananeStorage3(),{types:TYPES_INDEXES}):new BananeStorage3();
 const baseStoreBrut=store?.__base||store;
 /* CH-148 (Lot B3) : suivi d'invalidation pour la vue mémoïsée, cache de clés session et cache éphémère de capture courante. */
@@ -3622,6 +3622,12 @@ async function correctionOuvrir(args){
    changementPartie:{de:lu.part,vers:part,resultat:'eteint',eteint:P.eteint}});
   return {ok:false,resultat:'refuse',code:'PASSAGE_ETEINT',message,cible:{part,cut},correction:C};}
  if(C.passage)delete C.passage;
+ /* CH-151 (D3) : la coupe demandée est déjà affichée. Ne pas clore la période Écho et ne pas rejouer une navigation
+  * sans objet : la visite reste ouverte, sans coupure ni flash ; le cut courant et le journal sont néanmoins mis à jour. */
+ if(partCut(lu)&&lu.part===part&&lu.cut===cut){
+  C.courant={part,cut,at:new Date().toISOString(),resultat:'deja-affiche'};await engine.save();
+  journalerSimple('correction-ouvrir',{correctionId:C.id,identity:{part,cut},resultat:'deja-affiche',code:null,message:null,ecoReprise:engine.s.native?.status??null});
+  return {ok:true,resultat:'deja-affiche',cible:{part,cut},correction:C};}
  const enMarche=engine.s.native.status==='RUNNING';
  correctionOuverture=true;let r=null,erreur=null;
  try{if(enMarche)await native.pause();
@@ -3825,8 +3831,10 @@ async function relectureEntree(b){const partie=b.scope.part,cutDe=x=>x?.cut??x?.
  const a=engine.s.applied?.identity;if(a&&a.part===partie)noter(a.cut,poses,'poseEnAttente');
  for(const k of engine.s.blockedTargets||[]){const [,p,c]=String(k).split('|');if(Number(p)===partie)noter(Number(c),poses,'bloques');}
  const lot=[...poses].map(c=>({cut:c,differe:false})).concat([...differes].filter(c=>!poses.has(c)).map(c=>({cut:c,differe:true})));
- const zonesPN=[],zonesADV=[];let events=[];try{events=await lireTypes(['regles-metier-ombre'])||[];}catch{/* journal illisible */}
- for(const e of events){if(e?.type!=='regles-metier-ombre'||e.portee!=='cut'||e.batchId!==b.id||e.identity?.part!==partie)continue;
+ const zonesPN=[],zonesADV=[],alertesGardeVoie=[];let events=[];try{events=await lireTypes(['regles-metier-ombre','garde-voie-ombre'])||[];}catch{/* journal illisible */}
+ for(const e of events){if(e?.type==='garde-voie-ombre'&&(e.batchId===b.id||e.lotId===b.id)&&e.identity?.part===partie&&Number.isInteger(e.identity?.cut)
+   &&(e.auraitPause===true||e.verdict==='alerte'))alertesGardeVoie.push({part:partie,cut:e.identity.cut});
+  if(e?.type!=='regles-metier-ombre'||e.portee!=='cut'||e.batchId!==b.id||e.identity?.part!==partie)continue;
   const c=e.zone?.pnControle,z=e.zone?.advControle;
   if(Array.isArray(c)&&c.length===2&&c.every(Number.isInteger))zonesPN.push(c);if(Array.isArray(z)&&z.length===2&&z.every(Number.isInteger))zonesADV.push(z);}
  let aControler=[],ecartementPartieMm=null;try{const v=await vertsAControler({partie});if(v?.actif&&Array.isArray(v.verts))aControler=v.verts.map(x=>x.i).filter(Number.isInteger);
@@ -3835,7 +3843,9 @@ async function relectureEntree(b){const partie=b.scope.part,cutDe=x=>x?.cut??x?.
  const t=b.totalReleve,total=t?.part===partie&&Number.isInteger(t.total)?t.total:null;
  const dansLot=new Set(lot.map(x=>x.cut));
  /* H5 (audit P-5), en ombre : les verts de la liste d'ESV à plus de 15 mm de la médiane d'écartement de la partie (20 lignes au moins). */
- let ecartement=[],lignes=[];try{lignes=await relectureLignesListe(partie,b);const verts=lignes.filter(x=>x.statut==='valid'&&x.operateur!==true&&!dansLot.has(x.i)&&Number.isFinite(x.g));
+ let ecartement=[],lignes=[],tableListe=null;try{const memo=await relectureMemoireListe(partie,b);
+  if(memo){tableListe=memo.table;lignes=memo.lignes;}else lignes=await relectureLignesListe(partie,b);
+  const verts=lignes.filter(x=>x.statut==='valid'&&x.operateur!==true&&!dansLot.has(x.i)&&Number.isFinite(x.g));
   if(verts.length>=20){const v=verts.map(x=>x.g).sort((x,y)=>x-y),m=v.length>>1,med=v.length%2?v[m]:(v[m-1]+v[m])/2;
    if(!Number.isFinite(ecartementPartieMm))ecartementPartieMm=Math.round(med*10)/10;
    ecartement=verts.filter(x=>Math.abs(x.g-med)>15).map(x=>x.i);}}catch{/* liste illisible : rien en plus */}
@@ -3846,15 +3856,22 @@ async function relectureEntree(b){const partie=b.scope.part,cutDe=x=>x?.cut??x?.
  if(!Number.isFinite(ecartementPartieMm)&&Number.isFinite(page?.ecartementMm))ecartementPartieMm=page.ecartementMm;
  /* Zones figées AVANT la passe, tirées des seules captures du lot (événements `regles-metier-ombre` de ce lot) : les captures de la
   * passe ne créent ni n'étendent jamais une zone (audit P-5 : une fausse zone PN apparaît dès qu'on capture des verts). */
- return {partie,total,lot,sources,zonesPN,zonesADV,aControler,ecartement,ecartementPartieMm,zonesSource:'lot',vu};}
+ return {partie,total,lot,sources,zonesPN,zonesADV,aControler,ecartement,ecartementPartieMm,zonesSource:'lot',vu,tableListe,alertesGardeVoie};}
 /* Lignes de la liste d'ESV de la partie (instantané E1 qui concorde avec le lot, sinon fenêtres lues par B1), écartement et « vu ». */
-async function relectureLignesListe(partie,b){const V=globalThis.BananeVertsAControler,LM=globalThis.BananeListeMemoire;if(!V)return [];
+/* CH-151 / CH-152 : instantané de `liste-memoire.js`, rendu seulement s'il concorde avec le lot (au moins 80 % de ses cuts
+ * lus rouges avant le lot). La table décompactée sert au filtre D1 ; les lignes gardent leur forme historique. */
+async function relectureMemoireListe(partie,b){const V=globalThis.BananeVertsAControler,LM=globalThis.BananeListeMemoire;
+ if(!V||!LM||globalThis.BananeSettings?.listeMemoire?.actif===false)return null;
  const lot=new Set([...(b.processed||[]),...(b.deferred||[])].map(x=>x?.cut??x?.identity?.cut).filter(Number.isInteger));
  const g=x=>{const d=x.bords;return Number.isFinite(x.g)?x.g:d?.left&&d?.right?Math.hypot(d.left[0]-d.right[0],d.left[1]-d.right[1],d.left[2]-d.right[2])*1000:null;};
- try{if(LM&&globalThis.BananeSettings?.listeMemoire?.actif!==false){const inst=(await LM.instantanes(chrome.storage.local,[partie]))?.[0]?.snap,dec=inst?LM.decompacter(inst):null;
-  if(dec){const L=V.lignesDeInstantane(dec),parI=new Map(L.map(x=>[x.i,x])),cuts=[...lot];
-   const rouges=cuts.filter(c=>{const x=parI.get(c);return x&&(x.statut!=='valid'||x.operateur);}).length;
-   if(cuts.length&&rouges>=0.8*cuts.length)return L.map(x=>({...x,g:g(x),vu:Array.isArray(dec.fl)||ArrayBuffer.isView(dec.fl)?(dec.fl[x.i]&2)===2:undefined}));}}}catch{/* stockage illisible */}
+ try{const inst=(await LM.instantanes(chrome.storage.local,[partie]))?.[0]?.snap,dec=inst?LM.decompacter(inst):null;if(!dec)return null;
+  const L=V.lignesDeInstantane(dec),parI=new Map(L.map(x=>[x.i,x])),cuts=[...lot];
+  const rouges=cuts.filter(c=>{const x=parI.get(c);return x&&(x.statut!=='valid'||x.operateur);}).length;
+  if(!cuts.length||rouges<0.8*cuts.length)return null;
+  return {table:dec,lignes:L.map(x=>({...x,g:g(x),vu:Array.isArray(dec.fl)||ArrayBuffer.isView(dec.fl)?(dec.fl[x.i]&2)===2:undefined}))};}
+ catch{return null;}}
+async function relectureLignesListe(partie,b){const V=globalThis.BananeVertsAControler;if(!V)return [];
+ const memo=await relectureMemoireListe(partie,b);if(memo)return memo.lignes;
  const mem=reglesOmbre.mem;
  if(mem?.lignes?.size&&b?.id===mem.lotId&&b?.scope?.part===partie)return [...mem.lignes].map(([i,x])=>({i,statut:x.statut,operateur:false,g:x.g}));
  return [];}
@@ -3989,7 +4006,7 @@ async function relectureLancer({auto=false,passe=null,bornes:argsBornes=null}={}
    ecartementPartieMm:entree.ecartementPartieMm??null,cutsNeufsAnnonces:neufs,sourcesLot:entree.sources,chaine:'vide',validation:cfg.validation,
    zonesSource:entree.zonesSource,zones:{pn:entree.zonesPN.slice(0,64),adv:entree.zonesADV.slice(0,64)},tempsEstimeS:sel.tempsEstimeS,plafondCuts:sel.plafondCuts,plafondParZone:sel.plafondParZone,
    plages:sel.plages.map(x=>({debut:x.debut,fin:x.fin,zone:x.zone,libelle:x.libelle,relus:x.relus})),horsPlafond:sel.horsPlafond.map(x=>({debut:x.debut,fin:x.fin,libelle:x.libelle})),
-   reglages:p.reglages},p);
+   filtresListe:sel.filtresListe??0,filtresListeCompte:sel.filtresListe?.length??0,reglages:p.reglages},p);
   if(ecartesBornes)relectureBornesJournal(p,bornes,ecartesBornes,'lancement');
   relecture.tache=relecturePasse(p,b,sel,reglages,entree).catch(e=>{if(relecture.passe===p&&p.etat==='en-cours'){p.etat='erreur';p.message=`Relecture arrêtée : ${String(e?.message||e).slice(0,300)}`;p.fin=new Date().toISOString();
    relectureJournal('relecture-fin',{mode:p.mode,modeEffectif:p.modeEffectif,issue:'erreur',raison:p.message,faits:p.faits,corriges:p.corriges,vus:p.vus},p);}
@@ -4186,14 +4203,15 @@ async function remettrePose(b,now,raison,depuisMs=null){const K=globalThis.Banan
    return `${raison} ; remise impossible mais rien à remettre (rails inchangés à 1 mm, aucune écriture vue pour ce cut)`;}}
  if(!ok)throw Error(`cut ${cut} : pose d’Ariane non conforme (${raison}) et remise impossible ; rien n’est validé. Contrôle ce cut dans ESV (une pose non validée n’est pas enregistrée).`);
  await relectureEffacerIntention(cut,b.id);return `${raison} ; pose remise`;}
-/* Pose des rails d'un cut (intention notée) par la commande `apply` du lot, relue à 1 mm, puis rails relus comme le moteur avant de valider. T-5 : la pose
- * de la passe ne clique jamais en direct (« tout-recentre », D-157), quel que soit le réglage du lot. Une anomalie remet la pose d'avant (`restore`) : rend
+/* Pose des rails d'un cut (intention notée) par la commande `apply` du lot, relue à 1 mm, puis rails relus comme le moteur avant de valider. CH-151 : la pose
+ * de la relecture et de la 2e passe pose le rail droit en direct seulement s'il est visible (`gauche-recentre`, jamais hors canevas), et sélectionne à
+ * l'image (`selectionImage`) au lieu d'attendre deux recentrages de 300 ms. Le lot garde son propre clic. Une anomalie remet la pose d'avant (`restore`) : rend
  * alors la raison, intention effacée. Rend null si la pose est en place (l'intention reste, à effacer après la validation) ; lève si ESV est muet ou si la
  * remise est impossible. */
 async function poserPuisVerifier(b,now,rails,expected,origine=null){const K=globalThis.BananeCore3,cut=now.identity.cut,depuisMs=Date.now();
  await relectureNoterIntention({lotId:b.id,part:now.identity.part,cut,at:new Date().toISOString(),...(origine?{origine}:{})});
  const remettre=raison=>remettrePose(b,now,raison,depuisMs);
- let result;try{result=await applyInESV(now,rails,{clicHumain:'tout-recentre'});}
+ let result;try{result=await applyInESV(now,rails,{clicHumain:'gauche-recentre',selectionImage:true});}
  catch(e){if(/Adaptateur ESV sans réponse|Une autre Ariane/.test(e?.message||''))throw Error(`cut ${cut} : ESV ne répond plus pendant la pose (${e.message}) ; rien n’est validé. Contrôle ce cut dans ESV.`);
   return remettre(`pose refusée par la page : ${String(e?.message||e).slice(0,160)}`);}
  if(K.key(result?.identity||{})!==K.key(now.identity)||!K.equalPoses(expected,result?.rails,.001))return remettre('pose non conforme à la commande (relecture à 1 mm)');
@@ -4210,6 +4228,9 @@ async function relectureCorriger(p,b,etat,calc){const K=globalThis.BananeCore3,G
  {let l2=null;try{l2=await relectureLigneListe(cut,now);}catch{l2=null;}if(!l2||l2.statut!=='valid'||l2.operateur)return refusee('statut du cut changé ou illisible depuis la lecture');}
  const rails=calc.commande.rails,expected=K.expectedPoses(now,rails),g=G.gaugeMmOf(expected,K.C);
  if(!G.admissible(G.classifyMm(g)))return refusee(`écartement hors contrat (${Math.round(g*10)/10} mm)`);
+ /* CH-151 (D3) : un vert déjà valid est déjà à la pose voulue. ESV ne réémettrait aucun PUT sur Maj+Espace :
+  * ne rien réécrire, plutôt que d'attendre 6 s une preuve qui ne peut pas venir. */
+ if(K.equalPoses(now.rails,expected,.0005))return {action:'deja-conforme',raison:'pose déjà conforme à moins de 0,5 mm'};
  const effacer=()=>relectureEffacerIntention(cut,b.id);
  const pose=await poserPuisVerifier(b,now,rails,expected);if(pose)return refusee(pose);
  /* Maj+Espace (D-175, D-179) : sur un vert, ESV écrit « valid » et reste sur le même cut. L'attente est portée par la passe (jeton). */
@@ -4413,7 +4434,7 @@ async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=glob
    else{try{action=await relectureCorriger(p,b,etat,calc);}
     catch(e){stop(`Relecture arrêtée : ${String(e?.message||e).slice(0,300)}`);
      relectureJournal('relecture-ombre',evenementCut(c,plage,{action:'correction-incertaine',raison:p.message,statutEsv:ligne,arrivee:par,chemins}),p);p.faits++;p.suiteCut=sel.cuts[ci+1]?.cut??null;break;}
-    if(action.action==='corrige'){p.corriges++;ici=action.arrivee?action.arrivee.cut:null;}else p.refusees++;}}
+    if(action.action==='corrige'){p.corriges++;ici=action.arrivee?action.arrivee.cut:null;}else if(action.action!=='deja-conforme')p.refusees++;}}
   const j=calc?.jugement;capture=null;
   relectureJournal('relecture-ombre',evenementCut(c,plage,{statutEsv:ligne,arrivee:par,chemins,
    poseEsv:j?.poseActuelle??null,poseCalculee:j?.poseCalculee??null,ecartMm:j?.ecartMm??null,pireMm:j?.pireMm??null,confiance:j?.confiance??null,
@@ -4559,7 +4580,11 @@ async function fileChangerPartie(vers,retour){const R=fileReglage(),e0=fileP.eta
  const attendu=()=>fileP.etat?.id===e0.id&&(retour?fileP.etat.etat==='relecture':fileP.etat.etat==='changement'&&fileP.etat.changement?.vers===vers);
  const s=await fileSuspens();if(s)return fileEvenement({type:'suspens',detail:s});
  if(!retour)await fileEvenement({type:'changement-envoye',vers});
- const X=await changerPartieEsv(vers,{retour,attendu,R,gestes:()=>!retour,attendreEsv:true});   /* CH-109 (C) : après un F5, ESV revient dans la borne */
+ /* CH-151 (D4c) : si le lot de la partie quittée laisse au moins un différé non écrit par la 2e passe,
+  * « Next non validated cut » serait refusé « reste-a-valider » : commencer directement par « suivant-dernier ». */
+ const b=engine?.s?.batch,v=passeDiff.vue?.lotId===b?.id?passeDiff.vue:null,ecritesPasse=Number.isInteger(v?.ecrites)?v.ecrites:0;
+ const differesRestants=Math.max(0,(b?.deferred?.length||0)-ecritesPasse);
+ const X=await changerPartieEsv(vers,{retour,attendu,R,gestes:()=>!retour,attendreEsv:true,differesRestants});   /* CH-109 (C) : après un F5, ESV revient dans la borne */
  if(X.quitte)return;
  if(X.ok)return retour?fileRelectureApresRetour(true):fileEvenement({type:'changement-ok',part:vers,cut:X.r.identity.cut});
  if(X.journalEchec)journalerSimple('file-parties-changement-echec',{vers,retour,motif:X.motif,detail:String(X.detail||'').slice(0,300),tentatives:X.tentatives,selecteurAvant:X.selecteurAvant,selecteurApres:X.selecteurApres,dureeMs:Date.now()-X.t0});
@@ -4571,7 +4596,7 @@ async function fileChangerPartie(vers,retour){const R=fileReglage(),e0=fileP.eta
  * la preuve (partie lue dans la page, rails présents, onglet ré-équipé), les bornes, un événement par tentative (`typeTentative`), l'arrêt prudent si ESV
  * ouvre une autre partie. `attendu()` faux : on quitte sans rien conclure. Rend {ok, r} ou {ok:false, motif, detail, journalEchec, selecteurApres},
  * avec toujours {tentatives, selecteurAvant, t0} ; ne touche à aucun état de la file ni de la correction. */
-async function changerPartieEsv(vers,{retour=false,attendu,R,gestes=()=>true,typeTentative='file-parties-changement',attendreEsv=false}){
+async function changerPartieEsv(vers,{retour=false,attendu,R,gestes=()=>true,typeTentative='file-parties-changement',attendreEsv=false,differesRestants=null}){
  const t0=Date.now(),tentatives=[];let selecteurAvant=null;
  const sel=x=>x?{status:x.status??null,current:entierOuNul(x.current),n:Array.isArray(x.parts)?x.parts.length:null,vers:Array.isArray(x.parts)?x.parts.some(p=>p?.part===vers):null}:null;
  const relever=async()=>{try{return sel((await call('ping',{contrat:true}))?.selecteurParties);}catch{return null;}};
@@ -4600,7 +4625,10 @@ async function changerPartieEsv(vers,{retour=false,attendu,R,gestes=()=>true,typ
  selecteurAvant=sel(ping?.selecteurParties);
  if(!Array.isArray(ping?.capacites)||!ping.capacites.includes('changerPartie'))return echec('commande-absente','l’adaptateur de la page ne connaît pas « changerPartie » (diff proposé de CH-017 non appliqué)');
  const de0=lu?.identity?.part??null;
- const modes=[...(gestes(de0??entierOuNul(ping?.label?.part))?['invalide-suivant','suivant-dernier'].filter(m=>ping.capacites.includes('changerPartie:'+m)):[]),'lien'];
+ /* CH-151 : avec des différés restants certifiés, sauter l'essai `invalide-suivant`, voué au refus `reste-a-valider`.
+  * Sans différé restant, ou quand l'état est inconnu (appel hors file), l'ordre historique est inchangé. */
+ const gestesOrdre=differesRestants>0?['suivant-dernier']:['invalide-suivant','suivant-dernier'];
+ const modes=[...(gestes(de0??entierOuNul(ping?.label?.part))?gestesOrdre.filter(m=>ping.capacites.includes('changerPartie:'+m)):[]),'lien'];
  /* Attente de la preuve d'une tentative acceptée : la partie demandée, ou une autre partie (arrêt), ou rien dans la borne. */
  const preuve=async(borne,T,t)=>{const fin=Date.now()+borne;let vu=false,derniere=null,partie=null;
   /* CH-049-C : jalons en ms depuis le début de la tentative (page rechargée, chargée, première lecture, première AUTRE partie lue, partie attendue lue), une fois chacun. */
