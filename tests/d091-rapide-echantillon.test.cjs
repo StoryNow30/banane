@@ -16,13 +16,13 @@ test('un cut sur dix en référence, régulièrement réparti, sans paquets',()=
   assert.equal(ref(0),'reference');assert.equal(ref(102),'reference');assert.equal(ref(100),'rapide');assert.equal(ref(101),'rapide');
 });
 
-function lidarPage(cut){const f=page(),pc=F.object([0,0,0],'PointCloudOctree'),n=F.object([0,0,0],'Points');
+function lidarPage(cut){const f=page({globals:{BananeSettings:{...S,pilote:{...S.pilote,modeRapide:'echantillon50'}}}}),pc=F.object([0,0,0],'PointCloudOctree'),n=F.object([0,0,0],'Points');
   n.geometry={attributes:{position:F.buffer([[0,.01,.01],[0,1.425,.01]])}};pc.material={clipBoxes:[],clipTask:0,clipMethod:0};pc.visibleNodes=[{sceneNode:n}];
   f.ctx.viewer.scene.pointclouds=[pc];f.ctx.Potree=F.enums;f.nodes.get('O2N3DCutDescription').textContent=`Cut ${cut} of part 23`;f.ctx.BananeLidar.capture=opts=>L.capture(opts);return f;}
 
-test('réglage livré : la page suit la même règle que l’outil, la consigne, et date chaque étape',async()=>{
-  /* D-304 : le réglage livré est « echantillon50 » (un sur cinquante) ; même mécanique que D-091. */
-  assert.equal(S.pilote.modeRapide,'echantillon50');const ref=T.REGLES.echantillon50;
+test('réglage historique D-304 : la page suit la même règle que l’outil, la consigne, et date chaque étape',async()=>{
+  /* D-380 / D-381 : le réglage livré est « toujours » ; « echantillon50 » reste rejouable pour les journaux et réglages anciens. */
+  assert.equal(S.pilote.modeRapide,'toujours');const ref=T.REGLES.echantillon50;
   for(let cut=0;cut<30;cut++){const f=lidarPage(cut),out=await f.call('capture',await f.call('state'));
     assert.equal(out.readStrategy.lecture,ref(cut),`cut ${cut}`);assert.equal(out.readStrategy.regleLecture,'echantillon50');
     const fin=f.progress.find(p=>p.stage==='capture-ready');assert.equal(fin.detail.regleLecture,'echantillon50');assert.equal(fin.detail.lecture,ref(cut));

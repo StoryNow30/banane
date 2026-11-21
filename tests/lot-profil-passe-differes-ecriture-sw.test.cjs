@@ -6,13 +6,13 @@ const { lotPasse, relancer, ev, base } = require('./helpers/passe-differes.cjs')
 const PS = require('../src/part-summary-49.js');
 const j = x => JSON.parse(JSON.stringify(x)), ECRITURE = { passes: 1, ecritureMax: 1 };
 
-test('écriture : un cut rouge est atteint, posé (clic « tout-recentre », relu), validé sur place et prouvé ; un seul cut (ecritureMax 1) ; compté posé', async () => {
+test('écriture : un cut rouge est atteint, posé (clic « gauche-recentre » + sélection à l’image, relu), validé sur place et prouvé ; un seul cut (ecritureMax 1) ; compté posé', async () => {
   const x = await lotPasse({ passe: ECRITURE, deux: true });
   assert.deepEqual(ev(x.b, 'passe-differes-ombre-fin')[0].cuts, [112, 114]);
   assert.deepEqual(x.pasPasse, [], 'rien n’est envoyé à ESV tant que la pose du dernier cut attend sa validation');
   await relancer(x); assert.equal(x.refus.issue, 'refus-depart'); assert.match(x.refus.raison, /pose d’Ariane attend ta validation au cut 115/);
   assert.deepEqual(x.pasPasse, ['goToCut', 'goToCut', 'capture', 'apply', 'validateInPlace']);
-  assert.deepEqual(x.adapter.restes.at(-1), [{ clicHumain: 'tout-recentre' }], 'la pose de la passe ne clique jamais en direct');
+  assert.deepEqual(x.adapter.restes.at(-1), [{ clicHumain: 'gauche-recentre', selectionImage: true }], 'la pose de la passe est rapide, sans clic hors canevas');
   assert.deepEqual(x.adapter.enPlace.map(e => e.cut), [112]);
   assert.equal(x.adapter.enPlace[0].options.commande, 'ctrl-entree');
   const e = ev(x.b, 'passe-differes-ecriture'); assert.equal(e.length, 1); assert.equal(e[0].identity.cut, 112); assert.equal(e[0].resultat, 'ecrit');

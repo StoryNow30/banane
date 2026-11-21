@@ -682,8 +682,10 @@
  function directeVisible(target){try{const c=context(),v=projectToView(L.cameraSnapshot(c.viewer,c.frame.origin),target);
    return !!v?.inView&&v.ndc.every(Number.isFinite)&&!horsVueClic(v.viewport,...pointClic(v.viewport,v.ndc));}catch{return false;}}
  const pixelMm=cam=>cam?.viewport?.width&&Array.isArray(cam.projection)&&cam.projection[0]?2/cam.projection[0]/cam.viewport.width*1000:NaN;
- async function clickPosition(side,target,expected,vue=null,mode=CLIC_HUMAIN){
-   await select(side,expected);let dernier=null,pixel=NaN;
+ /* CH-151 (D-380 / D-381) : la relecture et la 2e passe peuvent demander la sélection à l'image (`selectionImage`),
+  * sans déplacer la vue. Cette option explicite ne change rien au chemin du lot par défaut (`tel-quel`). */
+ async function clickPosition(side,target,expected,vue=null,mode=CLIC_HUMAIN,selectionImage=false){
+   await (selectionImage?selectImage:select)(side,expected);let dernier=null,pixel=NaN;
    /* 5.0 (« déplacer la vue ») : seulement si le service worker l'a demandé pour ce cut (réglage `deplacerVue`, coupé par défaut). */
    if(vue){const r=await amenerVue(side,target,expected,vue.etat,vue.reglages,vue.progress);vue.rapports.push(r);
      if(!r.ok){const remise=await remettreVue(vue.etat,side,expected,vue.reglages,vue.progress).catch(e=>({ok:false,erreur:e.message}));
@@ -901,7 +903,7 @@
    if(!K.equalPoses(now.rails,before.rails))throw Error('Rails modifiés avant l’application.');
    const plan=options.deplacerVue&&typeof options.deplacerVue==='object'?options.deplacerVue:null;
    const reglages=plan?reglagesVue(plan):null,vue=plan?{etat:etatVue(reglages),reglages,progress,rapports:[],poses:[]}:null;
-   const expected=K.expectedPoses(before,proposals),directe=!vue&&piece(lectureDuCut(before.identity),'pose');
+   const expected=K.expectedPoses(before,proposals),directe=!vue&&piece(lectureDuCut(before.identity),'pose'),selectionImage=options.selectionImage===true&&!vue;
    /* D-157 : 'gauche-recentre' pose d'abord le rail droit, celui de la vue active après la capture ; 'tout-recentre' ne pose
     * jamais en direct. 'tel-quel' : gauche puis droit, en direct, comme avant. Test 6 : le mode du lot, s'il est transmis. */
    const mode=modeClic(options);
@@ -910,7 +912,7 @@
    for(const s of ordre){if(cancelled)throw Error('Action interrompue.');
      if(enDirect(s)&&poseDirecte(s,expected[s].positionSceneRelative,before.identity,mode))continue;
      if(enDirect(s))progress('apply-repli',{side:s});
-     await clickPosition(s,expected[s].positionSceneRelative,before.identity,vue,mode);if(vue)vue.poses.push(s);}
+     await clickPosition(s,expected[s].positionSceneRelative,before.identity,vue,mode,selectionImage);if(vue)vue.poses.push(s);}
    if(!vue){const fin=snapshot();fin.vueFin=vueFin(fin);return fin;}
    const remise=await remettreVue(vue.etat,'right',before.identity,reglages,progress);
    /* CH-038 (ordre de l'intégrateur, 02/11) : une vue non restituée n'est pas une pose ratée. Les deux rails sont posés et relus ; `apply`
