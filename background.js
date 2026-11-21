@@ -21,6 +21,28 @@ const TYPES_INDEXES=Object.freeze(['regles-metier-ombre','validation-accepted','
  'gcv1-shadow-observed','batch-stopped-at-end','relecture-debut','capture-abandoned','esv-observation','passe-differes-ecriture',
  'garde-apres-differe','garde-apres-differe-suivant','relecture-ombre','correction-debut','correction-fin']);
 const store=globalThis.BananeJournalIndex?.equiper?BananeJournalIndex.equiper(new BananeStorage3(),{types:TYPES_INDEXES}):new BananeStorage3();
+const baseStoreBrut=store?.__base||store;
+/* CH-148 (Lot B3) : suivi d'invalidation pour la vue mémoïsée, cache de clés session et cache éphémère de capture courante. */
+let versionJournalUi=0;
+for(const m of ['putEvent','putRecord','putMany','deleteEvent','deleteRecord','deleteMany','deleteIfUnchanged','clear','clearAll']){
+ if(typeof store[m]==='function'){const fn=store[m].bind(store);store[m]=(...a)=>{versionJournalUi++;return fn(...a);};}}
+const cacheStockageCle=new Map();
+async function sauverSession(cle,val){const s=chrome?.storage?.session;if(!s?.set)return false;
+ let json=null;try{json=JSON.stringify(val);}catch{json=null;}
+ if(json!==null&&cacheStockageCle.get('session:'+cle)===json)return false;
+ await s.set({[cle]:val});if(json!==null)cacheStockageCle.set('session:'+cle,json);return true;}
+const cacheCaptureCourante={id:null,capture:null,intercepter:false};
+if(typeof baseStoreBrut.getCloud==='function'){
+ const getCloudBrutOrig=baseStoreBrut.getCloud.bind(baseStoreBrut);
+ store.getCloud=async id=>{if(cacheCaptureCourante.id&&cacheCaptureCourante.id===id&&cacheCaptureCourante.capture)return cacheCaptureCourante.capture;
+  const c=await (store===baseStoreBrut?getCloudBrutOrig(id):baseStoreBrut.getCloud(id));
+  if(cacheCaptureCourante.intercepter&&id&&c){cacheCaptureCourante.id=id;cacheCaptureCourante.capture=c;}return c;};}
+async function lireCaptureCourante(id){if(!id)return null;
+ if(cacheCaptureCourante.id===id&&cacheCaptureCourante.capture)return cacheCaptureCourante.capture;
+ return store.getCloud(id);}
+const cacheUi={histCle:null,histRefH:null,histDeparts:null,histFins:null,histVal:null,fileCle:null,fileRefFP:null,fileVal:null,rev:0,etatsRev:new Map()};
+function viderCacheUi(){cacheUi.histCle=null;cacheUi.histRefH=null;cacheUi.histDeparts=null;cacheUi.histFins=null;cacheUi.histVal=null;
+ cacheUi.fileCle=null;cacheUi.fileRefFP=null;cacheUi.fileVal=null;cacheUi.etatsRev.clear();}
 /* Lecture par types : par l'index si le store en a un, sinon tout le magasin (l'appelant filtre toujours). */
 const lireTypes=types=>typeof store.lireParType==='function'?store.lireParType(types):store.all('events');let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
 const VERSION=globalThis.BananeCore3?.VERSION||'5',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'5';
@@ -230,7 +252,7 @@ const obsFins=new Map();
  * chrome.storage.session : un redémarrage du service worker pendant la grâce ne les perd plus (relues avant `ready`).
  * Sans chrome.storage.session (navigateur ancien) : mémoire seule, comme avant. Jamais dans chrome.storage.local. */
 const OBS_FINS_CLE='banane49ObsFins';
-function sauverObsFins(){try{const s=chrome?.storage?.session;if(s?.set)Promise.resolve(s.set({[OBS_FINS_CLE]:[...obsFins]})).catch(()=>{});}catch{/* mémoire seule */}}
+function sauverObsFins(){try{void sauverSession(OBS_FINS_CLE,[...obsFins]).catch(()=>{});}catch{/* mémoire seule */}}
 async function restaurerObsFins(){try{const s=chrome?.storage?.session;if(!s?.get)return;const v=(await s.get(OBS_FINS_CLE))?.[OBS_FINS_CLE];if(!Array.isArray(v))return;
  for(const x of v){const [id,f]=Array.isArray(x)?x:[];if(typeof id==='string'&&Number.isFinite(f?.at)&&!obsFins.has(id))obsFins.set(id,{at:f.at,cause:typeof f.cause==='string'?f.cause:null,ctx:f.ctx&&typeof f.ctx==='object'?f.ctx:{}});}
  while(obsFins.size>4)obsFins.delete(obsFins.keys().next().value);}catch{/* rien de relu : comme avant */}}
@@ -534,7 +556,8 @@ function rangerObservations(m){try{
     partie:echoId?engine?.s?.current?.identity?.part??null:(e.batchId??lotE?.id)===lotE?.id?lotE?.scope?.part:null,version:VERSION});
   if(fiche)void Promise.resolve(EC.noterDepart(chrome.storage.local,fiche)).then(()=>historiqueRelire()).catch(()=>{});
   listeApresChargement(e,fiche,courant.ctx);}catch{/* la fiche n'est pas critique */}}
- for(const e of events){try{void Promise.resolve(store.putEvent(e)).catch(()=>{obsState.lost++;});}catch{obsState.lost++;}}
+ if(events.length>1&&typeof store.putMany==='function'){try{void Promise.resolve(store.putMany('events',events)).catch(()=>{obsState.lost+=events.length;});}catch{obsState.lost+=events.length;}}
+ else for(const e of events){try{void Promise.resolve(store.putEvent(e)).catch(()=>{obsState.lost++;});}catch{obsState.lost++;}}
  /* OBS-5 : réponse en grâce marquée ; le pont n'en tire aucun début de séance (ni marque, ni résumés d'avant séance). */
  return {accept:true,stored:events.length,...(enGrace?{grace:true}:{}),...(b1Reglage()==='off'?{tableListe:false}:{}),...(relevesOff().length?{relevesOff:relevesOff()}:{})};
 }catch(e){return {accept:true,stored:0,reason:'error',error:String(e?.message||e).slice(0,200)};}}
@@ -1651,37 +1674,40 @@ const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storag
    if(pilotScope)assertPilotContract(pilotScope);
    const selector=pilotScope?'active-pilot-test':activeAssisted?'active-assisted':null;
    if(timing)timing.selector=selector||'runtime-default';
-   let proposal,analysisError=null;
-   try{if(selector)gcv1.armOnce(selector);proposal=await analyzeV46(...args);}
-   catch(e){analysisError=e;}
-   finally{gcv1?.disarm?.();}
-   const shadow=gcv1?.consumeLast?.()||null;
-   /* Engine.analyze() reste l'unique constructeur de s.proposal. On annote le
-    * même objet après le calcul pour rendre la provenance durable ; event()
-    * persiste ensuite ensemble l'état annoté et le proposalId comparatif. */
-   if(selector&&proposal&&shadow?.selection){
-     proposal.geometryEngine=shadow.selection.selectedEngine;
-     proposal.geometrySelection={selector,requestedEngine:GCV1_ENGINE,
-       selectedEngine:shadow.selection.selectedEngine,fallback:shadow.selection.fallback===true,
-       fallbackReason:shadow.selection.fallbackReason||null,contractId:shadow.contract?.id||null,
-       geometrySha256:shadow.contract?.geometrySha256||null};
-   }
-   /* Décision sur le lot (amendement n°9, D-039), calculée sur la capture du
-    * cut et les cuts déjà passés du lot, consignée avec l'observation GCV1.
-    * 4.7.10 (D-041, D-042) : dans un lot créé avec « appliquer », elle COMMANDE
-    * — la proposition remise au lot porte ses positions (`commandLot`). Un lot
-    * « observer seulement », ou créé avant la 4.7.10, reste en observation.
-    * Une erreur ici n'arrête rien : la proposition du moteur reste la seule. */
-   let lotObservation=null;const propositionMoteur=proposal;
-   if(pilotScope&&shadow&&!shadow.error)try{lotObservation=await observeLot(shadow);}
-    catch(e){lotObservation={stage:'error',reason:e?.message||String(e),applied:false};}
-   if(lotObservation&&pilotScope?.lotDecision==='apply'&&proposal&&!analysisError&&shadow?.selection?.selectedEngine===GCV1_ENGINE)try{proposal=await commandLot(proposal,lotObservation);}
-    catch(e){/* KI-053 : une paire retirée par la garde n'est jamais rendue, même sur erreur. */
-     if(lotObservation.guardDeferred&&globalThis.BananeLotDecision?.deferRails){
-       const d=globalThis.BananeLotDecision.deferRails(proposal.rails,lotObservation,'guard-error','décision sur le lot : paire du moteur retirée par la garde ; commande impossible ('+(e?.message||String(e))+')');
-       engine.s.proposal=proposal={...proposal,rails:d.rails,lotCommand:{action:'defer',reason:'guard-error',stage:lotObservation.stage,engineRails:proposal.rails}};
-       lotObservation.command={action:'defer',reason:'guard-error: '+(e?.message||String(e))};lotObservation.applied=false;}
-     else lotObservation.command={action:'engine',reason:'error: '+(e?.message||String(e))};}
+   let proposal,analysisError=null,shadow=null,lotObservation=null,propositionMoteur=null;
+   cacheCaptureCourante.id=null;cacheCaptureCourante.capture=null;cacheCaptureCourante.intercepter=true;
+   try{
+    try{if(selector)gcv1.armOnce(selector);proposal=await analyzeV46(...args);}
+    catch(e){analysisError=e;}
+    finally{gcv1?.disarm?.();cacheCaptureCourante.intercepter=false;}
+    shadow=gcv1?.consumeLast?.()||null;
+    /* Engine.analyze() reste l'unique constructeur de s.proposal. On annote le
+     * même objet après le calcul pour rendre la provenance durable ; event()
+     * persiste ensuite ensemble l'état annoté et le proposalId comparatif. */
+    if(selector&&proposal&&shadow?.selection){
+      proposal.geometryEngine=shadow.selection.selectedEngine;
+      proposal.geometrySelection={selector,requestedEngine:GCV1_ENGINE,
+        selectedEngine:shadow.selection.selectedEngine,fallback:shadow.selection.fallback===true,
+        fallbackReason:shadow.selection.fallbackReason||null,contractId:shadow.contract?.id||null,
+        geometrySha256:shadow.contract?.geometrySha256||null};
+    }
+    /* Décision sur le lot (amendement n°9, D-039), calculée sur la capture du
+     * cut et les cuts déjà passés du lot, consignée avec l'observation GCV1.
+     * 4.7.10 (D-041, D-042) : dans un lot créé avec « appliquer », elle COMMANDE
+     * — la proposition remise au lot porte ses positions (`commandLot`). Un lot
+     * « observer seulement », ou créé avant la 4.7.10, reste en observation.
+     * Une erreur ici n'arrête rien : la proposition du moteur reste la seule. */
+    propositionMoteur=proposal;
+    if(pilotScope&&shadow&&!shadow.error)try{lotObservation=await observeLot(shadow);}
+     catch(e){lotObservation={stage:'error',reason:e?.message||String(e),applied:false};}
+    if(lotObservation&&pilotScope?.lotDecision==='apply'&&proposal&&!analysisError&&shadow?.selection?.selectedEngine===GCV1_ENGINE)try{proposal=await commandLot(proposal,lotObservation);}
+     catch(e){/* KI-053 : une paire retirée par la garde n'est jamais rendue, même sur erreur. */
+      if(lotObservation.guardDeferred&&globalThis.BananeLotDecision?.deferRails){
+        const d=globalThis.BananeLotDecision.deferRails(proposal.rails,lotObservation,'guard-error','décision sur le lot : paire du moteur retirée par la garde ; commande impossible ('+(e?.message||String(e))+')');
+        engine.s.proposal=proposal={...proposal,rails:d.rails,lotCommand:{action:'defer',reason:'guard-error',stage:lotObservation.stage,engineRails:proposal.rails}};
+        lotObservation.command={action:'defer',reason:'guard-error: '+(e?.message||String(e))};lotObservation.applied=false;}
+      else lotObservation.command={action:'engine',reason:'error: '+(e?.message||String(e))};}
+   }finally{cacheCaptureCourante.intercepter=false;cacheCaptureCourante.id=null;cacheCaptureCourante.capture=null;}
    /* 4.7.18 (KI-057) : l'appui proposé attend que le cut soit validé avec ces
     * positions ; il ne compte qu'une fois posé (`promoteAnchors`). */
    if(lotObservation&&pilotScope)holdLotAnchor(lotObservation,pilotScope.lotDecision==='apply'?lotObservation.command??null:null);
@@ -1742,7 +1768,14 @@ async function historiqueRelire(){const H=globalThis.BananeHistoriqueParties,EC=
  try{finsLot.departs=EC?await EC.lireDeparts(chrome.storage.local):[];}catch{finsLot.departs=[];}
  try{finsLot.fins=H?await H.lireFins(chrome.storage.local):[];}catch{finsLot.fins=[];}}
 function partsHistory(){const H=globalThis.BananeHistoriqueParties;if(!H)return [];
- try{return H.historique({departs:finsLot.departs,fins:finsLot.fins,courant:engine?.s?.batch||null,version:VERSION});}catch{return [];}}
+ try{const b=engine?.s?.batch||null;
+  const cleLot=b?[b.id,b.state,b.pausedAt,b.startedAt,b.stoppedAtEnd?.at,b.stoppedAtEnd?.reason,b.stoppedAtEnd?.issue,b.error?.message,b.scope?.part,b.scope?.endMode,b.scope?.start,b.scope?.end,b.processed?.length,b.deferred?.length,b.manuallyCompleted?.length,b.skipped?.length].join('|'):'';
+  const cle=versionJournalUi+'|'+VERSION+'|'+finsLot.departs.length+'|'+(finsLot.departs.at(-1)?.batchId??'')+'|'+finsLot.fins.length+'|'+JSON.stringify(finsLot.fins.at(-1)??null)+'|'+cleLot;
+  if(cacheUi.histRefH===H&&cacheUi.histDeparts===finsLot.departs&&cacheUi.histFins===finsLot.fins&&cacheUi.histCle===cle&&cacheUi.histVal)
+   return cacheUi.histVal.map(x=>({...x,...(x.depart?{depart:{...x.depart}}:{})}));
+  const val=H.historique({departs:finsLot.departs,fins:finsLot.fins,courant:b,version:VERSION});
+  cacheUi.histRefH=H;cacheUi.histDeparts=finsLot.departs;cacheUi.histFins=finsLot.fins;cacheUi.histCle=cle;cacheUi.histVal=val;
+  return val.map(x=>({...x,...(x.depart?{depart:{...x.depart}}:{})}));}catch{return [];}}
 function lotSuivre(){const b=engine?.s?.batch;if(!b?.id)return;
  if(/^PAUSED/.test(b.state||'')){if(!b.pausedAt)b.pausedAt=new Date().toISOString();}else if(b.pausedAt)delete b.pausedAt;
  finLotNoter(b);}
@@ -1775,7 +1808,7 @@ function assistGauge(v){
 async function commandLot(proposal,lotObservation){
  const L=globalThis.BananeLotDecision,K=globalThis.BananeCore3,before=engine.s.before?.rails;
  /* 4.7.11 — caméras de la capture : la cible doit tomber dans la vue du rail (KI-051). */
- const capture=engine.s.lidarId?await store.getCloud(engine.s.lidarId):null;
+ const capture=engine.s.lidarId?await lireCaptureCourante(engine.s.lidarId):null;
  let command=L.commandRails({decision:lotObservation,runtimeRails:proposal.rails,before,expectedPoses:K.expectedPoses,cameras:L.viewCameras(capture)});
  /* 5.0 (D-147) : cible hors de la vue SEULEMENT, réglage `deplacerVue` actif (coupé par défaut) : le geste qui l'amènerait. */
  /* Profondeur de chaîne de chaque décision du lot (règle prudente), seulement si le réglage est actif. */
@@ -2757,7 +2790,7 @@ function revisiteDiffere(identity,batch,decision){try{
 async function observeLot(shadow){
  const L=globalThis.BananeLotDecision,S=globalThis.BananeSettings,batch=engine.s.batch;
  if(!L||!batch||S?.lot?.observe===false)return null;
- const capture=engine.s.lidarId?await store.getCloud(engine.s.lidarId):null;
+ const capture=engine.s.lidarId?await lireCaptureCourante(engine.s.lidarId):null;
  if(!capture?.rails?.left||!capture?.rails?.right||!Array.isArray(capture.pointsSceneRelative))return {stage:'no-capture',applied:false};
  const identity=globalThis.BananeCore3.completeIdentity(capture.identity||engine.s.before?.identity||{});
  /* 4.7.19 — lot « Reprise » : la mémoire part des cuts posés par le lot précédent
@@ -3272,6 +3305,11 @@ function exportState(){const {records,incomplete,...rest}=engine.view();return r
  * le lourd : 1,1 s par vue à 8 000 cuts sous Node (audit). On retire d'abord
  * (records, incomplete, lotPosed), on clone ensuite ; le panneau n'en lit que
  * les nombres. Même forme que panelView(engine.view()). */
+function filePartiesVueMemo(){const FP=FPm();if(!FP)return null;
+ const cle=versionJournalUi+'|'+JSON.stringify(fileP.etat??null);
+ if(cacheUi.fileRefFP===FP&&cacheUi.fileCle===cle&&cacheUi.fileVal!==undefined)return cacheUi.fileVal===null?null:JSON.parse(JSON.stringify(cacheUi.fileVal));
+ const val=FP.vue(fileP.etat);cacheUi.fileRefFP=FP;cacheUi.fileCle=cle;cacheUi.fileVal=val;
+ return val===null?null:JSON.parse(JSON.stringify(val));}
 function vuePanneau(){const {records,incomplete,...s}=engine.s,b=s.batch,poses=Array.isArray(b?.lotPosed)?b.lotPosed:null;
  /* La copie est celle du moteur : engine.view() appliqué à l'état allégé. */
  const leger=poses?{...s,batch:(({lotPosed,...x})=>x)(b)}:s,v=engine.view.call({s:leger,busy:engine.busy});
@@ -3282,7 +3320,8 @@ function vuePanneau(){const {records,incomplete,...s}=engine.s,b=s.batch,poses=A
   /* Test 17 : deuxième passe des différés, seulement si elle a eu lieu. */
   ...(passeDiff.vue?{passeDifferes:{...passeDiff.vue}}:{}),
   /* CH-017 : file de parties, seulement allumée (src/settings.js `file.actif`). */
-  ...(fileReglage()?(void fileCompleterBilan().catch(()=>{}),{fileParties:FPm().vue(fileP.etat)}):{})};}
+  ...(fileReglage()?(void fileCompleterBilan().catch(()=>{}),{fileParties:filePartiesVueMemo()}):{})};}
+function ui(){const v=vuePanneau();return {...v,assistGauge:assistGauge(v)};}
 function pollCurrent(){
  /* Pendant une reprise (retour au cut après F5) ou un retour à un cut demandé, la vue ne lit pas ESV. */
  /* T20a : ni pendant un équipement de l'onglet (le statut est alors « reconnecting », puis « ready »). */
@@ -4283,14 +4322,17 @@ async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=glob
  const stop=(m,i='erreur')=>{p.message=m;issue=i;if(i==='pause-esv')indexPause=ciCourant;};
  /* Test 17 : ESV muet (F5, onglet rechargé) : pause automatique si le réglage le veut, sinon arrêt comme avant ; tout autre arrêt reste une erreur. */
  const stopEsv=m=>stop(m,p.reprise&&p.repriseF5!=='arret'&&/sans réponse|ne répond pas/.test(m)?'pause-esv':'erreur');
- /* Point de reprise après chaque cut relu : `index` est le PROCHAIN cut à relire (jamais un cut à moitié fait). */
- const reprisePoser=async index=>{
+ /* Point de reprise après chaque cut relu : `index` est le PROCHAIN cut à relire (jamais un cut à moitié fait).
+  * CH-148 : `p.point` est tenu en mémoire à chaque cut ; l'écriture disque `chrome.storage.local` est espacée tous les 10 cuts ordinaires,
+  * et immédiate au départ/1er cut, sur correction (ou refus de correction), pause, arrêt ou erreur. */
+ const reprisePoser=async(index,immediat=false)=>{
   const pt={v:1,lotId:p.lotId,mode:p.mode,modeEffectif:p.modeEffectif,debut:p.debut,total:p.total,index,faits:p.faits,corriges:p.corriges,refusees:p.refusees,vus:p.vus,vusCuts:[...p.vusCuts],
    cutsNeufs:p.cutsNeufs,cutsNeufsAnnonces:p.cutsNeufsAnnonces,chaine:JSON.parse(JSON.stringify(chaine)),ecartementsVerts:ecartementsVerts.slice(),ecartementPartieMm:Number.isFinite(ecartementPartieMm)?ecartementPartieMm:null,
    plagesSautees:[...plagesSautees],sel:{cuts:sel.cuts,plages:sel.plages},reglages:p.reglages??null,noteMode:p.noteMode??null,savedAt:new Date().toISOString(),
    horsBornes:p.horsBornes||0,bornes:p.bornes??null,totalPartie:Number.isInteger(total)?total:null,apresSerie:Number.isInteger(p.apresSerie)?p.apresSerie:null};
-  p.point=pt;try{await chrome.storage.local.set({[CLE_RELECTURE_REPRISE]:pt});p.pointStocke=true;}catch{p.pointStocke=false;}};
- if(p.reprise)await reprisePoser(reprise?.index??0);
+  p.point=pt;if(!immediat)return;
+  try{await chrome.storage.local.set({[CLE_RELECTURE_REPRISE]:pt});p.pointStocke=true;}catch{p.pointStocke=false;}};
+ if(p.reprise)await reprisePoser(reprise?.index??0,true);
  /* Champs communs des événements d'un cut relu (revue, R10). */
  const evenementCut=(c,plage,champs)=>({identity:{part:partie,cut:c.cut},mode:p.modeEffectif,plage:plage?.libelle??null,zone:c.zone,zoneSource:sourceZone(c),role:c.role,...champs});
  /* Aller à un cut ('pas' : boutons d'ESV ; 'auto' : carte, sinon pas à pas). W8 : seul un cut hors des bornes, ou une annulation, fait
@@ -4382,7 +4424,7 @@ async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=glob
    action:action.action,raisonAction:action.raison,erreurCapture,erreurCalcul,
    durees:{navigationMs:tNav-t0,captureMs:tCap-tNav,calculMs:tCalc-tCap,totalMs:Date.now()-t0}}),p);
   p.faits++;p.suiteCut=sel.cuts[ci+1]?.cut??null;
-  if(p.reprise)await reprisePoser(ci+1);
+  if(p.reprise)await reprisePoser(ci+1,ci===0||p.faits%10===0||action.action==='corrige'||action.action==='correction-refusee'||!!action.stopApres||!!p.arret||!!p.pauseDemandee);
   if(action.stopApres){stop(action.stopApres);break;}
   /* CH-107 : série de cuts vides (ESV n'affiche plus les points). Au seuil, la passe n'écrit plus rien : pause au PREMIER cut vide de la série
    * (ses cuts seront relus), rechargement d'ESV et reprise, une fois par série ; sans pause permise, arrêt. */
@@ -4404,7 +4446,7 @@ async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=glob
  /* Pause (demandée, ou ESV muet) : la passe garde son point et passe « en pause » ; pas de relecture-fin, la passe n'est pas finie. */
  if((issue==='pause'||issue==='pause-esv'||issue==='pause-signal'||issue==='pause-points')&&relecture.passe===p&&p.reprise&&Number.isInteger(indexPause)){
   const sc=sel.cuts[indexPause];p.etat='en-pause';p.pauseRaison=issue==='pause'?'mic':issue==='pause-signal'?'signal':issue==='pause-points'?'points':'esv';p.pauseDemandee=false;p.arret=false;p.cut=sc?.cut??null;p.plage=sel.plages[sc?.plage]?.libelle??null;
-  await reprisePoser(indexPause);
+  await reprisePoser(indexPause,true);
   p.message=issue==='pause'?`Relecture en pause au cut ${p.cut} : ${pluriel(p.faits,'cut')} relu${p.faits>1?'s':''} sur ${p.total}. Tu peux la reprendre, même après un F5.`
    :issue==='pause-points'?`${p.pointsVidesMessage} (${pluriel(p.faits,'cut')} relu${p.faits>1?'s':''} sur ${p.total}).`
    :issue==='pause-signal'?`Signal de chargement d’ESV éteint (lecture lente) : Ariane recharge la page ESV, puis reprend la relecture au cut ${p.cut} (${pluriel(p.faits,'cut')} relu${p.faits>1?'s':''} sur ${p.total}).`
@@ -4838,7 +4880,8 @@ async function reinitialiserMemoireNeuve(){await store.getState(); /* réinitial
  relecture.planifie.clear();relecture.passe=null;relecture.attente=null;relecture.tache=null;relecture.gen=0;ajEssai=null;
  bandeau.on=false;bandeau.text='';bandeau.ton='';b1.repere=null;b1Depart.repere=null;b1.sansPaire=0;clearTimeout(b1Minuterie);b1Minuterie=null;b1File.length=0;
  gsOmbre.batchId=null;gsOmbre.ecartements.clear();voieSure.mem=null;voieSure.premier=true;voieSure.zones.clear();voieSure.poses.clear();
- l1Restes={cle:null,m:new Map()};l1eTransport={cle:null,poses:[]};}
+ l1Restes={cle:null,m:new Map()};l1eTransport={cle:null,poses:[]};
+ cacheStockageCle.clear();viderCacheUi();cacheCaptureCourante.intercepter=false;cacheCaptureCourante.id=null;cacheCaptureCourante.capture=null;}
 async function reinitialiserExtension(){const R=globalThis.ArianeReinitialisation;if(!R)throw Error('Réinitialisation indisponible (module absent).');
  await R.executer({store,storageLocal:chrome.storage.local,storageSession:chrome.storage.session,
   fermerTelecommande:async()=>{await telecommandePrete;if(telecommande){if(typeof telecommande.couperApresReponse==='function')await telecommande.couperApresReponse();else await telecommande.couper();}},reinitialiserMemoire:reinitialiserMemoireNeuve});
@@ -4926,7 +4969,13 @@ async function dispatch(m){await ready;await passeDiffReveil;   /* T21d : une pa
   try{await engine.observe();}catch{/* page équipée ; la lecture de la vue reprendra */}
   await engine.save();return engine.view();}
  if(action==='view'){await correctionVerifierFin().catch(()=>{});if(selectedTab===null&&engine.s.connection?.status!=='no-tab')connexionStatut('no-tab','Aucun onglet ESV choisi.',null);
-  pollCurrent();const v=vuePanneau();return {...v,assistGauge:assistGauge(v)};}
+  pollCurrent();return ui();}
+ if(action==='state'){await correctionVerifierFin().catch(()=>{});if(selectedTab===null&&engine.s.connection?.status!=='no-tab')connexionStatut('no-tab','Aucun onglet ESV choisi.',null);
+  pollCurrent();const complet=JSON.parse(JSON.stringify(ui()));
+  if(args?.morceaux===true){const M=globalThis.BananeEtatMorceaux,revDemande=Number.isInteger(args.rev)?args.rev:0,prec=revDemande>0?cacheUi.etatsRev.get(revDemande):null;
+   const rev=++cacheUi.rev;cacheUi.etatsRev.set(rev,complet);while(cacheUi.etatsRev.size>4)cacheUi.etatsRev.delete(cacheUi.etatsRev.keys().next().value);
+   return prec&&M?.diff?{...M.diff(prec,complet),rev}:{...complet,rev};}
+  return complet;}
  // V4.6.0 : une reprise manuelle est un lot actif. Le mode Natif ne prend pas sa place.
  /* CH-028 : la correction dans Orbite (avant le refus général « Écho est actif » : la correction EST une séance Écho). */
  if(action==='correction-liste')return correctionListe(args);

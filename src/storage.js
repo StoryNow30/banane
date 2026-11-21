@@ -57,7 +57,19 @@ class BananeStorage3{
   * complète des identifiants reste déclarée dans la session, donc un segment
   * manquant à la fusion est signalé plutôt que perdu. */
  async deleteCloud(id){return this.transaction('clouds','readwrite',s=>s.delete(id));}
- async clearAll(){for(const n of ['clouds','events','records'])await this.transaction(n,'readwrite',s=>s.clear());}
+ /* CH-148 (Lot B3) : écriture groupée de N entrées dans un magasin en UNE transaction readwrite,
+  * et purge groupée des trois magasins en UNE transaction multi-magasins (avec repli magasin par magasin). */
+ async putMany(name,items){if(!Array.isArray(items)||!items.length)return 0;const db=await this.open();return new Promise((resolve,reject)=>{
+   const tx=db.transaction(name,'readwrite'),os=tx.objectStore(name);
+   for(const item of items){const cle=name==='events'?item?.eventId:name==='records'?(item?.recordId||item?.id):Array.isArray(item)?item[0]:(item?.captureId??item?.id);
+    const val=name!=='events'&&name!=='records'&&Array.isArray(item)?item[1]:item;os.put(val,cle);}
+   tx.oncomplete=()=>resolve(items.length);tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error||Error('Stockage annulé.'));});}
+ async clear(){const stores=['events','records','clouds'],db=await this.open();
+  try{return await new Promise((resolve,reject)=>{const tx=db.transaction(stores,'readwrite');
+    for(const n of stores)tx.objectStore(n).clear();
+    tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error||Error('Stockage annulé.'));});}
+  catch{for(const n of stores)await this.transaction(n,'readwrite',s=>s.clear());}}
+ async clearAll(){return this.clear();}
  async putEvent(e){return this.transaction('events','readwrite',s=>s.put(e,e.eventId));}
  async deleteEvent(id){return this.transaction('events','readwrite',s=>s.delete(id));}
  async putRecord(r){return this.transaction('records','readwrite',s=>s.put(r,r.recordId||r.id));}
