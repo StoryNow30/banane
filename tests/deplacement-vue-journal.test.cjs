@@ -46,11 +46,11 @@ class EsvRapport extends EsvVue{
 async function lotRapport({rapport,echec}){
  const {production}=require('./helpers/perf-production.cjs');
  const {lot:l}=require('./helpers/deplacer-vue-lot.cjs');void production;
- const res=await l({reglage:{...S.deplacerVue,actif:true},adapterClasse:EsvRapport,rapport,echec});return res;
+ const res=await l({reglage:{...S.deplacerVue,actif:true,preVol:true},adapterClasse:EsvRapport,rapport,echec});return res;
 }
 
 test('lot : la pose avec déplacement journalise le côté, la remise faite et le bilan à la clôture ; la même suite de commandes qu\'avant',async()=>{
- const sans=await lot({reglage:{...S.deplacerVue,actif:true}}),avec=await lotRapport({rapport:{version:'x',cotes:[COTE],remise:{ok:true,crans:3,recentre:false,ecartEchelle:0,dureeMs:300}}});
+ const sans=await lot({reglage:{...S.deplacerVue,actif:true,preVol:true}}),avec=await lotRapport({rapport:{version:'x',cotes:[COTE],remise:{ok:true,crans:3,recentre:false,ecartEchelle:0,dureeMs:300}}});
  assert.deepEqual(avec.adapter.calls,sans.adapter.calls,'mêmes commandes envoyées à la page');assert.deepEqual(avec.adapter.applyArgs,sans.adapter.applyArgs);
  const {b}=avec,d=ev(b,'deplacement-vue').filter(x=>x.phase==='pose'),r=ev(b,'deplacement-vue-remise');
  assert.ok(ev(b,'deplacement-vue').some(x=>x.phase==='pre-vol'));

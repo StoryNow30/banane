@@ -1,0 +1,28 @@
+diff --git a/src/adapter-page.js b/src/adapter-page.js
+index 3f4dc297..ead20ca4 100644
+--- a/src/adapter-page.js
++++ b/src/adapter-page.js
+@@ -833,7 +833,12 @@
+      if(geste.type==='molette'){const f=Math.pow(echelleVue(cam)/echelleVue(cam2),1/geste.crans);geste.facteurCran=r3v(f);
+        if(f<1){etat.crans-=geste.crans;geste.sensInverse=true;}else{etat.crans+=geste.crans;etat.facteurCran=f;}}
+      else{etat.glisse=true;const v2=projectToView(cam2,target),d=Math.hypot((v2.ndc[0]-v.ndc[0])*r.width/2,(v2.ndc[1]-v.ndc[1])*r.height/2),m=Math.hypot(geste.px,geste.py);
+-       if(m>0&&d>0){etat.gain=d/m;geste.gain=r3v(etat.gain);}}
++       /* CH-150 : dérive orthogonale aberrante (type cut 1/35 : py quasi nul mais ΔndcY > 0,5 ou gain > 10) : remettre immédiatement la caméra par `select` avant l'essai suivant. */
++       const gainMesure=m>0&&d>0?d/m:null,deriveOrtho=Math.abs(geste.py)<=5&&v2?.ndc&&v?.ndc&&Math.abs(v2.ndc[1]-v.ndc[1])>0.5;
++       if(deriveOrtho||(gainMesure!==null&&gainMesure>10)){geste.derive=true;if(gainMesure!==null)geste.gain=r3v(gainMesure);
++         await select(side,expected);c=context();cam=L.cameraSnapshot(c.viewer,c.frame.origin);v=projectToView(cam,target);
++         geste.ndcApres=ndcVue(v);geste.zoom=r3v(etat.echelle0/echelleVue(cam));rapport.gestes.push(geste);progress('vue-geste',{side,...geste});continue;}
++       if(gainMesure!==null){etat.gain=gainMesure;geste.gain=r3v(etat.gain);}}
+      cam=cam2;c=context();v=projectToView(cam,target);geste.ndcApres=ndcVue(v);geste.zoom=r3v(etat.echelle0/echelleVue(cam));
+      rapport.gestes.push(geste);progress('vue-geste',{side,...geste});
+      if(geste.sensInverse){rapport.raison='sens-molette';break;}
+@@ -907,7 +912,8 @@
+    /* D-157 : 'gauche-recentre' pose d'abord le rail droit, celui de la vue active après la capture ; 'tout-recentre' ne pose
+     * jamais en direct. 'tel-quel' : gauche puis droit, en direct, comme avant. Test 6 : le mode du lot, s'il est transmis. */
+    const mode=modeClic(options);
+-   const ordre=directe&&mode==='gauche-recentre'?['right','left']:['left','right'];
++   /* CH-150 : avec `vue` (`deplacerVue`), les côtés hors-vue (`plan.cotes[s]`) passent EN PREMIER avant tout clic sur un rail déjà dans la vue. */
++   const ordre=vue?['left','right'].sort((a,b)=>(plan.cotes?.[b]?1:0)-(plan.cotes?.[a]?1:0)):(directe&&mode==='gauche-recentre'?['right','left']:['left','right']);
+    const enDirect=s=>directe&&(mode==='tel-quel'||mode==='gauche-recentre'&&s==='right');
+    for(const s of ordre){if(cancelled)throw Error('Action interrompue.');
+      if(enDirect(s)&&poseDirecte(s,expected[s].positionSceneRelative,before.identity,mode))continue;

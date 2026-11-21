@@ -1555,6 +1555,7 @@ adapter.apply=async(...args)=>{
    let ecriture='inconnue';try{const avant=args[0]?.rails,now=await readState();if(avant&&now?.rails)ecriture=globalThis.BananeCore3.equalPoses(now.rails,avant,1e-6)?'aucune':'faite';}catch{/* inconnue */}
    await engine.event('deplacer-vue',{...ev,erreur:message.slice(0,300),ecriture}).catch(()=>{});
    journalerDeplacementVue(null,null,message,'pose',Date.now()-t0);
+   if(ecriture==='aucune'&&e&&typeof e==='object')try{e.deplacerVueAucuneEcriture=true;}catch{/* message figé */}
    const dit={faite:' Déplacement de vue : les rails sont écrits dans ESV, rien n’est validé ; contrôle le cut.',aucune:' Déplacement de vue : aucun rail n’a bougé dans ESV.',inconnue:' Déplacement de vue : ESV illisible, contrôle le cut.'}[ecriture];
    if(e&&typeof e==='object'&&!message.includes(dit.trim()))try{e.message=message+dit;}catch{/* message figé */}
    throw e;}
@@ -1750,6 +1751,44 @@ const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storag
   commandLot=function(...args){return timing.trackTask('command-lot',()=>commander.apply(this,args));};
  }
  await engine.init();
+ /* CH-150 (D5) : si `apply(true)` pendant un lot échoue sur `deplacerVue` AVANT tout mouvement de rail (`ecriture === 'aucune'`),
+  * aucun rail n'a bougé dans ESV : on replie proprement la proposition en différé (`deferRails`), on nettoie `reconcileRequired`/`intent`,
+  * et la boucle du lot poursuit par `deferUnresolved` au lieu de s'arrêter en `ERROR`. */
+ const applyMoteur=engine.apply.bind(engine),runMoteur=engine.run.bind(engine);
+ let repliDeplacerVue=false;
+ engine.apply=async(auto)=>{
+  try{return await applyMoteur(auto);}
+  catch(e){
+   const b=engine.s.batch,L=globalThis.BananeLotDecision;
+   if(auto===true&&e?.deplacerVueAucuneEcriture===true&&b&&b.state==='RUNNING'&&b.scope?.geometryEngine===GCV1_ENGINE&&b.scope?.unresolvedPolicy==='defer'&&engine.s.proposal&&L?.deferRails){
+    engine.s.reconcileRequired=false;engine.s.intent=null;engine.s.snapshot=null;engine.s.expected=null;lotAnchorCandidate=null;
+    const runtimeBase=engine.s.proposal.lotCommand?.engineRails||engine.s.proposal.rails;
+    const d=L.deferRails(runtimeBase,{stage:engine.s.proposal.lotCommand?.stage??null},'deplacer-vue-echec','décision sur le lot : déplacement de la vue refusé avant tout mouvement de rail ('+String(e.message||e).slice(0,120)+')');
+    engine.s.proposal={...engine.s.proposal,rails:d.rails,lotCommand:{...engine.s.proposal.lotCommand,action:'defer',reason:'deplacer-vue-echec'}};
+    const id=engine.s.before?.identity;
+    if(id&&profilL1se()&&passeDiffReglage().mode!=='off'){const z=l1Zone(id);l1ResteNoter(id,{identity:{part:id.part,cut:id.cut,frameId:id.frameId??null},zone:z?.zone??'abords',adv:z?.adv??[],regle:false});}
+    repliDeplacerVue=true;
+   }
+   throw e;
+  }};
+ engine.run=async()=>{
+  for(;;){
+   repliDeplacerVue=false;
+   const r=await runMoteur();
+   const b=engine.s.batch;
+   if(repliDeplacerVue&&b&&b.state==='ERROR'&&b.step==='apply'){
+    repliDeplacerVue=false;
+    b.error=null;
+    if(stopAtLotEnd(engine.s.proposal)){
+     b.state=engine.closingState(b);
+     await coordinateurLot.transition('fin-de-lot',()=>engine.event('batch-stopped-at-end',{identity:engine.s.before?.identity??null,applied:false}));
+     await engine.save();
+     return r;
+    }
+    b.state='RUNNING';await engine.save();continue;
+   }
+   return r;
+  }};
  /* T20a : chaque écriture de l'état suit le lot (heure de la pause, fiche de fin de lot persistante) ; aucune décision ne lit ce suivi. */
  const sauverEtat=engine.save.bind(engine);engine.save=async(...a)=>{try{lotSuivre();}catch{/* suivi seulement */}return sauverEtat(...a);};
  manual=new BananeManualSession4.Sessions(engine,adapter,store);native=new BananeNativeSession4.Sessions(engine,adapter,store);await manual.init();await native.init();
@@ -1847,7 +1886,10 @@ async function commandLot(proposal,lotObservation){
     rechercheLarge:cmd=>rechercheLargeCommande(cmd,lotObservation,proposal,before,capture),
     gardeApresDiffere:cmd=>gardeApresDiffereCommande(cmd,lotObservation,proposal),
     ajustementFin:cmd=>ajustementFinCommande(cmd,lotObservation,proposal,before,capture),
-    ancre:async cmd=>ancreAllumee()?await ancreCommande(cmd,lotObservation,proposal,before):cmd,
+    ancre:async cmd=>{const c=ancreAllumee()?await ancreCommande(cmd,lotObservation,proposal,before):cmd;
+     /* CH-150 (D6c) : un cut transformé en différé par l'ancre (`reason === 'ancre'`) reste dans `l1Restes` pour la 2e passe. */
+     if(suivre&&c?.action==='defer'&&c?.reason==='ancre')l1ResteNoter(id,{identity:{part:id.part,cut:id.cut,frameId:id.frameId??null},zone:zSuivi?.zone??'abords',adv:zSuivi?.adv??[],regle:false,ancre:true});
+     return c;},
    },
   });
   command=res.command;
@@ -2238,8 +2280,8 @@ function l1VoisinsAvecFantomes(b,identity){const out=l1VoisinsReels(b,identity),
  for(const f of F){if(f.identity.cut===identity.cut||out.some(v=>v.identity.cut===f.identity.cut))continue;
   const i=out.findIndex(v=>v.identity.cut>f.identity.cut);out.splice(i<0?out.length:i,0,f);}
  return out;}
-/* Plan de vue pour une cible de la GCV2 (mêmes limites et même pré-vol que « déplacer la vue », D-147). */
-async function l1PlanVue(capture,positions,identity){const L=globalThis.BananeLotDecision,VR=globalThis.BananeVoieRecentree,r=reglageVueL1();
+/* Plan de vue pour une cible de la GCV2 (mêmes limites et même pré-vol que « déplacer la vue », D-147 ; `sansPreVol: true` en 2e passe). */
+async function l1PlanVue(capture,positions,identity,{sansPreVol=false}={}){const L=globalThis.BananeLotDecision,VR=globalThis.BananeVoieRecentree,r=reglageVueL1();
  const vue=VR.vueNecessaire(capture,positions,r.marge??L.VIEW_MARGIN),cams=L.viewCameras(capture),cotes={};
  if(vue.inconnu)return {ok:false,raison:'vue-inconnue'};
  for(const s of ['left','right']){const p=vue.par[s];if(!p||p.ok)continue;const c=cams[s];
@@ -2249,7 +2291,7 @@ async function l1PlanVue(capture,positions,identity){const L=globalThis.BananeLo
   cotes[s]={geste:dezoom?'dezoom':'glissement',dezoom:dvR(p.dezoom),panPx:dvR(p.panPx,10),pixelMm:dvR(pixel),ndc:p.ndc.map(x=>dvR(x))};}
  if(!Object.keys(cotes).length)return {ok:true,plan:null};
  const plan={version:'deplacer-vue-v1',cotes,...Object.fromEntries(DV_TRANSMIS.filter(k=>r[k]!==undefined).map(k=>[k,r[k]]))};
- if(r.preVol!==false)for(const s of Object.keys(cotes)){let x;
+ if(!sansPreVol&&r.preVol!==false)for(const s of Object.keys(cotes)){let x;
   try{x=await call('amenerDansLaVue',s,positions[s],identity,{...plan,cotes:undefined,essai:true});}catch(e){x={ok:false,raison:'erreur:'+String(e?.message||e).slice(0,100)};}
   if(!x?.ok)return {ok:false,raison:'pre-vol:'+(x?.raison||'?')};}
  return {ok:true,plan};}
@@ -2464,19 +2506,22 @@ async function passeDiffEcrire(b,poses,rg,vue,aReprendre=null){
  const E=passeDiff.etat&&passeDiff.etat.lotId===b.id?passeDiff.etat:null;
  let aEcrire;
  if(aReprendre){aEcrire=aReprendre;if(!aEcrire.length&&!E?.ecriture)return;}
- else{aEcrire=poses.slice(0,Math.max(0,rg.max-vue.ecrites));if(!aEcrire.length)return;
-  vue.etat='ecriture';vue.message=null;vue.demandees=vue.ecrites+aEcrire.length;
+ else{/* CH-150 (D6b) : le plafond `rg.max` est compté sur les SEULS cuts réellement écrits ; un refus `avantPose` n'en consomme aucun. */
+  const quota=Math.max(0,rg.max-vue.ecrites);if(!quota||!poses.length)return;
+  aEcrire=poses.slice();
+  vue.etat='ecriture';vue.message=null;vue.demandees=vue.ecrites+(Number.isFinite(quota)?Math.min(poses.length,quota):poses.length);
   if(E){E.phase='ecriture';E.ecriture={liste:aEcrire.map(p=>p.cut),faits:0,refuses:[],enVol:null,prouves:[]};E.vue=vueComptes(vue);await passeDiffSauver(E);}}
- const demandees=E?.ecriture?.liste?.length??aEcrire.length;
+ const demandees=Number.isFinite(rg.max)?Math.min(E?.ecriture?.liste?.length??aEcrire.length,rg.max):E?.ecriture?.liste?.length??aEcrire.length;
  for(let i=0;i<200&&engine.task;i++)await engine.task.catch(()=>{});
  /* T21d : reprise où tout était déjà écrit (redémarrage juste avant la fin) : rien à contrôler, la fin est seulement notée. */
  const raison0=!aEcrire.length?null:['en-cours','en-pause'].includes(relecture.passe?.etat)?'une relecture est en cours ou en pause':await lotCloRefus(b,true,null);let issue=raison0?'refus-depart':'fin',raison=raison0;
  /* CH-136 (D-363) : à la reprise après un redémarrage, les refus d'avant comptent : la passe se dira arrêtée sur le dernier refus. */
  const refusAvant=aReprendre&&Array.isArray(E?.ecriture?.refuses)?E.ecriture.refuses:[];
- let refusees=refusAvant.length,dernierRefus=refusAvant.length?`cut ${refusAvant.at(-1)} refusé avant la pose (avant le redémarrage d’Ariane)`:null;
+ let refusees=refusAvant.length,dernierRefus=refusAvant.length?`cut ${refusAvant.at(-1)} refusé avant la pose (avant le redémarrage d’Ariane)`:null,plafondAtteint=false;
  if(!raison0){const EC=passeDiff.ecriture={arret:false,attente:null,etat:E};
   try{
    for(const [ip,p] of aEcrire.entries()){
+    if(vue.ecrites>=rg.max){plafondAtteint=true;break;}
     EC.suivante=aEcrire[ip+1]?.cut;EC.apres=aEcrire[ip+2]?.cut;   /* CH-080 : cut suivant de la passe, pour le préchauffage ; CH-081 : celui d'après */
     EC.loin=cibleLoinListe(p.cut,aEcrire.slice(ip+1).map(x=>x.cut));   /* CH-088 : cible lointaine de la passe */
     if(EC.arret||!await passeDiffAllumee()){issue='arret';break;}
@@ -2491,10 +2536,11 @@ async function passeDiffEcrire(b,poses,rg,vue,aReprendre=null){
     /* D-363 (opérateur, 17/11) : un refus avant toute pose dans ESV n'arrête plus la passe, elle passe au cut suivant ; tout le reste l'arrête (D-237). */
     if(r.resultat==='refuse'&&r.avantPose===true){refusees++;dernierRefus=r.raison;continue;}
     if(r.resultat!=='ecrit'){issue=r.resultat;raison=r.raison;break;}
-    l1ResteOter(p.r.identity);vue.ecrites++;}
+    l1ResteOter(p.r.identity);vue.ecrites++;
+    if(vue.ecrites>=rg.max){plafondAtteint=true;break;}}
   }finally{passeDiff.ecriture=null;vue.cut=null;}
-  /* D-363 : liste parcourue mais des cuts refusés avant la pose : la passe se dit arrêtée sur le dernier refus (« Relancer » reste offert pour eux), comme avant. */
-  if(issue==='fin'&&refusees>0){issue='refuse';raison=refusees>1?`${refusees} cuts refusés avant la pose ; dernier : ${dernierRefus}`:dernierRefus;}}
+  /* D-363 : liste parcourue mais des cuts refusés avant la pose (et plafond non rempli) : la passe se dit arrêtée sur le dernier refus (« Relancer » reste offert pour eux), comme avant. */
+  if(issue==='fin'&&refusees>0&&!plafondAtteint){issue='refuse';raison=refusees>1?`${refusees} cuts refusés avant la pose ; dernier : ${dernierRefus}`:dernierRefus;}}
  vue.etat=issue==='fin'?'finie':'arretee';vue.message=raison;
  if(E){E.phase='finie';E.vue=vueComptes(vue);await passeDiffSauver(E);}
  journalerSimple('passe-differes-ecriture-fin',{lotId:b.id,issue,raison,ecrites:vue.ecrites,demandees,decidees:poses.length,refusees,...(aReprendre?{reprise:'sw-redemarre'}:{})});}
@@ -2526,7 +2572,7 @@ async function passeDiffPoser(b,p,E){
  /* D-363 : `avantPose` dit qu'ESV n'a encore rien reçu (ni pose ni validation) : la passe passe alors au cut suivant. Une anomalie (lecture impossible, nuage absent)
   * ou un refus après la pose arrête la passe, comme avant (D-237). */
  const refuse=(raison,avantPose=true)=>({resultat:'refuse',raison,avantPose});
- let now,cg;
+ let now,cg,capture;
  /* Lectures seulement : rien n'est encore écrit. */
  try{
   /* T21d : après un redémarrage, le nuage du cut est relu du magasin (calcul du premier tour) pour la garde « pose inchangée » et la commande. */
@@ -2538,7 +2584,7 @@ async function passeDiffPoser(b,p,E){
   if(nav.chemin!=='pas-a-pas')return refuse(`cut ${cut} atteint par ${nav.chemin==='evenement'?'la carte (saut)':nav.chemin||'un chemin inconnu'} : pas de pose juste après un saut`);
   const etat=await readState();if(etat?.identity?.part!==part||etat.identity.cut!==cut)return refuse(`ESV affiche le cut ${etat?.identity?.cut}, pas le cut ${cut}`);
   try{engine.writable(etat.identity);}catch{return refuse('cible bloquée par un résultat incertain archivé');}
-  const capture=await call('capture',avecPrechauffage(etat,E?.suivante,'passe-differes',E?.apres,E?.loin));K.assertTarget(etat.identity,capture.identity);
+  capture=await call('capture',avecPrechauffage(etat,E?.suivante,'passe-differes',E?.apres,E?.loin));K.assertTarget(etat.identity,capture.identity);
   now=await readState();
   if(K.key(now.identity)!==K.key(etat.identity)||!K.equalPoses(etat.rails,now.rails))return refuse('le cut affiché ou ses rails ont changé pendant la capture');
   if(!K.equalPoses(r.capture.rails,now.rails,.001))return refuse('pose d’ESV du cut changée depuis la visite du lot');
@@ -2547,8 +2593,13 @@ async function passeDiffPoser(b,p,E){
   cg=G.commander({positions:p.positions,runtimeRails:r.runtimeRails,before:now.rails,expectedPoses:K.expectedPoses,cameras:L.viewCameras(capture),camerasLarges:VR.camerasLarges(capture),valider:true});
  }catch(e){return refuse(`lecture impossible : ${String(e?.message||e).slice(0,200)}`,false);}
  if(cg.action!=='lot')return refuse(`commande refusée (${cg.reason})`);
- if(cg.vue==='deplacer')return refuse('cible hors de la vue : cette passe ne déplace pas la vue');
- const pose=await poserPuisVerifier(b,now,cg.rails,K.expectedPoses(now,cg.rails),'passe');if(pose)return refuse(pose,false);
+ let planVue=null;
+ if(cg.vue==='deplacer'){
+  if(!deplacerVueReglage())return refuse('cible hors de la vue : cette passe ne déplace pas la vue');
+  const v=await l1PlanVue(capture,p.positions,now.identity,{sansPreVol:true});
+  if(!v.ok||!v.plan)return refuse(`cible hors de la vue (${v.ok?'plan absent':v.raison})`);
+  planVue=v.plan;}
+ const pose=await poserPuisVerifier(b,now,cg.rails,K.expectedPoses(now,cg.rails),'passe',planVue);if(pose)return refuse(pose,false);
  /* Ctrl+Entrée : si la preuve manque APRÈS l'envoi, la pose reste, l'intention aussi : le cut est à contrôler dans ESV. */
  const a=E.attente={cut,depuisMs:Date.now(),ok:false,refus:null},envoi=ecritureNoterValidation(now.identity,'passe'),incertain=m=>Error(`cut ${cut} : validation incertaine (${m}). Contrôle ce cut dans ESV.`);
  let ev;
@@ -4208,10 +4259,11 @@ async function remettrePose(b,now,raison,depuisMs=null){const K=globalThis.Banan
  * l'image (`selectionImage`) au lieu d'attendre deux recentrages de 300 ms. Le lot garde son propre clic. Une anomalie remet la pose d'avant (`restore`) : rend
  * alors la raison, intention effacée. Rend null si la pose est en place (l'intention reste, à effacer après la validation) ; lève si ESV est muet ou si la
  * remise est impossible. */
-async function poserPuisVerifier(b,now,rails,expected,origine=null){const K=globalThis.BananeCore3,cut=now.identity.cut,depuisMs=Date.now();
+async function poserPuisVerifier(b,now,rails,expected,origine=null,planVue=null){const K=globalThis.BananeCore3,cut=now.identity.cut,depuisMs=Date.now();
  await relectureNoterIntention({lotId:b.id,part:now.identity.part,cut,at:new Date().toISOString(),...(origine?{origine}:{})});
  const remettre=raison=>remettrePose(b,now,raison,depuisMs);
- let result;try{result=await applyInESV(now,rails,{clicHumain:'gauche-recentre',selectionImage:true});}
+ const optApply=planVue?{clicHumain:'tout-recentre',deplacerVue:planVue}:{clicHumain:'gauche-recentre',selectionImage:true};
+ let result;try{result=await applyInESV(now,rails,optApply);}
  catch(e){if(/Adaptateur ESV sans réponse|Une autre Ariane/.test(e?.message||''))throw Error(`cut ${cut} : ESV ne répond plus pendant la pose (${e.message}) ; rien n’est validé. Contrôle ce cut dans ESV.`);
   return remettre(`pose refusée par la page : ${String(e?.message||e).slice(0,160)}`);}
  if(K.key(result?.identity||{})!==K.key(now.identity)||!K.equalPoses(expected,result?.rails,.001))return remettre('pose non conforme à la commande (relecture à 1 mm)');

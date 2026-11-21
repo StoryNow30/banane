@@ -495,7 +495,8 @@
     /* Test 25 (ordre de l'opérateur du 29/10, D-268) : ALLUMÉ. Quand la cible d'un rail tombe hors de la vue, Ariane déplace la vue (geste `deplacement.geste`), pose, puis remet la vue ; la preuve est le mouvement mesuré de la caméra, sinon le cut reste différé comme avant. */
     actif: true,
     etages: Object.freeze(['window']), regle: 'prudente',
-    gestesMax: 3, dezoomMax: 1.5, glissementPxMax: 250, pixelMaxMm: 0.9, marge: 0.99, remiseTolerance: 0.02, preVol: true,
+    /* CH-150 (D-380 / D-381) : `preVol: false` par défaut (élimine l'aller-retour caméra avant `apply` ; `apply` traite d'abord les rails hors-vue avant tout clic). */
+    gestesMax: 3, dezoomMax: 1.5, glissementPxMax: 250, pixelMaxMm: 0.9, marge: 0.99, remiseTolerance: 0.02, preVol: false,
     molette: Object.freeze({ deltaY: 100, deltaMode: 0, wheelDelta: 120, intervalleMs: Object.freeze([60, 140]), cransMax: 8, sensDezoom: 1, facteurSuppose: 1.1 }),
     glisser: Object.freeze({ dureeMs: Object.freeze([220, 420]), pasMs: 16, bouton: 0, clicFinal: false, viseNdc: 0.8 }),
     /* Test 25 (CH-018) : geste réglable du déplacement de la vue (src/deplacement-vue.js). ALLUMÉ au clic droit (la molette n'a jamais déplacé la caméra : 45 coups sur 45 sans effet sur la partie 20, 28/10) ; `glisse-synthetique` et `molette` restent réglables. Le journal par geste (`journalGestes`) dira quel geste marche. */
