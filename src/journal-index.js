@@ -51,9 +51,9 @@
   const store=new Proxy(base,{get:(t,p)=>{if(p in ajouts)return ajouts[p];const v=Reflect.get(t,p,t);return typeof v==='function'?v.bind(t):v;},
    set:(t,p,v)=>{ajouts[p]=v;return true;},has:(t,p)=>p in ajouts||p in t});
   const I=creer(TYPES_SET),{ix}=I,orig={};EQUIPES.add(store);
-  const def=(n,v)=>{ajouts[n]=v;};
+  const def=(n,v)=>{ajouts[n]=v;};def('__base',base);
   /* La méthode du magasin est cherchée À CHAQUE APPEL (un essai, ou un autre module, peut la remplacer après nous). */
-  for(const n of ['putEvent','putRecord','deleteEvent','deleteRecord','deleteMany','deleteIfUnchanged','clearAll'])if(typeof base[n]==='function')orig[n]=(...a)=>base[n](...a);
+  for(const n of ['putEvent','putRecord','putMany','deleteEvent','deleteRecord','deleteMany','deleteIfUnchanged','clear','clearAll'])if(typeof base[n]==='function')orig[n]=(...a)=>base[n](...a);
   /* Écritures : la clé est retenue DÈS l'appel, avant la fin de l'écriture. Une lecture lancée pendant une écriture en
    * cours la demande donc, et IndexedDB ordonne les transactions : comme `getAll` avant, elle voit l'écriture si celle-ci
    * a commencé avant elle. Une écriture refusée laisse une clé sans objet : sur-ensemble, sans effet sur le résultat.
@@ -69,6 +69,7 @@
   const fini=()=>{if(--suppressions===0){ecrits.events.clear();ecrits.records.clear();}};
   if(orig.putEvent)def('putEvent',e=>{try{if(e&&typeof e==='object'&&typeof e.eventId!=='string')ix.invalide=true;I.noterEvenement(e);compter('events',e?.eventId);ix.totaux.events++;}catch{ix.invalide=true;}return orig.putEvent(e);});
   if(orig.putRecord)def('putRecord',r=>{try{if(r&&typeof r==='object'&&cleVisite(r)===null)ix.invalide=true;I.noterVisite(r);compter('records',cleVisite(r));ix.totaux.records++;}catch{ix.invalide=true;}return orig.putRecord(r);});
+  if(orig.putMany)def('putMany',(nom,items)=>{try{if(Array.isArray(items)){if(nom==='events')for(const e of items){if(e&&typeof e==='object'&&typeof e.eventId!=='string')ix.invalide=true;I.noterEvenement(e);compter('events',e?.eventId);ix.totaux.events++;}else if(nom==='records')for(const r of items){if(r&&typeof r==='object'&&cleVisite(r)===null)ix.invalide=true;I.noterVisite(r);compter('records',cleVisite(r));ix.totaux.records++;}}}catch{ix.invalide=true;}return orig.putMany(nom,items);});
   if(orig.deleteEvent)def('deleteEvent',async id=>{const v=avant('events',[id]);try{const r=await orig.deleteEvent(id);retirerSiInchange('events',[ix.parType,ix.evNatif],[id],v);return r;}finally{fini();}});
   if(orig.deleteRecord)def('deleteRecord',async id=>{const v=avant('records',[id]);try{const r=await orig.deleteRecord(id);retirerSiInchange('records',[ix.recNatif],[id],v);return r;}finally{fini();}});
   if(orig.deleteMany)def('deleteMany',async(nom,ids)=>{const v=avant(nom,ids);try{const r=await orig.deleteMany(nom,ids);
@@ -77,7 +78,9 @@
    if(nom==='events')retirerSiInchange(nom,[ix.parType,ix.evNatif],ids,v);else if(nom==='records')retirerSiInchange(nom,[ix.recNatif],ids,v);return r;}finally{fini();}});
   /* CH-067 : après un vidage complet, l'index est JETÉ (reconstruit au prochain besoin, base presque vide) au lieu d'être vidé en restant
    * « prêt » : une écriture lancée pendant le vidage et passée après lui serait sinon absente de l'index. */
-  if(orig.clearAll)def('clearAll',async()=>{try{return await orig.clearAll();}finally{I.vider();ix.totaux={events:0,records:0};ix.pret=false;ix.invalide=false;ix.construction=null;}});
+  const jeterIndex=()=>{I.vider();ix.totaux={events:0,records:0};ix.pret=false;ix.invalide=false;ix.construction=null;};
+  if(orig.clear)def('clear',async()=>{try{return await orig.clear();}finally{jeterIndex();}});
+  if(orig.clearAll)def('clearAll',async()=>{try{return await orig.clearAll();}finally{jeterIndex();}});
   /* Construction : une lecture complète par magasin, une fois par vie du service worker. */
   const construire=()=>ix.construction||(ix.construction=(async()=>{const t0=Date.now();
    try{const cles=await Promise.all(['events','records'].map(n=>store.keys(n)));if(cles.flat().some(k=>typeof k!=='string'))ix.invalide=true;

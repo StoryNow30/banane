@@ -107,5 +107,24 @@
   for(const [racine] of CHEMINS){const r=etat[racine];if(r&&typeof r==='object'&&REF in r)delete r[REF];}
   return {etat,manquants,relus};}
 
- return {VERSION,PREFIXE,REF,CHEMINS,cleMorceau,estCle,decouper,clesARelire,recoller};
+ /* CH-148 (Lot B3) : delta superficiel d'état pour alléger le transfert IPC vers le panneau.
+  * Les morceaux inchangés (settings, partsHistory, historiqueParties, fileParties, contract, storage...) sont omis ;
+  * les clés retirées de l'état suivant sont listées dans `__supprimes` pour une reconstruction exacte. */
+ const SUPPR='__supprimes';
+ function diff(precedent,suivant){
+  if(!suivant||typeof suivant!=='object'||!precedent||typeof precedent!=='object')return clone(suivant);
+  const delta={},suppr=[];
+  for(const k of Object.keys(suivant)){if(k===SUPPR)continue;
+   if(!(k in precedent)||JSON.stringify(precedent[k])!==JSON.stringify(suivant[k]))delta[k]=clone(suivant[k]);}
+  for(const k of Object.keys(precedent))if(k!==SUPPR&&k!=='rev'&&!(k in suivant))suppr.push(k);
+  if(suppr.length)delta[SUPPR]=suppr;
+  return delta;}
+ function appliquerDiff(precedent,delta){
+  if(!delta||typeof delta!=='object')return clone(delta);
+  const base=precedent&&typeof precedent==='object'?clone(precedent):{};
+  for(const k of Object.keys(delta))if(k!==SUPPR)base[k]=clone(delta[k]);
+  if(Array.isArray(delta[SUPPR]))for(const k of delta[SUPPR])delete base[k];
+  return base;}
+
+ return {VERSION,PREFIXE,REF,CHEMINS,cleMorceau,estCle,decouper,clesARelire,recoller,diff,appliquerDiff};
 });
