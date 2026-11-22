@@ -1,0 +1,18 @@
+disallowed-methods = [
+  { path = "f64::hypot", reason = "Math.hypot de V8 : ariane_js::hypot" },
+  { path = "f64::round", reason = "Math.round de V8 : ariane_js::round" },
+  { path = "f64::max", reason = "Math.max (NaN, -0) : ariane_js::max" },
+  { path = "f64::min", reason = "Math.min (NaN, -0) : ariane_js::min" },
+  { path = "f64::signum", reason = "Math.sign : ariane_js::sign" },
+  { path = "f64::sin", reason = "transcendante : import JS" },
+  { path = "f64::cos", reason = "transcendante : import JS" },
+  { path = "f64::tan", reason = "transcendante : import JS" },
+  { path = "f64::atan2", reason = "transcendante : import JS" },
+  { path = "f64::exp", reason = "transcendante : import JS" },
+  { path = "f64::ln", reason = "transcendante : import JS" },
+  { path = "f64::ln_1p", reason = "transcendante : import JS" },
+  { path = "f64::log10", reason = "transcendante : import JS" },
+  { path = "f64::powf", reason = "transcendante : import JS" },
+  { path = "f64::powi", reason = "Math.pow : import JS" },
+  { path = "f64::mul_add", reason = "FMA : le JS n'en fait jamais" },
+]

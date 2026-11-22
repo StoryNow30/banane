@@ -1,0 +1,21 @@
+[package]
+name = "ariane-coeur"
+edition.workspace = true
+version.workspace = true
+publish.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+ariane-js = { path = "../ariane-js" }
+ariane-vba = { path = "../ariane-vba" }
+ariane-capture = { path = "../ariane-capture" }
+ariane-geometrie = { path = "../ariane-geometrie" }
+ariane-decision = { path = "../ariane-decision" }
+ariane-etat = { path = "../ariane-etat" }
+ariane-session = { path = "../ariane-session" }
+ariane-file = { path = "../ariane-file" }
+
+[lints]
+workspace = true

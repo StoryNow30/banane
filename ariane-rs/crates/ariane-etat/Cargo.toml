@@ -1,0 +1,25 @@
+[package]
+name = "ariane-etat"
+edition.workspace = true
+version.workspace = true
+publish.workspace = true
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+
+# Le binaire de mesure et le wasm autonome exportent `vba_*`. Le cœur ne l'active pas :
+# il a déjà ces symboles, et son arène est remise à zéro à chaque appel.
+[features]
+autonome = []
+
+[[bin]]
+name = "rss"
+path = "src/bin/rss.rs"
+required-features = ["autonome"]
+
+[dependencies]
+ariane-js = { path = "../ariane-js" }
+ariane-vba = { path = "../ariane-vba" }
+
+[lints]
+workspace = true

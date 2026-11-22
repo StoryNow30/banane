@@ -1,0 +1,180 @@
+{
+ "moteur": "Chrome/153.0.0.0",
+ "date": "2026-11-06T21:37:51.086Z",
+ "synthetiques": [
+  {
+   "cas": "simple",
+   "identique": true,
+   "statut": "complete-loaded-roi",
+   "lus": 40000,
+   "retenus": 5184
+  },
+  {
+   "cas": "rotation",
+   "identique": true,
+   "statut": "complete-loaded-roi",
+   "lus": 40000,
+   "retenus": 4162
+  },
+  {
+   "cas": "non-finis",
+   "identique": true,
+   "statut": "partial-invalid-points",
+   "lus": 40000,
+   "retenus": 5174
+  },
+  {
+   "cas": "float64",
+   "identique": true,
+   "statut": "complete-loaded-roi",
+   "lus": 40000,
+   "retenus": 5184
+  },
+  {
+   "cas": "entrelace-pas-5",
+   "identique": true,
+   "statut": "complete-loaded-roi",
+   "lus": 40000,
+   "retenus": 5066
+  },
+  {
+   "cas": "plage-partielle",
+   "identique": true,
+   "statut": "complete-loaded-roi",
+   "lus": 18002,
+   "retenus": 2326
+  },
+  {
+   "cas": "plage-fractionnaire",
+   "identique": true,
+   "statut": "complete-loaded-roi",
+   "lus": 10002,
+   "retenus": 1254
+  },
+  {
+   "cas": "normalise (repli JS)",
+   "identique": true,
+   "statut": "complete-loaded-roi",
+   "lus": 40000,
+   "retenus": 5184
+  },
+  {
+   "cas": "indexe (repli JS)",
+   "identique": true,
+   "statut": "complete-loaded-roi",
+   "lus": 40000,
+   "retenus": 5184
+  },
+  {
+   "cas": "maxPoints-17",
+   "identique": true,
+   "statut": "partial-limit",
+   "lus": 141,
+   "retenus": 17
+  },
+  {
+   "cas": "maxPoints-fractionnaire",
+   "identique": true,
+   "statut": "partial-limit",
+   "lus": 876,
+   "retenus": 101
+  },
+  {
+   "cas": "maxInspected-5000",
+   "identique": true,
+   "statut": "partial-limit",
+   "lus": 5000,
+   "retenus": 627
+  },
+  {
+   "cas": "maxInspected-fractionnaire",
+   "identique": true,
+   "statut": "partial-limit",
+   "lus": 4098,
+   "retenus": 518
+  },
+  {
+   "cas": "yieldEvery-1000",
+   "identique": true,
+   "statut": "complete-loaded-roi",
+   "lus": 40000,
+   "retenus": 5184
+  },
+  {
+   "cas": "yieldEvery-7",
+   "identique": true,
+   "statut": "complete-loaded-roi",
+   "lus": 6000,
+   "retenus": 748
+  },
+  {
+   "cas": "yieldEvery-0 (repli JS)",
+   "identique": true,
+   "statut": "complete-loaded-roi",
+   "lus": 6000,
+   "retenus": 748
+  },
+  {
+   "cas": "bornes-larges",
+   "identique": true,
+   "statut": "complete-loaded-roi",
+   "lus": 40000,
+   "retenus": 9194
+  },
+  {
+   "cas": "bornes-NaN (repli JS)",
+   "identique": true,
+   "statut": "no-points",
+   "lus": 40000,
+   "retenus": 0
+  },
+  {
+   "cas": "w-non-unitaire (division faite)",
+   "identique": true,
+   "statut": "complete-loaded-roi",
+   "lus": 40000,
+   "retenus": 5184
+  },
+  {
+   "cas": "transformation-infinie (exception)",
+   "identique": true,
+   "statut": "exception: Transformation non finie."
+  },
+  {
+   "cas": "bornes-immenses (tout retenu)",
+   "identique": true,
+   "statut": "complete-loaded-roi",
+   "lus": 40000,
+   "retenus": 40000
+  },
+  {
+   "cas": "grand-pas-float64-pas-9",
+   "identique": true,
+   "statut": "complete-loaded-roi",
+   "lus": 40000,
+   "retenus": 5106
+  }
+ ],
+ "vues": 94,
+ "captures": 47,
+ "points": 47151834,
+ "identiquesWasm": 116,
+ "identiquesJs": 116,
+ "ecarts": [],
+ "statuts": {
+  "complete-loaded-roi": 93,
+  "no-points": 1
+ },
+ "msTotal": {
+  "origine": 25013,
+  "wasm": 1573,
+  "js": 3589
+ },
+ "memoireWasmOctets": 524288,
+ "relancesNavigateur": 0,
+ "tranchesNoyau": {
+  "wasm": 13395,
+  "js": 13377
+ },
+ "identique": true
+}

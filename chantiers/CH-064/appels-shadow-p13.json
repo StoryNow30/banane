@@ -1,0 +1,37 @@
+{
+ "format": "ch064-compter-appels-v1",
+ "lot": {
+  "part": 13,
+  "start": 1165,
+  "end": 9390,
+  "testConfirmed": true,
+  "allowNavigationEvidence": true,
+  "lowConfidence": "attempt",
+  "unresolvedPolicy": "defer",
+  "lotDecision": "apply",
+  "geometryEngine": "geometry-candidate-v1"
+ },
+ "cuts": 24,
+ "erreurs": null,
+ "appels": {
+  "scientificProposeBoth": 1,
+  "scientificProposeBothAvecReservoir": 4
+ },
+ "msTotal": {
+  "scientificProposeBoth": 176,
+  "scientificProposeBothAvecReservoir": 258
+ },
+ "parCut": {
+  "appelsMoyens": 0.21,
+  "msMoyens": 18,
+  "cutsAvecAppel": 5,
+  "appelsMediane": 1,
+  "appelsMax": 1,
+  "msMediane": 73,
+  "msP90": 176.4
+ },
+ "msParAppel": {
+  "scientificProposeBoth": 176.4,
+  "scientificProposeBothAvecReservoir": 64.6
+ }
+}

@@ -1,0 +1,11 @@
+[package]
+name = "ariane-js"
+edition.workspace = true
+version.workspace = true
+publish.workspace = true
+
+[dependencies]
+ariane-vba = { path = "../ariane-vba" }
+
+[lints]
+workspace = true

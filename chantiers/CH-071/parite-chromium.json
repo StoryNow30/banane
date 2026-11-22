@@ -1,0 +1,31 @@
+{
+ "format": "ch071-parite-chromium-v1",
+ "navigateur": "Chrome/153.0.0.0",
+ "cas": 453637,
+ "identiques": 453637,
+ "ecarts": [],
+ "empreintes": {
+  "js": "6eac59e3cbc3df87a48fac9ecff9423e4e87584a87b9ce7c60c822a82925c2df",
+  "rs": "6eac59e3cbc3df87a48fac9ecff9423e4e87584a87b9ce7c60c822a82925c2df"
+ },
+ "bilanFacade": {
+  "coeur": 451202,
+  "repliHorsDomaine": 1349,
+  "repliFormat": 0,
+  "repliEcriture": 1086
+ },
+ "memoireCoeur": {
+  "reinstanciations": 0,
+  "hauteEau": 8912896,
+  "memoire": 8912896
+ },
+ "compte": {
+  "releve": 47914,
+  "releveNonEncodable": 0,
+  "reel": 261984,
+  "variantes": 143739,
+  "variantesNonEncodables": 0
+ },
+ "secondes": 1493,
+ "verdict": "IDENTIQUE"
+}

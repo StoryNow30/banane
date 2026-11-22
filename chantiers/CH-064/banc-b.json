@@ -1,0 +1,179 @@
+{
+ "format": "ch064-banc-b-v1",
+ "plateforme": "linux 6.18.44-fc-v242",
+ "noeud": "v22.23.4",
+ "preparation": {
+  "nuages": 200,
+  "octetsWasm": 229633,
+  "octetsHote": 616472
+ },
+ "navigateur": {
+  "ua": "Chrome/153.0.0.0",
+  "base64Natif": true,
+  "msInstanciationWasm": 5.300000000745058
+ },
+ "demarrageHote": {
+  "msPremierMessage": 29.899999999441206,
+  "pid": 13271,
+  "memoire": {
+   "rssKo": 2464,
+   "hauteEauKo": 2464
+  }
+ },
+ "latence": {
+  "natifMsMediane": 0.5,
+  "natifMsP95": 1.7000000001862645,
+  "wasmMsMediane": 0,
+  "wasmMsP95": 0.09999999962747097,
+  "n": 300
+ },
+ "debit": {
+  "points": 500000,
+  "msEncodageVba": 82.90000000037253,
+  "octetsVba": 12531051,
+  "msBase64": 16.799999999813735,
+  "octetsBase64": 16708068,
+  "natifAccuseMs": 681.5,
+  "natifAccuseUsHote": [
+   30776,
+   2880,
+   0
+  ],
+  "natifEchoMs": 791,
+  "natifEchoMorceaux": 18,
+  "natifEchoUsHote": [
+   33873,
+   11341,
+   20008
+  ],
+  "echoIdentique": true,
+  "wasmAccuseMs": 6.5,
+  "wasmEchoMs": 11.300000000745058,
+  "poseJsMs": 66.70000000018626,
+  "poseAMs": 99,
+  "poseAIdentique": true,
+  "poseBMs": 483.8999999994412,
+  "poseBIdentique": true,
+  "memoireWasm": {
+   "reinstanciations": 0,
+   "hauteEau": 60096512,
+   "memoire": 60096512
+  },
+  "memoireHote": {
+   "apresEcho": {
+    "rssKo": 31288,
+    "hauteEauKo": 51428
+   },
+   "apresMallocTrim": {
+    "rssKo": 2684,
+    "hauteEauKo": 51428
+   }
+  },
+  "chromium": {
+   "rssKo": 1485032,
+   "processus": 11
+  }
+ },
+ "lidarTransfert": {
+  "points": 505000,
+  "octets": 6060000,
+  "k": "ch064r",
+  "tRecu": 397.59999999962747,
+  "msBase64Contenu": 3.7999999998137355,
+  "msContenuVersSwEtHote": 253.1000000005588,
+  "sw": {
+   "octets": 6060000,
+   "msDecodageSw": 7.2000000001862645,
+   "msSwVersHote": 98.1000000005588
+  },
+  "typeRecuSansBase64": {
+   "type": "[object Object]",
+   "cles": 4
+  },
+  "msTotalPageVersHote": 256.5
+ },
+ "limites": {
+  "versChrome": {
+   "1000000": "reçu (999984 car.)",
+   "1048576": "reçu (1048560 car.)",
+   "1048577": "déconnecté : Error when communicating with the native messaging host.",
+   "1100000": "déconnecté : Error when communicating with the native messaging host."
+  },
+  "versHote": {
+   "16 Mio": "accepté",
+   "63 Mio": "accepté",
+   "64 Mio": "accepté",
+   "65 Mio": "Message exceeded maximum allowed size of 64MiB."
+  }
+ },
+ "pose": {
+  "nuages": 200,
+  "identiquesA": 200,
+  "identiquesB": 200,
+  "ecartsB": [],
+  "ms": {
+   "js": {
+    "mediane": 45,
+    "p95": 81.29999999981374
+   },
+   "a": {
+    "mediane": 24.09999999962747,
+    "p95": 43.90000000037253
+   },
+   "b": {
+    "mediane": 32,
+    "p95": 60.89999999944121
+   },
+   "coeurWasm": {
+    "mediane": 23.59999999962747,
+    "p95": 47
+   },
+   "coeurNatifUs": {
+    "mediane": 25.943,
+    "p95": 48.523
+   },
+   "encodage": {
+    "mediane": 0.5,
+    "p95": 2.7999999998137355
+   }
+  },
+  "memoireWasm": {
+   "reinstanciations": 0,
+   "hauteEau": 60096512,
+   "memoire": 60096512
+  },
+  "memoireHote": {
+   "rssKo": 4516,
+   "hauteEauKo": 67812
+  },
+  "chromium": {
+   "rssKo": 1489196,
+   "processus": 11
+  }
+ },
+ "tenue": {
+  "hoteTue": {
+   "deconnexionVue": {
+    "t": 1793972648333,
+    "e": "Native host has exited."
+   },
+   "msReconnexion": 10.600000000558794,
+   "nouveauPid": 13298
+  },
+  "inactifPortOuvert": {
+   "memeServiceWorker": true,
+   "portOuvert": true
+  },
+  "swArrete": {
+   "hoteEncoreVivant": false,
+   "msReveilEtReponse": 126,
+   "nouveauServiceWorker": true
+  },
+  "redemarrage": {
+   "hoteArreteALaFermeture": true,
+   "msLancementChrome": 375,
+   "msPremierMessage": 11.399999999441206,
+   "pid": 13446
+  }
+ }
+}

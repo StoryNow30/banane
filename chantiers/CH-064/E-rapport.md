@@ -1,0 +1,59 @@
+# CH-064-E — État, journal, listes (rapport)
+
+Crate `ariane-rs/crates/ariane-etat`, membre de l'espace, binaire propre `wasm32-unknown-unknown` (feature `autonome`) et bras `100..=149` du cœur. Le texte des nombres est `ariane_js::nombre::nombre_en_chaine` (`String(x)`), l'implémentation unique du chef. La copie de Ryū a été retirée. Mémoire linéaire du binaire propre plafonnée à 256 Mio, comme le cœur du paquet, et relâchée par réinstanciation de l'instance. Les symboles `vba_*` n'existent qu'avec `autonome`, désactivée par défaut, pour ne pas doubler l'ABI du cœur.
+
+Référence : le JavaScript de cette branche. Chromium du banc : Chrome/156. 15 répétitions après 3 d'échauffement, médiane et P90 (indice `floor(p·n)`).
+
+## Parité (ÉTABLI)
+
+`node tools/ch064-e-parite.cjs --corpus`, rejoué après le retrait de Ryū : **IDENTIQUE**, 0 écart. Corpus : 5 journaux, 64 instantanés, 31 segments Écho, 31 sessions.
+
+| Module | Ce qui a été rejoué |
+|---|---|
+| `etat-morceaux` | synthèse, puis `decouper` sur la session de 31 segments Écho |
+| `journal-index` (pur) | index des clés sur 5 journaux (champs lus : identifiant, type, session) |
+| `correction-liste` | `construire` et `couverture` sur ces 5 journaux, projection des champs lus |
+| `liste-memoire` (pur) | `decompacter` des 64 instantanés réels, plus synthèse |
+| `verts-a-controler` | `lignesDeInstantane` sur ces 64 instantanés ; `liste` sur la partie synthétique des essais |
+| `dataset` | assemblage sur 31 segments, visites réduites aux champs lus par `dataset` |
+
+Contrôle en plus, un journal de 36 983 événements : `construire` sur l'événement entier et sur la projection donnent le même objet. L'adaptateur `ariane-rs/parite/etat.cjs` rejoue la synthèse (5 cas, Node).
+
+## Temps dans Chromium (ÉTABLI)
+
+Journal réel aminci, 36 983 événements. Une traversée = encodage VBA, appel, décodage.
+
+| Module | JS médiane | JS P90 | WASM médiane | WASM P90 |
+|---|---:|---:|---:|---:|
+| `correction-liste` (`construire`) | 129,9 ms | 134,8 ms | 253,5 ms | 262,9 ms |
+| `liste-memoire` (`decompacter`, un instantané) | 0,3 ms | 1,1 ms | 2,8 ms | 4,1 ms |
+| `etat-morceaux` (`decouper`, une session) | 1,4 ms | 1,6 ms | 3,7 ms | 5,0 ms |
+
+Le WASM est plus lent : la traversée coûte plus que le calcul. Sur ce journal, l'écart médian de la liste de corrections est **+124 ms**. Un cut du lot dure 2,3 à 6,7 s (CH-058, médianes par partie) : 124 ms, c'est 2 à 5 % d'un cut, dans le sens d'un surcoût, pas d'un gain. La liste se construit une fois par lot, pas par cut. La lecture IndexedDB que l'index évite reste en JavaScript (CH-058 : jusqu'à 4,8 s en fin de journée) ; ce port ne la remplace pas.
+
+## Mémoire (ÉTABLI)
+
+| | Avant | Au plus haut | Après |
+|---|---:|---:|---:|
+| Linéaire WASM, banc (36 983 événements) | 1 114 112 o (1,06 Mio) | 70 713 344 o (67,4 Mio) | 1 114 112 o après réinstanciation |
+| Linéaire WASM, corpus entier (plafond 256 Mio) | — | 179 306 496 o (171 Mio) | 9 568 256 o (9,125 Mio), 15 réinstanciations |
+| Tas JS (banc, tas utile) | 83 254 372 o | — | 120 629 200 o (la charge reste en JS) |
+| RSS natif, un appel `construire` | — | HWM 112 728 Kio | RSS 109 384 Kio |
+
+Le pic de 482 803 712 octets venait de `couverture` sur le journal de 131 377 événements : chaque lot recopait le journal entier, et `construire` le recopiait encore. Ces recopies sont retirées. Les sorties ne changent pas. Le pic est maintenant `journal` sur ce même journal (131 377 événements, 1 809 enregistrements) : 179 306 496 octets, sous le plafond de 256 Mio.
+
+Rejeu au plafond du paquet (268 435 456 octets) : 227 appels, 0 rejeu JS, 0 écart. Rien n'est « sans gain » par dépassement. Après réinstanciation, la mémoire linéaire revient à la taille d'une instance neuve. Le banc Chromium du tableau de temps est celui du binaire précédent ; il n'a pas été refait.
+
+## Qualité (ÉTABLI)
+
+`cargo clippy -p ariane-etat --offline --no-deps --all-targets -- -W clippy::pedantic -D warnings` sort sans avertissement. Les conversions d'une longueur de tableau en `f64`, qui recopient `array.length`, sont nommées en tête de crate.
+
+Sans la feature, la surface publique est `appeler`, `parse_json` et `executer`. Avec `autonome`, s'ajoutent `vba_reserver`, `vba_liberer`, `vba_resultat`, `vba_liberer_resultat` et `vba_appel`. Le reste est `pub(crate)`. `cargo test -p ariane-etat` : 12 essais. `cargo test -p ariane-etat --features autonome` : 17 essais, un par fonction alors publique.
+
+Chaque bloc `unsafe` de l'ABI porte un commentaire `// SÛRETÉ :`. Il n'y en a plus ailleurs : la copie de Ryū a été supprimée. Les nombres passent par `ariane_js::nombre::nombre_en_chaine`. La parité de ce texte est celle du banc du chef (10 000 000 tirages, Node 22 et Chromium 153). `ariane-js` n'est pas modifié.
+
+Lié au cœur, `ariane-etat` ne garde aucun `Vec`, `String` ni pointeur d'un appel à l'autre : pas de `thread_local`, pas de statique allouée. Le seul tampon qui survit un appel est celui du binaire autonome, libéré au début de l'appel suivant.
+
+## Lecture
+
+Ces modules sont des lectures et des assemblages. Une fois les données en JavaScript, les porter en WASM les ralentit. Ils ne sont pas à brancher dans le chemin d'un cut. La parité est tenue, la mémoire est bornée.
