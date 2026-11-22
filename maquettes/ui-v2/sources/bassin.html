@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bassin</title>
+<style>
+/*POLICE:zodiak*/
+/*POLICE:switzer*/
+/* Proposition « Bassin ». Sources : KoiPond (une surface d'eau vivante, des nénuphars qui
+ * dérivent, des carpes qui glissent ; bassin ⇄ piscine), inspora (aquarelle, bleus d'eau),
+ * 60fps (micro-interactions : toucher, ça répond).
+ * Sens : chaque cut posé fait une onde. Un différé laisse un nénuphar qui reste à la surface.
+ * Un vert à examiner est une carpe orange qui tourne en attendant qu'on la regarde.
+ * Eau calme = rien ne tourne. En Écho, le bassin devient piscine : Ariane regarde. */
+:root{
+  --papier:#F4F6F2; --texte:#10231E; --texte-2:#475A53; --bord:#CFDAD4; --carte:#FFFFFF;
+  --eau1:#D3E7DF; --eau2:#AFD0C6; --reflet:255,255,255; --carpe:#B2441B; --carpe-v:#E5672F; --feuille:#2F6B45; --feuille-v:#4E9A62;
+  --plein:#10231E; --sur-plein:#F4F6F2; --scene:#CBD8D1; --serif:'Zodiak',Georgia,serif; --sans:'Switzer',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --papier:#0C1513; --texte:#E4EFEA; --texte-2:#9DB1A9; --bord:#22322D; --carte:#13201D;
+  --eau1:#0F2925; --eau2:#081A17; --reflet:200,240,225; --carpe:#FF9768; --carpe-v:#FF8A55; --feuille:#7FCB95; --feuille-v:#3F8A57;
+  --plein:#E4EFEA; --sur-plein:#0C1513; --scene:#030807;
+}}
+:root[data-theme="dark"]{
+  --papier:#0C1513; --texte:#E4EFEA; --texte-2:#9DB1A9; --bord:#22322D; --carte:#13201D;
+  --eau1:#0F2925; --eau2:#081A17; --reflet:200,240,225; --carpe:#FF9768; --carpe-v:#FF8A55; --feuille:#7FCB95; --feuille-v:#3F8A57;
+  --plein:#E4EFEA; --sur-plein:#0C1513; --scene:#030807;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)}
+.scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none}
+#panneau{container-type:inline-size;height:760px;overflow-y:auto;background:var(--papier);border-radius:28px;font-size:15px;line-height:1.5}
+.notes{max-width:380px;font-size:14px;line-height:1.6;background:var(--papier);padding:18px 20px;border-radius:24px}
+.notes h2{font-family:var(--serif);font-size:22px;margin:0 0 8px;font-weight:400}.notes p{margin:0 0 10px}
+
+.bassin{position:relative;margin:10px 10px 0;border-radius:22px;overflow:hidden;background:var(--eau2)}
+.bassin canvas{display:block;width:100%;height:250px;cursor:pointer;touch-action:manipulation}
+.bassin .haut{position:absolute;left:10px;right:10px;top:10px;display:flex;align-items:center;gap:8px}
+.puce{background:var(--carte);color:var(--texte);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
+.puce.non{color:var(--carpe)}
+.seg{margin-left:auto;display:flex;background:var(--carte);border-radius:999px;padding:3px}
+.seg button{font:inherit;font-size:13px;font-weight:600;border:0;border-radius:999px;padding:5px 12px;background:none;color:var(--texte-2);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--plein);color:var(--sur-plein)}
+.seg button[aria-disabled="true"]{cursor:not-allowed}
+.bassin .bas{position:absolute;left:10px;bottom:10px;right:10px;display:flex;gap:6px;flex-wrap:wrap}
+.bassin .bas .puce{font-weight:500}
+
+.corps{padding:16px 20px 24px}
+.titre{font-family:var(--serif);font-weight:400;font-size:clamp(28px,9cqi,38px);line-height:1.05;letter-spacing:-.01em;margin:6px 0 10px}
+.titre em{font-style:italic}
+.phrase{margin:0 0 14px;color:var(--texte)}
+.chiffres{display:flex;align-items:baseline;gap:10px;margin:4px 0 6px}
+.chiffres .n{font-family:var(--serif);font-size:64px;line-height:1;font-variant-numeric:tabular-nums}
+.chiffres .s{color:var(--texte-2);font-size:16px}
+.legende-v{display:flex;flex-wrap:wrap;gap:14px;margin:6px 0 14px;font-size:14px}
+.legende-v span{display:flex;align-items:center;gap:6px}
+.legende-v .carpe-t{color:var(--carpe);font-weight:600}
+.legende-v .feuille-t{color:var(--feuille);font-weight:600}
+.ico{width:16px;height:12px;flex:none}
+.tableau{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin:12px 0}
+.tableau dt{font-size:12px;color:var(--texte-2)} .tableau dd{margin:0;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
+
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}
+.b{font:inherit;font-size:15px;font-weight:600;border-radius:999px;padding:13px 20px;min-height:48px;cursor:pointer;text-align:left;flex:1 1 150px}
+.b .note{display:block;font-size:12px;font-weight:400}
+.b-principal{background:var(--plein);color:var(--sur-plein);border:1px solid var(--plein)}
+.b-second,.b-choix{background:var(--carte);color:var(--texte);border:1px solid var(--bord)}
+.b-arret{background:var(--carte);color:var(--texte);border:1.5px solid var(--texte)}
+.b-arret.confirme{border-width:3px}
+.b[aria-disabled="true"]{background:var(--papier);color:var(--texte-2);border:1px dashed var(--texte-2);cursor:not-allowed}
+.raison{font-size:13px;color:var(--texte-2);margin:0;flex-basis:100%}
+.lien{font:inherit;font-size:14px;font-weight:600;color:var(--texte);background:none;border:0;padding:6px 0;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+:focus-visible{outline:2px solid var(--texte);outline-offset:2px}
+
+.carte{background:var(--carte);border:1px solid var(--bord);border-radius:20px;padding:14px 16px;margin:12px 0}
+.carte h2{font-family:var(--serif);font-weight:400;font-size:20px;margin:0 0 6px}
+.carte p{margin:0 0 8px}
+.carte.alerte{border:2px solid var(--carpe)}
+.carte.alerte h2{color:var(--carpe)}
+.bornes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bornes label{font-size:12px;color:var(--texte-2);display:flex;flex-direction:column;gap:4px}
+.bornes input{font-family:var(--serif);font-size:30px;background:var(--papier);border:1px solid var(--bord);border-radius:14px;padding:6px 12px;color:var(--texte);width:100%;font-variant-numeric:tabular-nums}
+.bornes input:disabled{color:var(--texte-2)}
+.inter{display:flex;align-items:center;gap:10px;font:inherit;background:none;border:0;color:var(--texte);padding:10px 0 0;cursor:pointer;text-align:left}
+.inter .r{width:40px;height:24px;border-radius:999px;background:var(--papier);border:1px solid var(--texte-2);position:relative;flex:none}
+.inter .r::after{content:"";position:absolute;width:16px;height:16px;border-radius:50%;top:3px;left:3px;background:var(--texte-2)}
+.inter[aria-checked="true"] .r{background:var(--plein);border-color:var(--plein)}
+.inter[aria-checked="true"] .r::after{left:19px;background:var(--sur-plein)}
+.pas{display:flex;align-items:center;gap:10px;margin-top:10px}
+.pas button{font:inherit;font-size:18px;width:40px;height:40px;border-radius:50%;border:1px solid var(--bord);background:var(--papier);color:var(--texte);cursor:pointer}
+.pas output{font-family:var(--serif);font-size:30px;min-width:2ch;text-align:center}
+.parties{list-style:none;padding:0;margin:0}
+.parties li{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid var(--bord);font-size:14px}
+.parties li.ici{font-weight:700}
+.parties li span:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.reste{display:grid;grid-template-columns:22px 1fr;gap:10px;padding:12px 0;border-top:1px solid var(--bord)}
+.reste .t{font-weight:600}
+.reste .t.carpe-t{color:var(--carpe)} .reste .t.feuille-t{color:var(--feuille)}
+.reste .m{color:var(--texte-2);font-size:14px;margin:0 0 6px}
+.reste .g{display:flex;gap:14px}
+.coupe svg{display:block;width:100%;height:auto}
+.message{background:var(--carte);border:1px solid var(--bord);border-radius:14px;padding:10px 14px;font-size:14px;margin:10px 0}
+.legende{font-size:13px;color:var(--texte-2);margin-top:12px}
+.legende summary{cursor:pointer;color:var(--texte);font-weight:600}
+
+/* Mouvement (partition dans la fiche) : une valeur qui change monte à sa place ; au changement
+ * d'état, les blocs arrivent l'un après l'autre. Rien de tout cela en mouvement réduit. */
+@media (prefers-reduced-motion:no-preference){:root:not([data-mouvement="reduit"]){
+  .change{display:inline-block;animation:roule .42s cubic-bezier(.2,.8,.2,1)}
+  #panneau[data-etat-change="1"]>*{animation:arrive .48s cubic-bezier(.2,.8,.2,1) both}
+  #panneau[data-etat-change="1"]>*:nth-child(2){animation-delay:.04s}
+  #panneau[data-etat-change="1"]>*:nth-child(3){animation-delay:.08s}
+  #panneau[data-etat-change="1"]>*:nth-child(4){animation-delay:.12s}
+  #panneau[data-etat-change="1"]>*:nth-child(n+5){animation-delay:.16s}
+}}
+@keyframes roule{from{transform:translateY(.35em);opacity:.2}to{transform:none;opacity:1}}
+@keyframes arrive{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
+</style>
+</head>
+<body>
+<main class="scene">
+  <div id="cadre"><div id="panneau" aria-label="Panneau Ariane, proposition Bassin"></div></div>
+  <aside class="notes">
+    <h2>Bassin</h2>
+    <p><b>D'où ça vient.</b> KoiPond : une surface d'eau vivante sur laquelle des nénuphars dérivent et des carpes glissent ; on touche, l'eau répond ; un bassin qui devient piscine. inspora : les bleus d'eau et l'aquarelle. 60fps : chaque geste reçoit une réponse.</p>
+    <p><b>Ce que ça veut dire ici.</b> Chaque cut posé fait une onde. Un différé laisse un nénuphar vert qui reste à la surface. Un vert à examiner est une carpe orange qui tourne en attendant qu'on la regarde. On touche un nénuphar ou une carpe pour l'examiner. Eau immobile : rien ne tourne. En Écho, le bassin devient piscine : Ariane regarde l'opérateur nager. En mouvement réduit, l'eau est figée ; nénuphars et carpes restent là où ils sont.</p>
+  </aside>
+</main>
+<script>
+/*COMMUN*/
+</script>
+<script>
+(function () {
+  'use strict';
+  const { esc } = Demo.D;
+  const ICO_F = '<svg class="ico" viewBox="0 0 16 12" aria-hidden="true"><path d="M8 6 L14 3 A6 6 0 1 0 14 9 Z" fill="var(--feuille)"/></svg>';
+  const ICO_C = '<svg class="ico" viewBox="0 0 16 12" aria-hidden="true"><ellipse cx="7" cy="6" rx="6" ry="3.2" fill="var(--carpe)"/><path d="M12 6 L16 2.5 L16 9.5 Z" fill="var(--carpe)"/></svg>';
+  function bouton(x) {
+    const cls = { principal: 'b b-principal', second: 'b b-second', arret: 'b b-arret' + (x.confirme ? ' confirme' : ''), choix: 'b b-choix', lien: 'lien' }[x.rang];
+    return `<button class="${cls}" data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}${x.desactive ? ' aria-disabled="true"' : ''}>${esc(x.libelle)}${x.note ? `<span class="note">${esc(x.note)}</span>` : ''}</button>${x.raison ? `<p class="raison">${esc(x.raison)}</p>` : ''}`;
+  }
+  const actions = (l) => `<div class="actions">${l.map(bouton).join('')}</div>`;
+  function bassin(m) {
+    const bl = m.activiteBloquee ? ' aria-disabled="true" title="Mettre le lot en pause ou l’arrêter avant de changer d’activité"' : '';
+    const ok = m.liaison.etat === 'relie';
+    const nb = m.restants.length, d = m.restants.filter((r) => r.type === 'differe').length, v = nb - d;
+    const lbl = m.vue === 'echo' ? 'Piscine : Ariane observe l’opérateur' : `Bassin du lot : ${m.phase === 'encours' ? 'l’eau bouge, le lot tourne' : 'eau calme, rien ne tourne'} ; ${d} nénuphars différés et ${v} carpes à examiner à la surface`;
+    return `<div class="bassin"><canvas data-garder="eau" id="eau" role="img" aria-label="${esc(lbl)}"></canvas>
+      <div class="haut"><span class="puce${ok ? '' : ' non'}">${ok ? '' : '! '}${esc(m.liaison.texte)}</span><div class="seg" role="group" aria-label="Activité"><button data-a="orbite" aria-pressed="${m.activite === 'orbite'}"${m.activite === 'echo' ? '' : bl}>Orbite</button><button data-a="echo" aria-pressed="${m.activite === 'echo'}"${bl}>Écho</button></div></div>
+      ${nb && m.vue !== 'echo' ? `<div class="bas"><span class="puce">${ICO_F}${d} différés</span><span class="puce">${ICO_C}${v} à examiner</span></div>` : ''}</div>`;
+  }
+  function titre(m) {
+    if (m.vue === 'echo') return 'Ariane <em>regarde</em>, sans poser.';
+    if (m.file.relecture) return `Partie ${m.file.courante} finie, <em>relecture</em>.`;
+    return { pret: 'Prête. L’eau est <em>calme</em>.', encours: 'Le lot est <em>en cours</em>.', pause: 'Le lot est <em>en pause</em>.', arrete: m.file.alerte ? 'La file s’est <em>arrêtée</em>.' : 'Le lot est <em>arrêté</em>.', fin: m.file.finie ? 'La file est <em>terminée</em>.' : 'Le lot est <em>terminé</em>.' }[m.phase];
+  }
+  function file(m) {
+    const f = m.file;
+    if (m.phase === 'pret') return `<div class="carte"><h2>File de parties</h2><button class="inter" role="switch" aria-checked="${f.active}" data-a="fileBascule"><span class="r" aria-hidden="true"></span>Enchaîner plusieurs parties · ${f.active ? 'allumée' : 'éteinte'}</button>${f.active ? `<div class="pas"><button data-a="fileMoins" aria-label="Une partie de moins">−</button><output>${f.nb}</output><button data-a="filePlus" aria-label="Une partie de plus">+</button><span>parties, relues et corrigées une à une</span></div>` : ''}</div>`;
+    if (!f.active) return '';
+    let l = '';
+    for (let i = 1; i <= f.nb; i++) { const p = f.parties.find((x) => x.n === i), ici = i === f.courante && !f.finie; l += `<li class="${ici ? 'ici' : ''}"><span>Partie ${i}</span><span>${p ? `${p.poses} posés · ${p.differes} différés · ${p.aControler} à examiner` : ici ? (f.relecture ? 'relecture' : m.phase === 'arrete' ? 'arrêtée' : 'en cours') : 'à venir'}</span></li>`; }
+    return `<div class="carte"><h2>${f.finie ? `File terminée, ${f.nb} parties` : `Partie ${f.courante} sur ${f.nb}`}</h2><ol class="parties">${l}</ol></div>`;
+  }
+  function principal(m, S) {
+    let h = bassin(m) + '<div class="corps">' + `<h1 class="titre">${titre(m)}</h1>`;
+    if (m.vue === 'echo') return h + `<p class="phrase">${esc(m.phrase)}</p><div class="chiffres"><span class="n" data-valeur="n">${m.echo.vus}</span><span class="s">cuts vus</span></div><dl class="tableau"><div><dt>Dernier cut vu</dt><dd>${m.echo.dernier ?? '—'}</dd></div><div><dt>Mêmes choix qu'Ariane</dt><dd>${m.echo.accord} / ${m.echo.vus}</dd></div></dl>` + actions(m.actions) + '</div>';
+    const c = m.compte;
+    if (m.file.alerte) h += `<div class="carte alerte" role="alert"><h2>${esc(m.file.alerte.titre)}</h2><p>${esc(m.file.alerte.detail)}</p></div>`;
+    if (m.incident) h += `<div class="carte${m.incident.type !== 'reprise' ? ' alerte' : ''}"${m.incident.type !== 'reprise' ? ' role="alert"' : ''}><h2>${esc(m.incident.titre)}</h2><p>${esc(m.incident.texte)}</p>${m.incident.actions.length ? actions(m.incident.actions) : ''}</div>`;
+    h += `<p class="phrase">${esc(m.phrase)}</p>`;
+    if (m.phase === 'pret') {
+      const b = m.bornes;
+      h += `<div class="carte"><div class="bornes"><label>Premier cut<input data-champ="debut" inputmode="numeric" value="${b.debut}"></label><label>Dernier cut<input data-champ="fin" inputmode="numeric" value="${b.finDePartie ? '' : b.fin}" placeholder="fin"${b.finDePartie ? ' disabled' : ''}></label></div><button class="inter" role="switch" aria-checked="${b.finDePartie}" data-a="finDePartie"><span class="r" aria-hidden="true"></span>Jusqu'à la fin de la partie</button></div>` + actions(m.actions) + file(m);
+    } else {
+      const fin = m.phase === 'fin';
+      h += `<div class="chiffres"><span class="n" data-valeur="n">${fin ? c.poses : c.faits}</span><span class="s">${fin ? 'posés sur ' + c.faits : 'sur ' + esc(c.totalTexte)}</span></div>`;
+      h += `<div class="legende-v"><span class="feuille-t">${ICO_F}${c.differes} différés</span><span class="carpe-t">${ICO_C}${c.aExaminer} à examiner</span></div>`;
+      if (!fin) h += `<dl class="tableau"><div><dt>Temps restant</dt><dd>${esc(c.tempsTexte)}</dd></div><div><dt>Cut en cours</dt><dd>${c.cut}</dd></div></dl>`;
+      h += actions(m.actions) + file(m);
+    }
+    if (m.message) h += `<p class="message" role="status">${esc(m.message)}</p>`;
+    return h + `<details class="legende"><summary>Légende</summary><p>Onde : un cut vient d'être posé. Nénuphar vert : différé. Carpe orange : vert à examiner. Toucher l'un ou l'autre ouvre l'examen. Eau calme : rien ne tourne. Piscine : Écho.</p></details></div>`;
+  }
+  function reste(m) {
+    const l = m.restants.slice().sort((a, b) => a.cut - b.cut).map((r) => `<div class="reste">${r.type === 'vert' ? ICO_C : ICO_F}<div><div class="t ${r.type === 'vert' ? 'carpe-t' : 'feuille-t'}">Cut ${r.cut} · ${r.type === 'vert' ? 'à examiner' : 'différé'}</div><p class="m">${esc(r.motif)}</p><div class="g"><button class="lien" data-a="examiner" data-id="${r.id}">Examiner</button><button class="lien" data-a="ouvrir" data-id="${r.id}">Ouvrir dans ESV</button></div></div></div>`).join('');
+    return bassin(m) + `<div class="corps"><h1 class="titre">Ce qui <em>reste</em>.</h1><p class="phrase">Ce qui flotte encore : ${m.restants.length} cuts.</p>${actions([{ a: 'retour', libelle: 'Retour au lot', rang: 'second' }])}${l}${m.message ? `<p class="message" role="status">${esc(m.message)}</p>` : ''}</div>`;
+  }
+  function coupe(r) {
+    const { pts, rails } = Demo.D.coupe(r.cut, 260);
+    const W = 360, H = 170, X = (x) => 14 + (x + 1) / 2 * (W - 28), Z = (z) => 26 - (z + 0.1) * 320;
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Coupe du cut ${r.cut}">`;
+    for (const [x, z] of pts) s += `<circle cx="${X(x).toFixed(1)}" cy="${Z(z).toFixed(1)}" r="1.4" fill="var(--texte)" opacity=".75"/>`;
+    for (const rx of rails) s += `<rect x="${X(rx) - 4}" y="${Z(-0.16) - 22}" width="8" height="22" rx="2" fill="${r.type === 'vert' ? 'var(--carpe)' : 'none'}" stroke="${r.type === 'vert' ? 'var(--carpe)' : 'var(--feuille)'}" stroke-width="2"${r.type === 'vert' ? '' : ' stroke-dasharray="3 3"'}/>`;
+    return s + '</svg>';
+  }
+  function examen(m) {
+    const r = m.examen;
+    return `<div class="corps"><button class="lien" data-a="voirReste">Retour à la liste</button><h1 class="titre">Cut ${r.cut}, <em>${r.type === 'vert' ? 'à examiner' : 'différé'}</em>.</h1><p class="phrase">${esc(r.motif)}. ${r.type === 'vert' ? 'Rails posés en orange.' : 'Rien de posé ; places envisagées en tireté vert.'}</p><div class="carte coupe">${coupe(r)}</div>`
+      + actions([{ a: 'ouvrir', id: r.id, libelle: 'Ouvrir dans ESV', rang: 'principal' }, { a: 'traiter', id: r.id, libelle: 'Marquer comme vu', rang: 'second' }]) + (m.message ? `<p class="message" role="status">${esc(m.message)}</p>` : '') + '</div>';
+  }
+
+  /* ---------- l'eau ---------- */
+  const ondes = [], corps = new Map();
+  let faitsVus = -1, dernier = 0, melange = 0;
+  function hach(s) { let x = Math.sin(s * 12.9898) * 43758.5453; return x - Math.floor(x); }
+  function eau(t) {
+    const cv = document.getElementById('eau');
+    if (cv) {
+      const S = Demo.etat(), m = Demo.D.modele(), w = cv.clientWidth, H = cv.clientHeight, dpr = devicePixelRatio || 1;
+      if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(H * dpr); }
+      const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const st = getComputedStyle(document.documentElement), v = (k) => st.getPropertyValue(k).trim();
+      const reduit = Demo.D.mouvementReduit(), vit = !reduit && (m.phase === 'encours' || m.vue === 'echo');
+      const dt = Math.min(0.05, (t - dernier) / 1000); dernier = t;
+      const tt = reduit ? 0 : t / 1000;
+      const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, v('--eau1')); g.addColorStop(1, v('--eau2'));
+      ctx.fillStyle = g; ctx.fillRect(0, 0, w, H);
+      const rf = v('--reflet');
+      /* Bassin ⇄ piscine (KoiPond) : les carreaux montent en une seconde environ ; en mouvement réduit, d'un coup. */
+      const cible = m.vue === 'echo' ? 1 : 0;
+      melange = reduit ? cible : melange + (cible - melange) * Math.min(1, dt * 3.2);
+      if (melange > 0.01) {
+        ctx.strokeStyle = `rgba(${rf},${(0.35 * melange).toFixed(3)})`; ctx.lineWidth = 1;
+        for (let x = 0; x < w; x += 22) { ctx.beginPath(); for (let y = 0; y <= H; y += 6) ctx.lineTo(x + Math.sin(y / 30 + tt * 1.5) * 2, y); ctx.stroke(); }
+        for (let y = 0; y < H; y += 22) { ctx.beginPath(); for (let x = 0; x <= w; x += 6) ctx.lineTo(x, y + Math.sin(x / 30 + tt * 1.5) * 2); ctx.stroke(); }
+      }
+      if (melange < 0.99) {
+        ctx.strokeStyle = `rgba(${rf},${(0.28 * (1 - melange)).toFixed(3)})`; ctx.lineWidth = 1.2;
+        for (let k = 0; k < 7; k++) { ctx.beginPath(); for (let x = 0; x <= w; x += 8) { const y = 50 + k * 30 + Math.sin(x / 40 + tt * 0.8 + k) * 4 + Math.sin(x / 13 + tt * 1.7) * 1.5; x ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke(); }
+      }
+      /* une onde par cut posé */
+      if (faitsVus >= 0 && S.faits > faitsVus && vit) ondes.push({ x: 30 + hach(S.faits) * (w - 60), y: 60 + hach(S.faits + 7) * (H - 100), r: 2, a: 0.9 });
+      faitsVus = S.faits;
+      for (let i = ondes.length - 1; i >= 0; i--) {
+        const o = ondes[i]; o.r += 40 * dt; o.a -= 0.45 * dt;
+        if (o.a <= 0) { ondes.splice(i, 1); continue; }
+        ctx.strokeStyle = `rgba(${rf},${o.a.toFixed(3)})`; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.ellipse(o.x, o.y, o.r, o.r * 0.55, 0, 0, 6.3); ctx.stroke();
+        if (o.r > 12) { ctx.beginPath(); ctx.ellipse(o.x, o.y, o.r - 9, (o.r - 9) * 0.55, 0, 0, 6.3); ctx.stroke(); }
+      }
+      if (m.vue !== 'echo') {
+        /* nénuphars (différés) et carpes (à examiner) */
+        const vus = new Set();
+        for (const r of S.restants) {
+          vus.add(r.id);
+          if (!corps.has(r.id)) corps.set(r.id, { x: 30 + hach(r.cut) * (w - 60), y: 70 + hach(r.cut + 3) * (H - 110), a: hach(r.cut + 9) * 6.28, ph: hach(r.cut + 1) * 6.28 });
+          const c = corps.get(r.id);
+          if (r.type === 'differe') {
+            if (!reduit) { c.x += Math.sin(tt * 0.2 + c.ph) * 0.05; c.y += Math.cos(tt * 0.17 + c.ph) * 0.04; }
+            ctx.fillStyle = v('--feuille-v'); ctx.beginPath(); ctx.moveTo(c.x, c.y); ctx.arc(c.x, c.y, 11, c.a + 0.35, c.a + 6.28 - 0.35); ctx.closePath(); ctx.fill();
+            ctx.strokeStyle = `rgba(${rf},.5)`; ctx.lineWidth = 1; ctx.stroke();
+          } else {
+            const tour = reduit ? 0 : tt * 0.5 + c.ph;
+            const cx = c.x + Math.cos(tour) * 14, cy = c.y + Math.sin(tour) * 8, dir = tour + Math.PI / 2;
+            ctx.save(); ctx.translate(cx, cy); ctx.rotate(dir);
+            ctx.fillStyle = v('--carpe-v'); ctx.beginPath(); ctx.ellipse(0, 0, 11, 4.5, 0, 0, 6.3); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(-9, 0); ctx.lineTo(-16, -5 + Math.sin(tt * 6) * 1.5); ctx.lineTo(-16, 5 + Math.sin(tt * 6) * 1.5); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = `rgba(${rf},.8)`; ctx.beginPath(); ctx.ellipse(3, -1, 3, 1.6, 0, 0, 6.3); ctx.fill();
+            ctx.restore(); c.cx = cx; c.cy = cy;
+          }
+        }
+        for (const k of [...corps.keys()]) if (!vus.has(k)) corps.delete(k);
+      }
+    }
+    requestAnimationFrame(eau);
+  }
+  function touche(e) {
+    const cv = e.target.closest('#eau'); if (!cv) return;
+    const rc = cv.getBoundingClientRect(), x = e.clientX - rc.left, y = e.clientY - rc.top;
+    ondes.push({ x, y, r: 2, a: 0.8 });
+    let best = null, d0 = 22;
+    for (const r of Demo.etat().restants) { const c = corps.get(r.id); if (!c) continue; const px = r.type === 'vert' ? c.cx : c.x, py = r.type === 'vert' ? c.cy : c.y; const d = Math.hypot(px - x, py - y); if (d < d0) { d0 = d; best = r; } }
+    if (best) Demo.agir('examiner', best.id);
+  }
+  document.addEventListener('click', touche);
+  Demo.monter({ rendre(S, D) { const m = D.modele(); if (m.vue === 'reste') return reste(m); if (m.vue === 'examen' && m.examen) return examen(m); return principal(m, S); } });
+  requestAnimationFrame(eau);
+})();
+</script>
+</body>
+</html>
