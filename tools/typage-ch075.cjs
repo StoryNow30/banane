@@ -7,8 +7,9 @@ const REFERENCES={
  /* CH-097 (défaut 3) : le code de la file change (alertes : écrits de la passe, refus de la relecture). Référence refaite sur le commit du changement ;
   * l'ancienne (base 32c4783, arbre 9d59d93b…) reste lisible dans l'historique. Si l'intégration ne garde pas ce commit, refaire la base sur le tronc. */
  /* CH-109 (B) : cuts non relus d'une relecture close « interrompue » (`nonRelus`). Référence refaite sur le commit du changement (3feab9e) ; l'ancienne
-  * (base a674e14, arbre a94dbfef…) reste lisible dans l'historique. Si l'intégration ne garde pas ce commit, refaire la base sur le tronc. */
- 'src/file-parties.js':{base:'3feab9e',source:'ab36528a478db8a1669b63316d6ac481fb38c67809addd241a7ae020b868a2bb',ast:'0b68918df2d7eb9ef584bf9b65fad52a7549dc17f80e82824847f9e6614c9206'},
+  * (base a674e14, arbre a94dbfef…) reste lisible dans l'historique. Si l'intégration ne garde pas ce commit, refaire la base sur le tronc.
+  * CH-159 (D-382) : motif `qualite-portion` ajouté aux motifs de fin de relecture de la file (0872179). */
+ 'src/file-parties.js':{base:'0872179',source:'eb7a3267238e1a284dacfb39c5b2604dde298b25e93c5d841fc81065dba72da4',ast:'f58a8ed55389ed215e3437e56d305e3ed23e18521fcb93c88ba7e1045aec4f86'},
  'src/file-prioritaire.js':{base:'32c4783',source:'c43494abd24fd2ff21ac410021c6e66e2ed6dea1eb172b8ef8633cb147f6bab1',ast:'ed5fc7e67e598d1098b8332bb3f0a5674e022086f585884e24cbfc68e236c566'},
 };
 const PERIMETRE=['src/appuis-liste.js','src/file-prioritaire.js','src/file-parties.js'];
