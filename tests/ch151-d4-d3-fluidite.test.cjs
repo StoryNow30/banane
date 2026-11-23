@@ -130,7 +130,8 @@ test('D4c — Constellation : saut direct à suivant-dernier si différés resta
 test('D4c — relectureEntree branche tableListe (liste-memoire) et alertesGardeVoie vers BananeRelectureOmbre.selection', async () => {
   const local = Hrel.S && require('./helpers/perf-production.cjs').memoire();
   /* Table de 200 lignes : cuts 111–113 rouges avant le lot (concordance 100 %), bosse de 5 mm au cut 105 (dans une ADV 100–110),
-   * et alerte garde-voie-ombre au cut 102 : les verts lisses d'ADV sont filtrés sauf autour de l'alerte (102 ± 3) et la bosse (105). */
+   * et alerte garde-voie-ombre au cut 102. CH-158 : toute l'ADV reste visitée (les verts lisses d'ADV ne sont plus écartés) ;
+   * la bosse, les cuts couverts par l'alerte et le branchement de tableListe restent vérifiés. */
   const total = 200, st = Array(total).fill(0), fl = Array(total).fill(0), ed = [];
   for (let i = 0; i < total; i++) {
     if (i >= 111 && i <= 113) st[i] = 1;
@@ -152,12 +153,13 @@ test('D4c — relectureEntree branche tableListe (liste-memoire) et alertesGarde
   assert.equal(p.etat, 'finie', p.message);
   assert.ok(b.ctx.BananeRelectureFiltreListe, 'BananeRelectureFiltreListe chargé dans le service worker');
   const debut = Hrel.evenements(b, 'relecture-debut')[0];
-  assert.ok(Array.isArray(debut.filtresListe) && debut.filtresListe.length > 0, `cuts lisses filtrés attendus, obtenu : ${JSON.stringify(debut.filtresListe)}`);
+  assert.ok(Array.isArray(debut.filtresListe), 'filtresListe exposé (tableListe branchée)');
   assert.equal(debut.filtresListeCompte, debut.filtresListe.length);
+  assert.ok(!debut.filtresListe.some(x => x.zone === 'adv'), 'aucun cut d’ADV dans filtresListe');
   const relus = Hrel.evenements(b, 'relecture-ombre').map(e => e.identity.cut);
   assert.ok(relus.includes(105), 'la bosse de 5 mm au cut 105 reste visitée');
   assert.ok(relus.includes(101) && relus.includes(102), 'les cuts couverts par garde-voie-ombre restent visités');
-  assert.ok(!relus.includes(96) && !relus.includes(97), `les verts lisses d'ADV loin des alertes sont écartés : ${relus.join(',')}`);
+  assert.ok(relus.includes(96) && relus.includes(97), `toute l'ADV reste visitée, y compris les verts lisses loin des alertes : ${relus.join(',')}`);
 });
 
 test('D3 — correctionOuvrir sur le cut déjà affiché ne met pas Écho en pause et n’envoie pas goToCut', async () => {
