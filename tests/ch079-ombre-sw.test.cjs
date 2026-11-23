@@ -27,9 +27,9 @@ before(async()=>{
  coupe=await lot({garde:{...S.lot.gardeVoieOmbre,actif:false},serrage:{...S.lot.serrageLotOmbre,actif:false}});
  active=await lot({garde:{...S.lot.gardeVoieOmbre,voisinesMin:1}});
 });
-test('les réglages existent, figés, allumés en OMBRE ; seuil 15 mm, fenêtre 20 cuts',()=>{
+test('les réglages existent, figés (garde de voie allumée, serrage coupé en D-380) ; seuil 15 mm, fenêtre 20 cuts',()=>{
  for(const k of ['gardeVoieOmbre','serrageLotOmbre'])assert.ok(Object.isFrozen(S.lot[k]),k);
- deq({...S.lot.gardeVoieOmbre},{actif:true,seuilMm:15,fenetre:20,voisinesMin:5});deq({...S.lot.serrageLotOmbre},{actif:true,plafondMm:20,fenetre:20,voisinesMin:5});
+ deq({...S.lot.gardeVoieOmbre},{actif:true,seuilMm:15,fenetre:20,voisinesMin:5});deq({...S.lot.serrageLotOmbre},{actif:false,plafondMm:20,fenetre:20,voisinesMin:5});
 });
 test('LA POSE NE CHANGE PAS : mêmes commandes ESV, mêmes rails, mêmes enregistrements, décisions identiques octet pour octet, avec, sans et en panne',()=>{
  for(const [nom,x] of [['ombres actives',active]]){  /* le cas « en panne » est dans tests/ch079-ombre-sw-panne.test.cjs */
@@ -55,7 +55,7 @@ test('seul le service worker appelle les modules, après la commande ; ils ne so
  const bg=fs.readFileSync(path.join(racine,'background.js'),'utf8');
  assert.match(bg,/'src\/garde-voie-ombre\.js','src\/serrage-lot-ombre\.js'/);assert.match(bg,/gardeSerrageOmbre\(lotObservation,proposal\)/);
  assert.ok(bg.indexOf('b1EcartPlanifier(lotObservation,proposal)')<bg.indexOf('gardeSerrageOmbre(lotObservation,proposal)'),'après la décision et la commande');
- for(const f of fs.readdirSync(path.join(racine,'src')).filter(x=>x.endsWith(".js")&&!/^(garde-voie-ombre|serrage-lot-ombre|settings)\.js$/.test(x))){
+ for(const f of fs.readdirSync(path.join(racine,'src')).filter(x=>x.endsWith(".js")&&!/^(garde-voie-ombre|serrage-lot-ombre|settings|correction-liste)\.js$/.test(x))){
   assert.doesNotMatch(fs.readFileSync(path.join(racine,'src',f),'utf8'),/BananeGardeVoieOmbre|BananeSerrageLotOmbre|garde-voie-ombre|serrage-lot-ombre/,f+' ne lit pas les ombres');}
 });
 

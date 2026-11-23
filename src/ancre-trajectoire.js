@@ -144,7 +144,34 @@
    const theta=E.modele.R.thetaMm;
    return {refus:Math.abs(x.ecartMm)>theta,ecartMm:r1(x.ecartMm),axeMm:r1(x.axeMm),cinematiqueMm:r1(x.cinematiqueMm),thetaMm:theta};
  }
+ /* CH-153 (Lot C1, D-380 / D-381) — GRAINE D'AXE (« gA ») : projette l'axe de la voie relevée en décalages [latMm, vertMm]
+  * dans le repère profil de chaque rail de départ de la capture, à ±gRefMm/2 autour de l'axe. Se tait dès que l'ancre ou le calage est muet. */
+ function projProfil(M,p){
+   const [x,y,z]=p,w=M[3]*x+M[7]*y+M[11]*z+M[15];
+   if(!fini(w)||Math.abs(w)<1e-15)return null;
+   const out=[(M[0]*x+M[4]*y+M[8]*z+M[12])/w,(M[1]*x+M[5]*y+M[9]*z+M[13])/w,(M[2]*x+M[6]*y+M[10]*z+M[14])/w];
+   return out.every(fini)?out:null;
+ }
+ function graineAxe(E,cut,capture,gRefMm=1437){
+   const Mo=E&&E.modele;if(!Mo||!Mo.ok)return {muet:Mo&&Mo.raison||'modele'};
+   const ax=axe(Mo,cut);if(ax.muet)return ax;
+   const c=noter(E,cut,capture);if(!c.rigide)return {muet:'calage-ligne'};
+   const g=translation(E);if(!g||1000*Math.hypot(g.t[0]-c.T[0],g.t[1]-c.T[1],g.t[2]-c.T[2])>Mo.R.calageMaxMm)return {muet:'calage-lot'};
+   const ra=capture&&capture.rails;if(!ra||!ra.left||!ra.right)return {muet:'rails'};
+   const k=Mo.Lg.pos[cut],demi=(fini(gRefMm)&&gRefMm>1000?gRefMm:1437)/2000;
+   const Cx=Mo.Lg.Mx[k]+(ax.mm/1000)*Mo.Lg.ex[k],Cy=Mo.Lg.My[k]+(ax.mm/1000)*Mo.Lg.ey[k];
+   const out={axeMm:r1(ax.mm),cinematiqueMm:r1(ax.cinematiqueMm),thetaMm:Mo.R.thetaMm};
+   for(const [s,sg] of [['left',1],['right',-1]]){
+     const M=ra[s].sceneRelativeToProfileLocal,p0=ra[s].positionSceneRelative;
+     if(!Array.isArray(M)||M.length!==16||!Array.isArray(p0)||p0.length<3)return {muet:'rails'};
+     const pCible=[Cx+sg*demi*Mo.Lg.ex[k]-c.T[0],Cy+sg*demi*Mo.Lg.ey[k]-c.T[1],p0[2]];
+     const q=projProfil(M,pCible),o=projProfil(M,p0);
+     if(!q||!o)return {muet:'projection'};
+     out[s]=[r1(1000*(q[1]-o[1])),r1(1000*(q[2]-o[2]))];
+   }
+   return out;
+ }
  /* État complet d'un lot depuis la table décompactée de la liste (null sans table). */
  function etat(table,r){if(!table)return null;const E=creer(table,r);E.table=table;return E;}
- return {VERSION,REGLAGE,reglage,lignes,serie,grille,predire,preparer,axe,etat,noter,translation,ecartPose,juger};
+ return {VERSION,REGLAGE,reglage,lignes,serie,grille,predire,preparer,axe,etat,noter,translation,ecartPose,juger,graineAxe};
 });

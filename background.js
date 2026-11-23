@@ -1876,6 +1876,7 @@ async function commandLot(proposal,lotObservation){
    obtenirModele:()=>l1Modele(),
    obtenirReference:async()=>globalThis.BananeGcv2L1e.referenceEcartement(await l1eTable(id.part),id.cut),
    obtenirVoieListe:async()=>await l1eVoieListe(ctx.lotArgs.capture,id),
+   obtenirEtatAncre:async()=>ancreAllumee()?await ancreEtat(id.part):null,
    validerVue:async({etape,decision,positions,command:cmd})=>etape==='gcv2'?await l1PlanVue(capture,positions,id):await deplacerVuePlanifier({lotObservation:decision,proposal,before,capture,command:cmd,reglage:reglageVueL1()}),
    appliquerReglesMetier:cmd=>reglesMetierCommande(cmd,lotObservation,proposal,before),
    transporter:(cap,ident,pos)=>l1eTransporter(cap,ident,pos),

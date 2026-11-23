@@ -12,7 +12,7 @@ const decisions=b=>b.store.events.filter(e=>e.type==='gcv1-shadow-observed').map
 const H=require('./helpers/lot-profil.cjs');
 async function lotL1e(ombres){
  const adapter=new H.EsvTrou([]),b=H.production({adapter});
- const lotR={...S.lot,profil:'L1-se',gardeApresDiffere:undefined,...(ombres?{gardeVoieOmbre:{...S.lot.gardeVoieOmbre,voisinesMin:1},serrageLotOmbre:{...S.lot.serrageLotOmbre,voisinesMin:1}}:{gardeVoieOmbre:{...S.lot.gardeVoieOmbre,actif:false},serrageLotOmbre:{...S.lot.serrageLotOmbre,actif:false}})};
+ const lotR={...S.lot,profil:'L1-se',gardeApresDiffere:undefined,...(ombres?{gardeVoieOmbre:{...S.lot.gardeVoieOmbre,voisinesMin:1},serrageLotOmbre:{...S.lot.serrageLotOmbre,actif:true,voisinesMin:1}}:{gardeVoieOmbre:{...S.lot.gardeVoieOmbre,actif:false},serrageLotOmbre:{...S.lot.serrageLotOmbre,actif:false}})};
  b.ctx.BananeSettings={...b.ctx.BananeSettings,voiePrediteOmbre:{...S.voiePrediteOmbre,actif:false},deplacerVue:{...S.deplacerVue,actif:false},lot:lotR};
  const G=b.ctx.BananeGcv2L1;
  b.ctx.BananeGcv2L1={...G,deciderDiffere:a=>{const r=G.deciderDiffere(a);if(a.capture.identity.cut!==112)return r;
