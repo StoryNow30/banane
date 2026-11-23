@@ -9,7 +9,6 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const path=require('node:path'),{spawnSync}=require('node:child_process');
 const {patchOk,Engine,lot,lotPannes,reprendre,attendre,sansPerteNiDoublon}=require('./helpers/ch094.cjs');
-const pause=ms=>new Promise(ok=>setTimeout(ok,ms));
 const QUATRE=['apply:100','validate:100','apply:101','validate:101'];
 /* Panne des événements (hors `batch-…`) du retour de la validation du cut 101 jusqu'à `reparer()` : le montage de CH-092. */
 const panne101=o=>{let panne=false;o.store.sort=c=>panne&&!String(c.type).startsWith('batch-')?'refus':null;
@@ -22,19 +21,28 @@ test('2. voisin : une reprise abandonnée sur délai finit pendant la fenêtre s
  /* Phase 1 (retour de la validation du cut 100) : les événements sont RETENUS (ni confirmés ni refusés) : délai à la porte, reprise
   * retenue aussi, pause. Phase 2 : le stockage répond, Reprendre. Phase 3 (retour de la validation du cut 101) : les écritures retenues
   * sont lâchées (la vieille reprise finit pendant la fenêtre du cut 101) et les événements NOUVEAUX sont refusés. La capture du cut 102
-  * dure 80 ms : la vieille reprise a fini avant la porte. Attendu : la porte du cut 102 voit le refus, pause, aucune pose du cut 102. */
+  * attend que cette vieille reprise ait écrit les événements de la première fenêtre, puis la porte voit le refus : pause, aucune pose du 102.
+  * Le premier délai reste court (40 ms, les écritures ne finissent pas). Avant Reprendre, le délai passe à 5 s pour que la réécriture
+  * de la fenêtre restée tienne sur une machine chargée, sans course à `pause(60)` ni `pause(80)`. */
  let phase=0;const premiere=new Set();
+ let libererCapture102;const capture102Libre=new Promise(ok=>{libererCapture102=ok;});
  const o=await lotPannes({reglage:{enFond:true,delaiMs:40},monter:({esv,store})=>{
   store.sort=c=>String(c.type).startsWith('batch-')?null:phase===1?'retenu':phase===3&&!premiere.has(c.eventId)?'refus':null;
   const base=esv.validateAndNext.bind(esv);esv.validateAndNext=async(...a)=>{const r=await base(...a);
    if(esv.cmd.at(-1)==='validate:100'&&phase===0)phase=1;
-   if(esv.cmd.at(-1)==='validate:101'){phase=3;store.lacher();}return r;};
-  const capture=esv.capture.bind(esv);esv.capture=async(...a)=>{if(esv.identity.cut===102)await pause(80);return capture(...a);};}});
+   if(esv.cmd.at(-1)==='validate:101'){phase=3;store.lacher();
+    const debut=Date.now();
+    (async()=>{
+     while(Date.now()-debut<5000){if([...premiere].every(id=>store.events.has(id))){libererCapture102();return;}await attendre(store);}
+     libererCapture102();
+    })();
+   }return r;};
+  const capture=esv.capture.bind(esv);esv.capture=async(...a)=>{if(esv.identity.cut===102)await capture102Libre;return capture(...a);};}});
  const {e,esv,store}=o;
  assert.equal(e.s.batch.error?.code,'ECRITURE_NON_CONFIRMEE');assert.deepEqual(esv.cmd,['apply:100','validate:100']);
  assert.ok(store.retenus.length>0,'des écritures sont retenues');
  for(const id of e.s.fenetreEcritures.evenements)premiere.add(id);
- phase=2;await reprendre(o);await pause(60);await attendre(store);
+ phase=2;e.ecrituresApresValidation={enFond:true,delaiMs:5000};await reprendre(o);await attendre(store);
  const absents=e.s.events.filter(x=>!store.events.has(x.eventId)).map(x=>x.type);
  assert.deepEqual({cmd:esv.cmd,etat:e.s.batch.state,code:e.s.batch.error?.code??null,absents:absents.length>0,liste:(e.s.fenetreEcritures?.evenements.length??0)>0},
   {cmd:QUATRE,etat:'PAUSED',code:'ECRITURE_NON_CONFIRMEE',absents:true,liste:true},
