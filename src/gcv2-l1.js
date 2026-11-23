@@ -1025,6 +1025,33 @@ function contreChaine(g,decalChaine,seuilMm){
    const ajuste=SIDES.some(s=>out[s].some((v,i)=>v!==decal[s][i]));
    return {decal:ajuste?out:decal,ajuste,info};
  }
+ /* CH-155 (Lot C3, D-380 / D-381) — ARBITRAGE FIN EN TRAVERS PAR L'AXE SUR UNE POSE GCV2 :
+  * Relit le flanc LiDAR autour de la pose candidate `decal` ; n'applique le recalage latéral (`tolMm` ≤ |du| ≤ `maxMm`)
+  * QUE lorsque l'axe `etatAncre` est établi, que l'écart du milieu de la paire à l'axe diminue strictement d'au moins `gainAxeMinMm`,
+  * et que l'écartement après recalage tient dans `±ecartRefMaxMm` de `gRefMm` (et dans le contrat [1420, 1470]). */
+ const modAncreC3=()=>(typeof globalThis!=='undefined'&&globalThis.BananeAncreTrajectoire)||(typeof require==='function'?require('./ancre-trajectoire.js'):null);
+ function affinerPoseParAxe({capture,cut,decal,etatAncre,gRefMm=null,tolMm=3,maxMm=16,minFace=6,bandeMm=12,ecartRefMaxMm=10,gainAxeMinMm=0.5}={}){
+   const A=modAncreC3();
+   if(!A?.ecartPose||!etatAncre||!capture?.rails||!decal||!Number.isInteger(cut))return {decal,applique:false,motif:'contexte'};
+   const pos0=positionsDe(capture,{left:{decal:decal.left},right:{decal:decal.right}});
+   const ep0=A.ecartPose(etatAncre,cut,capture,pos0);
+   if(ep0.muet)return {decal,applique:false,motif:'ancre:'+ep0.muet};
+   const Q=Conv.quantile,nd={left:decal.left.slice(),right:decal.right.slice()};let bouge=false;
+   for(const s of SIDES){
+     const P=lirePose(capture,s,decal[s],bandeMm/1000);
+     if(!P||P.face.length<minFace)continue;
+     const du=Q(P.face,.5)+Conv.DEFAULTS.faceOffsetMm;
+     if(Math.abs(du)>=tolMm&&Math.abs(du)<=maxMm){nd[s][1]=r2(decal[s][1]+P.sign*du);bouge=true;}
+   }
+   if(!bouge)return {decal,applique:false,motif:'sous-seuil'};
+   const g1=ecartementDecal(capture,nd);
+   if(!fini(g1)||g1<REGLE.contratMm[0]||g1>REGLE.contratMm[1])return {decal,applique:false,motif:'contrat'};
+   if(fini(gRefMm)&&Math.abs(g1-gRefMm)>ecartRefMaxMm)return {decal,applique:false,motif:'ecartement-ref'};
+   const pos1=positionsDe(capture,{left:{decal:nd.left},right:{decal:nd.right}});
+   const ep1=A.ecartPose(etatAncre,cut,capture,pos1);
+   if(ep1.muet||!(Math.abs(ep1.ecartMm)<=Math.abs(ep0.ecartMm)-gainAxeMinMm))return {decal,applique:false,motif:'eloigne-axe',avantAxeMm:ep0.ecartMm,apresAxeMm:ep1.ecartMm??null};
+   return {decal:nd,applique:true,avantAxeMm:arrondi(ep0.ecartMm,1),apresAxeMm:arrondi(ep1.ecartMm,1),ecartementMm:arrondi(g1,1)};
+ }
 
  /* ------------------------------------------------------------------ CH-153 (Lot C1) : pool H8 (v4BS-sd + graine d'axe gA) et recherche recentrée sur l'axe */
  function c1PaireAuPool(capture,hyp,gRef){
@@ -1305,6 +1332,6 @@ function contreChaine(g,decalChaine,seuilMm){
      nHyp:r.hyp?r.hyp.cut.nHyp:null,...(d.variante==='L1-e'?{variante:'L1-e',correction:d.correction,test13:d.test13,...(d.diag?{diag:d.diag}:{})}:{})};
  }
  return {VERSION,REGLE,REGLE_V,REGLE_E,H6,NUM,CAT,MULTI,FORMAT_PARAMS,decalage,variante,decalageDepuisDepart,decalagesH6,hypothesesDuCut,avecRupture,transfo,accords,brut,coder,soutienRail,
-   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,ecartAVoie,contreChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,LEVIERS_V4,LEVIERS_V5,LEVIERS_V6,LEVIERS_V7,LEVIERS_V8,ajusterPoseFinale,AJ_DEFAUT,AJ_ESSAI,deciderDiffere,commander,resumer,
+   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,ecartAVoie,contreChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,LEVIERS_V4,LEVIERS_V5,LEVIERS_V6,LEVIERS_V7,LEVIERS_V8,ajusterPoseFinale,affinerPoseParAxe,AJ_DEFAUT,AJ_ESSAI,deciderDiffere,commander,resumer,
    voieAbsolue,rechercheRecentree,pairesRecentrees,probasAncre,leviersActifs:()=>LEVIERS};
 });
