@@ -23,7 +23,9 @@
  const VERSION='ancre-trajectoire-1';
  /* Réglage figé (chantiers/CH-124/reglage-fige.md). `thetaMm` : au-delà de cet écart en travers entre le milieu d'une pose et l'axe, la pose est refusée. */
  const REGLAGE=Object.freeze({thetaMm:75,a:4,w:14,pasM:0.25,ecartMinMm:1428,ecartMaxMm:1446,fenetres:Object.freeze([200,400,800,1600]),minLignes:30,margeM:2,
-   sensRapportMin:1.10,sensFaibleMaxMm:20,rigideMaxMm:2,calageMaxMm:5,blocCout:400,plafondCoutMm:40,minLignesListe:100});
+   sensRapportMin:1.10,sensFaibleMaxMm:20,rigideMaxMm:2,calageMaxMm:5,blocCout:400,plafondCoutMm:40,minLignesListe:100,
+   /* CH-154 (Lot C4, N+ à haute pureté) : reprise sur le pool restreint à l'axe avec seuil d'acceptation resserré à `thetaRepriseMm` (25 mm). */
+   reprise:true,thetaRepriseMm:25});
  const fini=v=>typeof v==='number'&&Number.isFinite(v);
  const reglage=r=>Object.freeze({...REGLAGE,...(r&&typeof r==='object'?r:{})});
  function mediane(v){const s=Array.from(v).sort((p,q)=>p-q),m=s.length>>1;return s.length?(s.length%2?s[m]:(s[m-1]+s[m])/2):null;}
@@ -171,7 +173,21 @@
    }
    return out;
  }
+ /* CH-154 (N+) : jugement d'une pose d'un cut déjà noté (calage connu), sans sa capture (voisin ou appui du lot). */
+ function jugerConnu(E,cut,positions){if(!E||!E.parCut||!E.parCut.has(cut))return {muet:'non-note'};return juger(E,cut,null,positions);}
+ /* CH-154 (N+) : intervalle des décalages en travers [min, max] (mm, repère profil de chaque rail de départ) autour de l'axe ± demi-contrat ± θ. */
+ function fenetres(E,cut,capture,contrat=[1420,1470]){
+   const ra=capture&&capture.rails,pL=ra&&ra.left&&ra.left.positionSceneRelative,pR=ra&&ra.right&&ra.right.positionSceneRelative;
+   if(!Array.isArray(pL)||!Array.isArray(pR))return {muet:'pose'};
+   const x=ecartPose(E,cut,capture,{left:pL,right:pR});if(x.muet)return {muet:x.muet};
+   const Mo=E.modele,k=Mo.Lg.pos[cut],ex=Mo.Lg.ex[k],ey=Mo.Lg.ey[k],th=Mo.R.thetaMm,centre=-x.ecartMm;
+   const g0=1000*Math.abs((pL[0]-pR[0])*ex+(pL[1]-pR[1])*ey),lo=(contrat[0]-g0)/2,hi=(contrat[1]-g0)/2,out={centreMm:centre};
+   for(const [s,a,b] of [['left',centre+lo-th,centre+hi+th],['right',centre-hi-th,centre-lo+th]]){
+     const P=ra[s].profileLocalToSceneRelative,sg=Array.isArray(P)&&P.length===16&&fini(P[4])&&fini(P[5])?(P[4]*ex+P[5]*ey>=0?1:-1):1;
+     out[s]=sg>0?[a,b]:[-b,-a];}
+   return out;
+ }
  /* État complet d'un lot depuis la table décompactée de la liste (null sans table). */
  function etat(table,r){if(!table)return null;const E=creer(table,r);E.table=table;return E;}
- return {VERSION,REGLAGE,reglage,lignes,serie,grille,predire,preparer,axe,etat,noter,translation,ecartPose,juger,graineAxe};
+ return {VERSION,REGLAGE,reglage,lignes,serie,grille,predire,preparer,axe,etat,noter,translation,ecartPose,juger,graineAxe,jugerConnu,fenetres};
 });

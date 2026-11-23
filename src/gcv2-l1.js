@@ -1155,7 +1155,13 @@ function contreChaine(g,decalChaine,seuilMm){
   *   voisins : cuts validés par le lot avant ce cut, { identity, positions, rails (pose de départ de ce voisin) } ; zone : 'pn' | 'adv' | 'abords' ;
   *   plagesADV : plages ADV connues à l'instant ; modele : `modeleFige(...)` ; regle : REGLE ou REGLE_V.
   * Rend { decision (deciderL1), positions (scène) ou null, hyp (résumé), cas } ; lève une erreur seulement sur entrée illisible. */
- function deciderDiffereBase({capture,science,appuis=[],options=REGLE.lotOptions,voisins=[],zone='abords',plagesADV=[],modele,regle=REGLE,reference=null,voisinsTransport=null,voieListe=null}){
+ /* CH-154 (Lot C2 + C4) : probabilités des hypothèses restreintes à la fenêtre de l'ancre (`fen` : { left:[min,max], right:[min,max] }). */
+ function probasAncre(k,mod,fen,base=null){
+   const p={};
+   for(const s of SIDES)p[s]=Float64Array.from(k.rails[s].hyps.map((h,i)=>fen&&Array.isArray(fen[s])&&h.decal[1]>=fen[s][0]&&h.decal[1]<=fen[s][1]?(base?base[s][i]:probas(mod,h.x).p10):0));
+   return p;
+ }
+ function deciderDiffereBase({capture,science,appuis=[],options=REGLE.lotOptions,voisins=[],zone='abords',plagesADV=[],modele,regle=REGLE,reference=null,voisinsTransport=null,voieListe=null,ancre=null}){
    if(!modele)throw Error('GCV2 L1 : modèle absent.');
    if(!SIDES.every(s=>science&&science.rails&&science.rails[s]))throw Error('GCV2 L1 : science incomplète.');
    const id=capture.identity,seul=variante(capture,science,[],options),chaine=variante(capture,science,appuis.slice(),options);
@@ -1182,7 +1188,24 @@ function contreChaine(g,decalChaine,seuilMm){
    }
    /* Levier `voieProcheSureCuts` : sans poses L1 à transporter, le voisin le plus proche est lu dans la chaîne seule. */
    if(!k.voieProche&&fini(LEVIERS.voieProcheSureCuts)&&vs.length){const r=decalagesH6(id,vs);if(r&&r.proche)k.voieProche={left:r.proche.left.map(x=>arrondi(x,2)),right:r.proche.right.map(x=>arrondi(x,2)),dist:r.proche.dist};}
-   const d=regle.variante==='L1-e'?deciderL1e(k,modele,reference,capture):deciderL1(k,modele,regle);
+   const pa=ancre?probasAncre(k,modele,ancre):null;
+   let d=regle.variante==='L1-e'?deciderL1e(k,modele,reference,capture,pa):deciderL1(k,modele,regle,pa);
+   /* CH-154 (C4 + gA) : si le pool initial restreint à `ancre` laisse `rien`, chercher une paire unique et fortement soutenue directement au centre de `ancre`. */
+   if(ancre&&d.etat==='rien'&&regle.variante==='L1-e'&&Array.isArray(ancre.left)&&Array.isArray(ancre.right)){
+     const gRef=reference&&fini(reference.mm)?reference.mm:fini(gMed)?gMed:1437;
+     const seed={left:[(ancre.left[0]+ancre.left[1])/2,0],right:[(ancre.right[0]+ancre.right[1])/2,0]};
+     const vaF={left:{v:seed.left,proche:seed.left,distProche:1,n:{avant:2,apres:2},residuMm:0,encadre:null},right:{v:seed.right,proche:seed.right,distProche:1,n:{avant:2,apres:2},residuMm:0,encadre:null}};
+     const rr=pairesRecentrees(capture,[{nom:'np',left:seed.left,right:seed.right}],gRef,vaF,15,{filtre:{minTop:15,minFace:6,ratioMax:1.5},dedupMm:5});
+     if(rr&&rr.paires.length){
+       const admL=rr.paires.filter(q=>q.top>=15&&q.face>=6&&q.ratio<=1.5&&Math.abs(q.dg)<=15&&q.depl<=300);
+       const admS=admL.filter(q=>q.fort&&q.top>=60&&Math.abs(q.dg)<=10&&SIDES.every(s=>Math.abs(q.decal[s][1]-seed[s][0])<=35&&Math.abs(q.decal[s][2])<=25));
+       const best=admS[0]||null;
+       if(best&&!admL.some(q=>q!==best&&Math.max(...SIDES.map(s=>norme(moins(q.decal[s],best.decal[s]))))>15)){
+         const paire={left:{origines:['H8'],sousOrigines:['np-axe'],hauteur:false,decal:best.decal.left},right:{origines:['H8'],sousOrigines:['np-axe'],hauteur:false,decal:best.decal.right}};
+         d={...d,etat:'valider',motif:'reprise-axe',paire,hypothese:'H8',ecartDepartMm:arrondi(Math.max(norme(paire.left.decal),norme(paire.right.decal)),1)};
+       }
+     }
+   }
    const positions=d.paire&&d.etat!=='rien'?positionsDe(capture,d.paire):null;
    return {decision:d,positions,gMed,cas:k,hyp,chaine:{stage:chaine.decision.stage,reason:chaine.decision.reason??null,anchorsUsed:chaine.decision.anchorsUsed||[]}};
  }
@@ -1283,5 +1306,5 @@ function contreChaine(g,decalChaine,seuilMm){
  }
  return {VERSION,REGLE,REGLE_V,REGLE_E,H6,NUM,CAT,MULTI,FORMAT_PARAMS,decalage,variante,decalageDepuisDepart,decalagesH6,hypothesesDuCut,avecRupture,transfo,accords,brut,coder,soutienRail,
    modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,ecartAVoie,contreChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,LEVIERS_V4,LEVIERS_V5,LEVIERS_V6,LEVIERS_V7,LEVIERS_V8,ajusterPoseFinale,AJ_DEFAUT,AJ_ESSAI,deciderDiffere,commander,resumer,
-   voieAbsolue,rechercheRecentree,pairesRecentrees,leviersActifs:()=>LEVIERS};
+   voieAbsolue,rechercheRecentree,pairesRecentrees,probasAncre,leviersActifs:()=>LEVIERS};
 });

@@ -195,6 +195,56 @@
     return c.action === 'lot' ? g.voisinLivre.positions : null;
   }
 
+  /* CH-154 (Lot C4, N+ à haute pureté) : reprise d'un cut refusé par l'ancre sur le pool restreint à la fenêtre de l'axe,
+   * sans les appuis ni les voisins refusés par l'ancre, avec exigences renforcées de support (`dessus >= 12, flanc >= 5`),
+   * d'écartement (`<= 10 mm` de la référence) et de proximité finale à l'axe (`|ecartMm| <= thetaRepriseMm`, 25 mm). Sans ricochet. */
+  function reprendreApresRefusAncre({ etatAncre, fin, capture, science, anchors = [], voisins = [], voisinsTransport = null, zone = 'abords', plagesADV = [], modele, reference = null, voieListe = null, runtimeRails, before, cameras, camerasLarges, cut, etage, apres = null, passe2 = null } = {}) {
+    const ANC = modANC(), G = modL1(), K = modK();
+    const rate = (motif, extra = {}) => ({ ok: false, outBanc: { ...fin, reprise: { etat: 'rien', motif, ...extra } } });
+    if (!ANC || !G || !K || !etatAncre || etatAncre.modele?.R?.reprise !== true || !capture || !science || !modele) return { ok: false, outBanc: fin };
+    try {
+      const F = ANC.fenetres(etatAncre, cut, capture, G.REGLE.contratMm);
+      if (F.muet) return rate('ancre-' + F.muet);
+      const propre = v => !!v && !!v.identity && v.identity.cut !== cut && ANC.jugerConnu(etatAncre, v.identity.cut, v.positions).refus !== true;
+      const vsPropres = (voisins || []).filter(propre);
+      const trPropres = Array.isArray(voisinsTransport) ? voisinsTransport.filter(propre) : [];
+      const appPropres = (anchors || []).filter(propre);
+      const g = G.deciderDiffere({
+        capture, science, appuis: appPropres, options: { ...G.REGLE.lotOptions },
+        voisins: vsPropres, voisinsTransport: trPropres.length ? trPropres : null,
+        zone, plagesADV, modele, regle: G.REGLE_E, reference, voieListe, ancre: F,
+      });
+      const l1 = G.resumer(g);
+      if (g.decision.etat !== 'valider' || !g.positions || !g.decision.paire) return rate(g.decision.motif ?? g.decision.etat, { l1 });
+      /* Exigences renforcées de support et d'écartement (CH-154) : */
+      for (const s of SIDES) {
+        const m = G.soutienRail(capture, s, g.decision.paire[s].decal);
+        if (m.dessus < 12 || m.flanc < 5) return rate('soutien-reprise', { l1 });
+      }
+      if (reference && fini(reference.mm)) {
+        const gPaire = G.ecartementDecal(capture, { left: g.decision.paire.left.decal, right: g.decision.paire.right.decal });
+        if (!fini(gPaire) || Math.abs(gPaire - reference.mm) > 10) return rate('ecartement-reprise', { l1 });
+      }
+      const cg = G.commander({ positions: g.positions, runtimeRails, before, expectedPoses: K.expectedPoses, cameras, camerasLarges, valider: true });
+      if (cg.action !== 'lot') return rate('commande:' + cg.reason, { l1 });
+      const ap = apres ? apres(g, cg, vsPropres) : { positions: g.positions, source: 'gcv2', vue: cg.vue === 'deplacer' ? 'deplacee' : null, detail: null };
+      if (ap.refus) return rate(ap.refus, { l1, ...(ap.detail || {}) });
+      const j2 = ANC.juger(etatAncre, cut, capture, ap.positions);
+      const thetaRep = etatAncre.modele?.R?.thetaRepriseMm ?? 25;
+      if (j2.refus !== false || !fini(j2.ecartMm) || Math.abs(j2.ecartMm) > thetaRep) {
+        return rate(j2.muet ? 'ancre-' + j2.muet : 'hors-cone-reprise', { ancre: j2, l1 });
+      }
+      const outBanc = {
+        etat: 'pose', source: ap.source, etage, vue: ap.vue, decal: decalPose(before, ap.positions),
+        l1, ancre: j2, ...(ap.detail || {}),
+        reprise: { etat: 'pose', origine: fin.origine, refus: fin.ancre, decalRefuse: fin.decalRefuse },
+        ...(passe2 ? { passe2 } : {}),
+      };
+      return { ok: true, positions: ap.positions, cg, j2, l1, outBanc };
+    } catch (e) {
+      return { ok: false, outBanc: { ...fin, reprise: { etat: 'erreur', message: String(e && e.message || e).slice(0, 120) } } };
+    }
+  }
   /* CH-124 : jugement d'une pose par l'ancre de trajectoire (sans ricochet). */
   function jugerAncre({ etatAncre, cut, capture = null, before, positions = null, decal = null, source = 'lot', etage = null, appui = false, positionsDecision = null } = {}) {
     const ANC = modANC(), L = modL();
@@ -558,11 +608,37 @@
     const restePasse = !!(out && out.etat === 'differe' && (out.source === 'gcv2' || out.source === 'lot' || out.source === 'recherche-large'));
     const valideChaine = !!(out && out.etat === 'pose' && !(posesL1s || out.source === 'gcv2'));
 
-    /* CH-124 : refus d'ancre, sans ricochet (la pose refusée reste appui, voisine, transport et mémoire de grappe ; elle n'est pas donnée à la 2e passe). */
+    /* CH-124 + CH-154 (N+) : refus d'ancre, puis reprise éventuelle sur le pool restreint à l'axe sans ricochet. */
     const Ea = resoudreAncre();
     if (Ea && out && out.etat === 'pose' && out.decal) {
       const ja = jugerAncre({ etatAncre: Ea, cut, capture, before, decal: out.decal, source: out.source, etage: out.etage });
-      if (ja) out = ja.refus ? ja.outBanc : { ...out, ancre: ja.jugement };
+      if (ja) {
+        if (ja.refus) {
+          let fin = ja.outBanc;
+          if (Ea.modele?.R?.reprise === true) {
+            const scRep = science || (obtenirScience ? obtenirScience() : Sh.scientificProposeBothAvecReservoir(capture));
+            const modRep = modele || (obtenirModele ? obtenirModele() : null);
+            const rep = reprendreApresRefusAncre({
+              etatAncre: Ea, fin, capture, science: scRep,
+              anchors: E ? E.anchors : anchors, voisins: listeVoisins, voisinsTransport: leviers.transport ? listeTransport : null,
+              zone: zone || 'abords', plagesADV, modele: modRep,
+              reference: resoudreRef(), voieListe: resoudreVoieListe(),
+              runtimeRails, before, cameras, camerasLarges, cut, etage: out.etage,
+              apres: (g, cg) => {
+                const vueG = cg.vue === 'deplacer' ? 'deplacee' : null;
+                const rl = confronter(g.positions, d.stage, vueG ? camerasLarges : cameras, 'ancre-reprise');
+                if (rl && rl.out && rl.out.etat === 'differe') return { refus: 'recherche-large', detail: { rechercheLarge: rl.out.rechercheLarge } };
+                if (rl && rl.out) return { positions: rl.positions, source: 'recherche-large', vue: null, detail: { rechercheLarge: rl.out.rechercheLarge } };
+                return { positions: g.positions, source: 'gcv2', vue: vueG, detail: rl ? { rechercheLarge: rl.garde } : null };
+              },
+            });
+            fin = rep.outBanc;
+          }
+          out = fin;
+        } else {
+          out = { ...out, ancre: ja.jugement };
+        }
+      }
     }
 
     return { out, decisionLot: d, posesL1s, valideChaine, restePasse };
@@ -811,5 +887,6 @@
     jugerGardeApresDiffere,
     ajusterPoseFin,
     jugerAncre,
+    reprendreApresRefusAncre,
   };
 });

@@ -2236,6 +2236,23 @@ async function ancreCommande(command,lotObservation,proposal,before){
   const deL1=!!(command.l1s||command.reason==='gcv2-l1');
   lotObservation.ancre={...j,commande:{action:command.action,reason:command.reason??null,...(command.l1s?{l1s:command.l1s}:{})},appui:!!appui};
   if(!deL1&&profilL1s())ancreFantomes(engine.s.batch,identity).push({identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},positions:pd?{left:pd.left.slice(0,3),right:pd.right.slice(0,3)}:positions,rails:K.clone(Object.fromEntries(SIDES.map(s=>[s,before[s]])))});
+  /* CH-154 (Lot C4, N+ à haute pureté) : reprise sans ricochet sur le pool restreint à l'axe. */
+  if(E.modele?.R?.reprise===true&&typeof D.reprendreApresRefusAncre==='function'){
+   try{const Sh=globalThis.BananeGCV1Shadow,G=globalThis.BananeGcv2L1,VR=globalThis.BananeVoieRecentree;
+    const capNuage=engine.s.lidarId?await lireCaptureCourante(engine.s.lidarId):null;
+    if(capNuage&&typeof Sh?.scientificProposeBothAvecReservoir==='function'){
+     const capL1={identity:capNuage.identity||identity,rails:capNuage.rails,pointsSceneRelative:capNuage.pointsSceneRelative,visibleByClipBoxes:capNuage.visibleByClipBoxes};
+     const z=l1Zone(identity),ref=globalThis.BananeGcv2L1e?.referenceEcartement(await l1eTable(identity.part),identity.cut)??null,vl=await l1eVoieListe(capL1,identity);
+     const rep=D.reprendreApresRefusAncre({etatAncre:E,fin:{origine:deL1?'gcv2':'lot',ancre:j,decalRefuse:null},capture:capL1,science:Sh.scientificProposeBothAvecReservoir(capL1),
+      anchors:engine.s.batch?.lotObservation?.anchors||[],voisins:l1Voisins(engine.s.batch,identity),voisinsTransport:G?.LEVIERS_LIVRES?.transport?l1eTransportDe(identity).slice():null,
+      zone:z?.zone??'abords',plagesADV:z?.adv??[],modele:l1Modele(),reference:ref,voieListe:vl,runtimeRails:proposal.rails,before,
+      cameras:L.viewCameras(capNuage),camerasLarges:VR?.camerasLarges(capNuage),cut:identity.cut,etage:lotObservation.stage??null});
+     if(rep?.ok){
+      let plan=null,vueOk=true;
+      if(rep.cg.vue==='deplacer'){const v=await l1PlanVue(capNuage,rep.positions,identity);if(!v.ok)vueOk=false;else plan=v.plan;}
+      if(vueOk){lotObservation.ancreReprise={etat:'pose',ecartMm:rep.j2.ecartMm};return {action:'lot',reason:'ancre-reprise',rails:rep.cg.rails,gaugeMm:rep.cg.gaugeMm,l1s:'ancre-reprise',...(plan?{deplacerVue:plan}:{})};}
+     }else if(rep?.outBanc?.reprise)lotObservation.ancreReprise=rep.outBanc.reprise;
+    }}catch{/* repli sur le refus d'ancre ordinaire */}}
   return L.deferRails(proposal.rails,lotObservation,'ancre','décision sur le lot : pose à '+Math.abs(j.ecartMm)+' mm en travers de l\'axe de la voie relevée (trajectoire) : cut laissé à l\'opérateur');
  }catch(e){lotObservation.ancre={erreur:String(e?.message||e).slice(0,160)};return command;}}
 /* 4.9.5.15 (fiches/L1_CAP5.md) — sous L1-se, poses de L1 de CE lot (GCV2 validées, chaîne refaite par L1-s) : voisines de la GCV2 pour la seule
