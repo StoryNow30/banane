@@ -11,7 +11,7 @@ Ariane est une extension Chrome qui place des rails dans ESV (LiDAR). Ce fichier
 
 ## Interdits absolus (aucune exception, aucun ticket ne les lève)
 - **Jamais de nom d'opérateur, de code projet ESV, d'adresse ESV, d'UUID ni de capture d'écran** dans un fichier du dépôt ou un commit. Les exports terrain (zips, journaux, nuages) ne sont jamais versés ici : ils vivent dans le dépôt `banane-data`. Seules les sessions Claude du projet et OpenCode (D-364) les lisent dans `banane-data` ; aucun autre service externe (D-306).
-- **Ariane n'envoie jamais SKIP** et ne valide jamais un cut non résolu. Sens (D-264, opérateur) : « non résolu » = ni le moteur ni le lot n'ont de décision ; un cut décidé par le lot (décision sur le lot, GCV2 L1) est résolu.
+- **Ariane n'envoie SKIP que pour un saut borné confirmé en relecture (D-382, révise D-241)** — cas 1 à 4 encadrés par $M = 2$ voisines saines de chaque côté et bornés à $K_{\max}$ (4 / 5 / 4 / 6), jamais en dehors de cette règle, jamais sur un vert déjà validé dans ESV (`valid`) — et **ne valide jamais un cut non résolu**. Sens (D-264, opérateur) : « non résolu » = ni le moteur ni le lot n'ont de décision ; un cut décidé par le lot (décision sur le lot, GCV2 L1) est résolu.
 - **La deuxième passe écrit, plafonnée à 10 cuts par lot** (D-259 ; `passeDifferesDefaut` : `ecriture:true`, `ecritureMax:10`). Lever ce plafond, ou la couper, demande une décision écrite de l'opérateur.
 - **Pas de réécriture d'historique** (rebase, amend d'un commit poussé, force-push) sans ordre explicite de l'opérateur. Pas de pull request sans demande.
 - **Aucun nom de modèle d'IA** dans les fichiers ni les messages de commit, hors le pied de commit imposé par le harnais.

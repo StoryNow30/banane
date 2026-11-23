@@ -34,5 +34,21 @@
     " /* CH-065 : médiane exacte plus rapide (même valeur au bit près). Le tri d'origine, slice().sort((a,b)=>a-b), est remplacé par le tri\n  * numérique natif d'une copie Float64Array quand il range les valeurs dans le même ordre : tableau ordinaire de nombres, sans NaN (le\n  * comparateur rend NaN, l'ordre d'origine dépend alors de l'algorithme), et sans mélange de -0 et +0 (égaux pour le comparateur, le tri\n  * stable garde leur ordre d'entrée, le tri natif met -0 d'abord). Dans ces conditions, deux valeurs égales pour le comparateur sont le même\n  * nombre : les éléments du milieu sont identiques au bit. Sinon, le code d'origine. Parité : tests/ch065-mediane.test.cjs. */\n const median=a=>{if(!a.length)return NaN;\n   if(Array.isArray(a)){let ok=true,pz=false,nz=false;\n     for(let k=0;k<a.length;k++){const x=a[k];if(typeof x!==\"number\"||x!==x){ok=false;break;}if(x===0){if(1/x<0)nz=true;else pz=true;}}\n     if(ok&&!(pz&&nz)){const b=Float64Array.from(a).sort(),i=b.length>>1;return b.length%2?b[i]:(b[i-1]+b[i])/2;}}\n   const b=a.slice().sort((a,b)=>a-b),i=b.length>>1;return b.length%2?b[i]:(b[i-1]+b[i])/2;};\n"
    ]
   ]
+ },
+ "ch159-lidar-attributs": {
+  "vendor/lidar.js": [
+   [
+    "    const extras=[\"intensity\",\"classification\",\"pointSourceID\",\"pointSourceId\",\"returnNumber\",\"numberOfReturns\"];\n    // Explicit allowlist only; no URLs, object userData, credentials or source code.\n    for(const key of extras)out.attributes[key]=[];",
+    "    const extras=[\"intensity\",\"classification\",\"pointSourceID\",\"pointSourceId\",\"returnNumber\",\"numberOfReturns\",\"rgba\",\"color\",\"rgb\",\"source\",\"chain\",\"chainId\",\"chainID\",\"scannerId\",\"scannerID\"];\n    const colorExtras=new Set([\"rgba\",\"color\",\"rgb\"]);\n    const readExtra=(key,a,i)=>{if(!a||i>=a.count)return null;if(colorExtras.has(key)&&(a.itemSize===3||a.itemSize===4)){const c=[];for(let k=0;k<a.itemSize;k++){const v=a.get(i,k);c.push(finite(v)?v:null);}return c;}const value=a.get(i,0);return finite(value)?value:null;};\n    const hasExtraValue=x=>Array.isArray(x)?x.some(v=>v!==null):x!==null;\n    // Explicit allowlist only; no URLs, object userData, credentials or source code.\n    for(const key of extras)out.attributes[key]=[];"
+   ],
+   [
+    "        for(const key of extras) {\n          const a=attrs[key],value=a&&i<a.count?a.get(i,0):null;\n          out.attributes[key].push(finite(value)?value:null);\n        }\n        out.nodes[nodeIndex].retained++;\n      }\n      unchanged();",
+    "        for(const key of extras) {\n          out.attributes[key].push(readExtra(key,attrs[key],i));\n        }\n        out.nodes[nodeIndex].retained++;\n      }\n      unchanged();"
+   ],
+   [
+    "    for(const key of extras)if(!out.attributes[key].some(x=>x!==null))delete out.attributes[key];",
+    "    for(const key of extras)if(!out.attributes[key].some(hasExtraValue))delete out.attributes[key];"
+   ]
+  ]
  }
 }

@@ -177,8 +177,9 @@ const JOURNAL_INDEX=['journal-index.js'];
 /* CH-060 : le signal de fin de chargement d'ESV éteint pendant la relecture (src/relecture-signal.js) : partie pure, lue par la relecture seule (après le
  * lot) ; elle ne lit ni ne commande la pose. Son réglage `relectureSignalEteint` est ALLUMÉ depuis D-290 (vérifié plus bas). */
 const SIGNAL_RELECTURE=['relecture-signal.js'];
-/* CH-152 : filtre pur de la relecture sur la liste d'ESV ; il ne lit ni ne commande la pose du lot. */
-const FILTRE_RELECTURE=['relecture-filtre-liste.js'];
+/* CH-152 : filtre pur de la relecture sur la liste d'ESV ; il ne lit ni ne commande la pose du lot.
+ * CH-159 : cas particuliers de relecture (saut borné, sous-nappe non déformée en relecture, bilan par portion de 10 000 ER) ; ni pose ni décision du lot. */
+const FILTRE_RELECTURE=['relecture-filtre-liste.js','relecture-cas-particuliers.js'];
 
 /* D-284 (ordre de l'opérateur du 05/11) : la sélection de la relecture relit les voisins d'un cut « À contrôler » et bouche les trous de 3 cuts au
  * plus ; sans ces lignes, src/relecture-ombre.js est celui de la test 8. Toute autre modification du fichier reste détectée. */
@@ -212,6 +213,7 @@ const sansCH152=(f,t)=>{
   let s=t.replace(' function reglagesBase(fichier,source=\'defaut\'){',' function reglages(fichier,source=\'defaut\'){');
   for(const id of ['D2-REGLAGES','D2-QUALIFIANT'])s=sansBlocCH152(s,id);
   s=sansBlocCH152(s,'D2-BOUCLE','\n'+CONFIANCE_AVANT_CH152);
+  {const d='/* CH-159-SKIP-BORNE',fn='/* FIN CH-159-SKIP-BORNE */',a=s.indexOf(d),b=s.indexOf(fn,a),l=s.lastIndexOf('\n',a);if(a>=0&&b>=0&&l>=0)s=s.slice(0,l)+s.slice(b+fn.length);}
   return s.replace(',correctionPermise,qualifierConfiance,juger}',',correctionPermise,juger}');}
  return t;};
 /* D-296 (CH-064, étape 6 a) : lecture LiDAR en Rust dans la page. Un fichier de page en plus (src/lidar-rust.js, le chargeur), et l'adaptateur
@@ -317,7 +319,8 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
 });
 test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la recapture des captures vides (coupée)',()=>{
  const S=require('../src/settings.js'),canon=v=>JSON.stringify(v,(k,x)=>typeof x==='function'?'<fn>':x);
- const {skipExplicite,echo,passeDifferesDefaut,file,relectureDefaut,relectureSignalEteint,relecturePause,validationSurPlace,ecrituresApresValidation,eveil,correctionEntreParties,rust,...reste000}=S,{repliCourt,imagesMin,...piloteSans}=reste000.pilote,reste00={...reste000,pilote:piloteSans},deplacerVueSans=Object.fromEntries(Object.keys(reste00.deplacerVue).filter(k=>k!=='deplacement').map(k=>[k,k==='actif'?false:k==='preVol'?true:reste00.deplacerVue[k]])),reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,voieB1EcartOmbre,gardeVoieOmbre,serrageLotOmbre,signalEteint,chargement,reparationPotree,voieSureOmbre,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
+ const {skipExplicite,relectureCasParticuliers,echo,passeDifferesDefaut,file,relectureDefaut,relectureSignalEteint,relecturePause,validationSurPlace,ecrituresApresValidation,eveil,correctionEntreParties,rust,...reste000}=S,{repliCourt,imagesMin,...piloteSans}=reste000.pilote,reste00={...reste000,pilote:piloteSans},deplacerVueSans=Object.fromEntries(Object.keys(reste00.deplacerVue).filter(k=>k!=='deplacement').map(k=>[k,k==='actif'?false:k==='preVol'?true:reste00.deplacerVue[k]])),reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,voieB1EcartOmbre,gardeVoieOmbre,serrageLotOmbre,signalEteint,chargement,reparationPotree,voieSureOmbre,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
+ assert.equal(relectureCasParticuliers.actif,true,'CH-159 (D-382) : cas particuliers de relecture actifs par défaut');
  assert.equal(S.deplacerVue.preVol,false,'CH-150 : aller-retour preVol coupé par défaut');
  /* D-296 (CH-064) : clé ajoutée au premier niveau, la lecture LiDAR en Rust, ALLUMÉE par défaut (accord de l'opérateur), sortie identique au bit près. */
  assert.deepEqual({...rust},{lidar:true},'D-296 : lecture LiDAR en Rust, allumée par défaut');

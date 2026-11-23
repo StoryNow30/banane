@@ -192,7 +192,10 @@
           C.distance(C.point(im,C.point(m,p)),p));
     }
     if(out.quality.hasUnsupportedNodes)warnings.push("Certains nœuds visibles sont non reconnus ; voir clouds[].unsupportedNodes.");
-    const extras=["intensity","classification","pointSourceID","pointSourceId","returnNumber","numberOfReturns"];
+    const extras=["intensity","classification","pointSourceID","pointSourceId","returnNumber","numberOfReturns","rgba","color","rgb","source","chain","chainId","chainID","scannerId","scannerID"];
+    const colorExtras=new Set(["rgba","color","rgb"]);
+    const readExtra=(key,a,i)=>{if(!a||i>=a.count)return null;if(colorExtras.has(key)&&(a.itemSize===3||a.itemSize===4)){const c=[];for(let k=0;k<a.itemSize;k++){const v=a.get(i,k);c.push(finite(v)?v:null);}return c;}const value=a.get(i,0);return finite(value)?value:null;};
+    const hasExtraValue=x=>Array.isArray(x)?x.some(v=>v!==null):x!==null;
     // Explicit allowlist only; no URLs, object userData, credentials or source code.
     for(const key of extras)out.attributes[key]=[];
     let finishedAll=true;
@@ -251,8 +254,7 @@
             out.quality.pointRoundTripsChecked++;
             out.visibleByClipBoxes.push(boxVisible(__cl,p));
             for(const key of extras) {
-              const a=attrs[key],value=a&&i<a.count?a.get(i,0):null;
-              out.attributes[key].push(finite(value)?value:null);
+              out.attributes[key].push(readExtra(key,attrs[key],i));
             }
             out.nodes[nodeIndex].retained++;
           }
@@ -290,8 +292,7 @@
         out.quality.pointRoundTripsChecked++;
         out.visibleByClipBoxes.push(boxVisible(out.clouds[n.cloudIndex].clipping,p));
         for(const key of extras) {
-          const a=attrs[key],value=a&&i<a.count?a.get(i,0):null;
-          out.attributes[key].push(finite(value)?value:null);
+          out.attributes[key].push(readExtra(key,attrs[key],i));
         }
         out.nodes[nodeIndex].retained++;
       }
@@ -313,7 +314,7 @@
       fail("La caméra a changé pendant l'export. Garde la vue immobile et réessaie.");
     out.quality.retained=out.pointsSceneRelative.length;
     out.quality.durationMs=Date.now()-started;
-    for(const key of extras)if(!out.attributes[key].some(x=>x!==null))delete out.attributes[key];
+    for(const key of extras)if(!out.attributes[key].some(hasExtraValue))delete out.attributes[key];
     if(!finishedAll) {out.status="partial-limit";warnings.push("Limite de temps ou de volume atteinte : export partiel, sans sous-échantillonnage caché.");}
     out.scope.scanComplete=finishedAll&&out.nodes.length>0&&out.nodes.every(n=>n.inspection==="complete");
     out.scope.completeLoadedRoi=out.scope.scanComplete&&!out.quality.hasUnsupportedNodes&&!out.quality.nonFinitePositions&&
