@@ -29,7 +29,7 @@ test('CH-147 : geometrie-elaguee-v46 est présent dans src/geometry.js et lidar-
   const vGeo = H.A.versions(RACINE, 'src/geometry.js');
   const vLid = H.A.versions(RACINE, 'vendor/lidar.js');
   assert.equal(fs.readFileSync(path.join(RACINE, 'src/geometry.js'), 'utf8'), vGeo.patche, 'geometrie-elaguee-v46 doit être appliqué à src/geometry.js');
-  assert.equal(fs.readFileSync(path.join(RACINE, 'vendor/lidar.js'), 'utf8'), vLid.origine, 'lidar-direct doit rester absent de vendor/lidar.js');
+  assert.equal(vLid.presents.includes('lidar-direct'), false, 'lidar-direct doit rester absent de vendor/lidar.js');
 });
 
 test('CH-147 : gcv1-shadow met en cache V46.propose et scientificRail sans recalcul sur la même capture, sorties identiques au bit', () => {

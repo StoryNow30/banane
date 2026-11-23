@@ -48,8 +48,7 @@
             out.quality.pointRoundTripsChecked++;
             out.visibleByClipBoxes.push(boxVisible(__cl,p));
             for(const key of extras) {
-              const a=attrs[key],value=a&&i<a.count?a.get(i,0):null;
-              out.attributes[key].push(finite(value)?value:null);
+              out.attributes[key].push(readExtra(key,attrs[key],i));
             }
             out.nodes[nodeIndex].retained++;
           }
