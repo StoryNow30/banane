@@ -89,7 +89,7 @@
      if(vis?.[i]===false)continue;
      const src=points[i];if(!Array.isArray(src)||!src.every(Number.isFinite))continue;
      const q=C.point(mat,src);
-     if(!(Math.abs(q[0])<=.5&&Math.abs(q[1])<.18&&Math.abs(q[2])<.10))continue;
+     if(!(Math.abs(q[0])<=.5&&Math.abs(q[1])<.60&&Math.abs(q[2])<.30))continue;
      tmp1.push(q[1]);tmp2.push(q[2]);
    }
    const out={ptsLen:points.length,vis,visLen:vis?.length??-1,mat:Array.isArray(mat)?mat.slice():null,q1:Float64Array.from(tmp1),q2:Float64Array.from(tmp2)};
@@ -97,15 +97,20 @@
    return out;
  }
  /* Écarts des points au gabarit posé au delta publié : verticaux sur le dessus,
-  * latéraux sur le flanc. Ce sont les seules entrées du calage. */
+  * latéraux sur le flanc. Ce sont les seules entrées du calage.
+  * CH-155 (Lot C3) : au-delà de 130 mm en travers ou 60 mm en hauteur (ou `centrerFenetre: true`),
+  * la fenêtre ±180 mm × ±100 mm suit `(delta[1], delta[2])` ; sous ces seuils, identique au bit près. */
  function bandOffsets(capture,side,delta,options={}){
    const cfg={...DEFAULTS,...options},rail=capture?.rails?.[side],t=template(rail);
    if(!t)return {ok:false,reason:'template-unavailable'};
    if(!Array.isArray(delta)||delta.length!==3||!delta.every(Number.isFinite))return {ok:false,reason:'delta-invalid'};
    const bu=t.sign*delta[1],bz=delta[2],band=cfg.bandMm/1000,top=[],face=[];
+   const centrer=cfg.centrerFenetre===true||(cfg.centrerFenetre!==false&&(Math.abs(delta[1])>=.13||Math.abs(delta[2])>=.06));
+   const yRef=centrer?delta[1]:0,zRef=centrer?delta[2]:0;
    const points=capture.pointsSceneRelative||[];
    const {q1,q2}=points.length?pointsLocauxFiltres(points,capture.visibleByClipBoxes,rail):{q1:[],q2:[]};
    for(let i=0;i<q1.length;i++){
+     if(!(Math.abs(q1[i]-yRef)<.18&&Math.abs(q2[i]-zRef)<.10))continue;
      const lu=t.sign*q1[i]-bu,lz=q2[i]-bz;
      if(lu>.012&&lu<t.width-.012&&Math.abs(lz)<band){const z=t.topAt(lu);if(z!==null&&Math.abs(lz-z)<band)top.push((lz-z)*1000);}
      if(lz<-.009&&lz>-.034&&Math.abs(lu)<band){const u=t.faceAt(lz);if(u!==null&&Math.abs(lu-u)<band)face.push((lu-u)*1000);}
