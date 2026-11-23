@@ -245,13 +245,19 @@
       return { ok: false, outBanc: { ...fin, reprise: { etat: 'erreur', message: String(e && e.message || e).slice(0, 120) } } };
     }
   }
-  /* CH-124 : jugement d'une pose par l'ancre de trajectoire (sans ricochet). */
-  function jugerAncre({ etatAncre, cut, capture = null, before, positions = null, decal = null, source = 'lot', etage = null, appui = false, positionsDecision = null } = {}) {
+  /* CH-124 + CH-156 (C5b) : jugement d'une pose par l'ancre de trajectoire et la garde de courbure longitudinale sur 5 coupes (sans ricochet). */
+  function jugerAncre({ etatAncre, cut, capture = null, before, positions = null, decal = null, source = 'lot', etage = null, appui = false, positionsDecision = null, voisins = null } = {}) {
     const ANC = modANC(), L = modL();
     if (!ANC || !etatAncre || !before || !Number.isInteger(cut)) return null;
     const pos = positions || (decal && L ? Object.fromEntries(SIDES.map(s => [s, L.positionOf(before[s], decal[s].map(v => v / 1000))])) : null);
     if (!pos) return null;
-    const j = ANC.juger(etatAncre, cut, capture || { rails: before }, pos);
+    const capRef = capture || { rails: before };
+    let j = ANC.juger(etatAncre, cut, capRef, pos);
+    if (j.refus !== true && source !== 'lot' && Array.isArray(voisins) && voisins.length >= 2 && typeof ANC.jugerCourbure === 'function') {
+      const jc = ANC.jugerCourbure(etatAncre, cut, capRef, pos, voisins);
+      if (jc && jc.refus === true) j = { ...j, refus: true, motifRefus: 'courbure', courbure: jc };
+      else if (jc && !jc.muet) j = { ...j, courbure: jc };
+    }
     if (j.refus !== true) return { refus: false, jugement: j };
     const posFantome = positionsDecision ? { left: positionsDecision.left.slice(0, 3), right: positionsDecision.right.slice(0, 3) } : pos;
     return {
@@ -611,7 +617,7 @@
     /* CH-124 + CH-154 (N+) : refus d'ancre, puis reprise éventuelle sur le pool restreint à l'axe sans ricochet. */
     const Ea = resoudreAncre();
     if (Ea && out && out.etat === 'pose' && out.decal) {
-      const ja = jugerAncre({ etatAncre: Ea, cut, capture, before, decal: out.decal, source: out.source, etage: out.etage });
+      const ja = jugerAncre({ etatAncre: Ea, cut, capture, before, decal: out.decal, source: out.source, etage: out.etage, voisins: listeVoisins });
       if (ja) {
         if (ja.refus) {
           let fin = ja.outBanc;
@@ -823,7 +829,8 @@
 
       /* Refus d'ancre (CH-124) : la pose refusée reste comptée et transportée comme le livré (sans ricochet), et n'est ni posée ni reprise. */
       if (Ea) {
-        const ja = jugerAncre({ etatAncre: Ea, cut, capture, before, positions: g.positions, decal: outBanc.decal, source: 'gcv2-passe', etage: 'deferred' });
+        const vsCourb = typeof voisins === 'function' ? voisins() : vs0;
+        const ja = jugerAncre({ etatAncre: Ea, cut, capture, before, positions: g.positions, decal: outBanc.decal, source: 'gcv2-passe', etage: 'deferred', voisins: vsCourb });
         if (ja && ja.refus) {
           if (entreeTransport && Array.isArray(transport)) transport.push(entreeTransport);
           outBanc = { etat: 'differe', source: 'ancre', etage: 'deferred', origine: 'gcv2-passe', ancre: ja.jugement, decalRefuse: outBanc.decal, passe2: outBanc.passe2 };

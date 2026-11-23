@@ -2228,12 +2228,13 @@ async function ancreCommande(command,lotObservation,proposal,before){
    * sa voisine fantôme porte la pose de la DÉCISION (`b.ajustementsFin`, levier `voisinsDecision`), pas la pose ajustée. Sans ajustement, rien ne change. */
   const cmdA=command.avantAjustement?{...command,action:command.avantAjustement.action}:command,pd=engine.s.batch?.ajustementsFin?.[identity.cut];
   const appui=cmdA.l1s||cmdA.rechercheLarge==='remplacer'?false:L.commandsPositions(lotObservation,cmdA)||lotObservation.l1?.etat==='valider'&&cmdA.action==='lot'&&cmdA.reason==='gcv2-l1';
-  const ja=D.jugerAncre({etatAncre:E,cut:identity.cut,before,positions,positionsDecision:pd,appui});
+  const deL1=!!(command.l1s||command.reason==='gcv2-l1');
+  const vsAncre=deL1&&engine.s.batch?l1Voisins(engine.s.batch,identity):null;
+  const ja=D.jugerAncre({etatAncre:E,cut:identity.cut,before,positions,positionsDecision:pd,appui,source:deL1?'gcv2':'lot',voisins:vsAncre});
   if(!ja)return command;
   const j=ja.jugement;
   lotObservation.ancre=j;
   if(ja.refus!==true)return command;
-  const deL1=!!(command.l1s||command.reason==='gcv2-l1');
   lotObservation.ancre={...j,commande:{action:command.action,reason:command.reason??null,...(command.l1s?{l1s:command.l1s}:{})},appui:!!appui};
   if(!deL1&&profilL1s())ancreFantomes(engine.s.batch,identity).push({identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},positions:pd?{left:pd.left.slice(0,3),right:pd.right.slice(0,3)}:positions,rails:K.clone(Object.fromEntries(SIDES.map(s=>[s,before[s]])))});
   /* CH-154 (Lot C4, N+ à haute pureté) : reprise sans ricochet sur le pool restreint à l'axe. */

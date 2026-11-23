@@ -23,7 +23,8 @@
  const VERSION='ancre-trajectoire-1';
  /* Réglage figé (chantiers/CH-124/reglage-fige.md). `thetaMm` : au-delà de cet écart en travers entre le milieu d'une pose et l'axe, la pose est refusée. */
  const REGLAGE=Object.freeze({thetaMm:75,a:4,w:14,pasM:0.25,ecartMinMm:1428,ecartMaxMm:1446,fenetres:Object.freeze([200,400,800,1600]),minLignes:30,margeM:2,
-   sensRapportMin:1.10,sensFaibleMaxMm:20,rigideMaxMm:2,calageMaxMm:5,blocCout:400,plafondCoutMm:40,minLignesListe:100,
+   sensRapportMin:1.10,sensFaibleMaxMm:20,seuilCourbeSensMm:10,minLignesCourbe:20,maxFlecheVertMm:55,maxGauchissementMm:40,
+   rigideMaxMm:2,calageMaxMm:5,blocCout:400,plafondCoutMm:40,minLignesListe:100,
    /* CH-154 (Lot C4, N+ à haute pureté) : reprise sur le pool restreint à l'axe avec seuil d'acceptation resserré à `thetaRepriseMm` (25 mm). */
    reprise:true,thetaRepriseMm:25});
  const fini=v=>typeof v==='number'&&Number.isFinite(v);
@@ -79,6 +80,50 @@
    for(let b=0;b<m;b+=R.blocCout){const v=[];for(let k=b;k<Math.min(m,b+R.blocCout);k++)if(plein[k])v.push(S.o0[k]-p[k]);if(v.length<10)continue;const c=mediane(v);for(const x of v){somme+=Math.min(Math.abs(x-c),R.plafondCoutMm);nb++;}}
    return nb?somme/nb:Infinity;
  }
+ /* CH-156 (C5a) : coût évalué sur les seules lignes de voie courante en courbe (max(|pP|,|pM|) >= seuilCourbeSensMm),
+  * évitant qu'une longue ligne droite (où pP ≈ pM ≈ 0) ne dilue `rapportSens` sous 1,10. */
+ function coutCourbe(S,plein,pP,pM,m,R){
+   let errP=0,errM=0,nb=0;const seuil=R.seuilCourbeSensMm??10;
+   for(let b=0;b<m;b+=R.blocCout){
+     const vP=[],vM=[];
+     for(let k=b;k<Math.min(m,b+R.blocCout);k++)if(plein[k]){vP.push(S.o0[k]-pP[k]);vM.push(S.o0[k]-pM[k]);}
+     if(vP.length<10)continue;
+     const cP0=mediane(vP),cM0=mediane(vM);
+     for(let k=b;k<Math.min(m,b+R.blocCout);k++){
+       if(!plein[k]||Math.max(Math.abs(pP[k]),Math.abs(pM[k]))<seuil)continue;
+       errP+=Math.min(Math.abs((S.o0[k]-pP[k])-cP0),R.plafondCoutMm);
+       errM+=Math.min(Math.abs((S.o0[k]-pM[k])-cM0),R.plafondCoutMm);
+       nb++;
+     }
+   }
+   if(nb<(R.minLignesCourbe??20))return null;
+   return {n:nb,sens:errP<=errM?1:-1,rapport:Math.max(errP,errM)/Math.max(Math.min(errP,errM),1e-9)};
+ }
+ /* CH-156 (C5a) : orientation optionnelle par `trajAzimuth` lorsqu'une table non compactée porte l'azimut de trajectoire. */
+ function sensParAzimuth(table,Lg){
+   const az=table&&table.trajAzimuth;
+   if(!Array.isArray(az)&&!ArrayBuffer.isView(az))return null;
+   if(az.length<table.n)return null;
+   let deg=false;
+   for(let k=0;k<Lg.m;k++){const v=az[Lg.idx[k]];if(fini(v)&&Math.abs(v)>2*Math.PI+0.1){deg=true;break;}}
+   const evalConv=geo=>{
+     let pos=0,neg=0,absSum=0,n=0;
+     for(let k=0;k<Lg.m;k++){
+       const raw=az[Lg.idx[k]];if(!fini(raw))continue;
+       const rad=deg?raw*Math.PI/180:raw;
+       const ux=geo?Math.sin(rad):Math.cos(rad),uy=geo?Math.cos(rad):Math.sin(rad);
+       const nx=Lg.ey[k],ny=-Lg.ex[k],dot=ux*nx+uy*ny;
+       absSum+=Math.abs(dot);n++;if(dot>0.5)pos++;else if(dot<-0.5)neg++;
+     }
+     if(n<20||absSum/n<0.85)return null;
+     const maj=Math.max(pos,neg),accord=maj/n;
+     if(accord<0.90)return null;
+     return {sens:pos>=neg?1:-1,accord,rapport:accord/Math.max(1-accord,0.05)};
+   };
+   const a=evalConv(false),b=evalConv(true);
+   if(a&&b)return a.accord>=b.accord?a:b;
+   return a||b;
+ }
  /* Modèle d'une partie, à calculer une fois par lot : { ok, … } ou { ok:false, raison }. `r` : réglage (défaut REGLAGE). */
  function preparer(table,r){
    const R=reglage(r),Lg=lignes(table);
@@ -88,8 +133,13 @@
    if(nPlein<R.minLignes)return {ok:false,raison:'voie-courante',version:VERSION};
    const G=grille(S,m,R.pasM),pP=auxLignes(S,G,predire(G,R.a,R.w,1),m),pM=auxLignes(S,G,predire(G,R.a,R.w,-1),m),cP=cout(S,plein,pP,m,R),cM=cout(S,plein,pM,m,R);
    if(!fini(cP)||!fini(cM))return {ok:false,raison:'voie-courante',version:VERSION};
-   const sens=cP<=cM?1:-1,p=sens>0?pP:pM,res=new Float64Array(m);for(let k=0;k<m;k++)res[k]=S.o0[k]-p[k];
-   return {ok:true,version:VERSION,R,Lg,S,m,plein,p,res,sens,rapportSens:Math.max(cP,cM)/Math.max(Math.min(cP,cM),1e-9),cout:Math.min(cP,cM),lignesPleines:nPlein,bout};
+   const sensGlobal=cP<=cM?1:-1,rapportSensGlobal=Math.max(cP,cM)/Math.max(Math.min(cP,cM),1e-9);
+   const courbe=coutCourbe(S,plein,pP,pM,m,R),az=sensParAzimuth(table,Lg);
+   let sens=sensGlobal,rapportSens=rapportSensGlobal;
+   if(courbe&&courbe.sens===sensGlobal&&courbe.rapport>rapportSens)rapportSens=courbe.rapport;
+   if(az&&rapportSens<R.sensRapportMin){sens=az.sens;rapportSens=Math.max(rapportSens,az.rapport);}
+   const p=sens>0?pP:pM,res=new Float64Array(m);for(let k=0;k<m;k++)res[k]=S.o0[k]-p[k];
+   return {ok:true,version:VERSION,R,Lg,S,m,plein,p,res,sens,rapportSens,rapportSensGlobal,rapportSensCourbe:courbe?courbe.rapport:null,cout:Math.min(cP,cM),lignesPleines:nPlein,bout};
  }
  function constanteLocale(Mo,k){
    for(const W of Mo.R.fenetres){const v=[];for(let j=Math.max(0,k-W);j<=Math.min(Mo.m-1,k+W);j++)if(Mo.plein[j])v.push(Mo.res[j]);if(v.length>=Mo.R.minLignes)return {c:mediane(v),n:v.length,fenetre:W};}
@@ -187,7 +237,56 @@
      out[s]=sg>0?[a,b]:[-b,-a];}
    return out;
  }
+ /* CH-156 (C5b) — GARDE PURE DE COURBURE / FLÈCHE LONGITUDINALE SUR 5 COUPES :
+  * Détecte une pose erronée en hauteur ou tordue qui reste proche de l'axe en travers (invisible au seul seuil θ = 75 mm),
+  * en comparant ses coordonnées profil [lat, vert] à la droite locale des voisins validés proches (±fenetreCuts),
+  * pondérée en travers par la courbure cinématique locale dθ/ds de `Mo`. */
+ function proj4(M,p){
+   const [x,y,z]=p,w=M[3]*x+M[7]*y+M[11]*z+M[15];
+   if(!fini(w)||Math.abs(w)<1e-15)return null;
+   const out=[(M[0]*x+M[4]*y+M[8]*z+M[12])/w,(M[1]*x+M[5]*y+M[9]*z+M[13])/w,(M[2]*x+M[6]*y+M[10]*z+M[14])/w];
+   return out.every(fini)?out:null;
+ }
+ function jugerCourbure(E,cut,capture,positions,voisins,opts={}){
+   const R=E?.modele?.R||REGLAGE,fenetre=opts.fenetreCuts??3,minVois=opts.minVoisins??2;
+   const maxVert=opts.maxFlecheVertMm??R.maxFlecheVertMm??55,maxGauch=opts.maxGauchissementMm??R.maxGauchissementMm??40;
+   const ra=capture&&capture.rails;
+   if(!ra?.left?.sceneRelativeToProfileLocal||!ra?.right?.sceneRelativeToProfileLocal||!positions?.left||!positions?.right)return {muet:'rails'};
+   const decDe=(s,pos)=>{const M=ra[s].sceneRelativeToProfileLocal,o=proj4(M,ra[s].positionSceneRelative),q=proj4(M,pos);
+     return o&&q?[q[0]-o[0],1000*(q[1]-o[1]),1000*(q[2]-o[2])]:null;};
+   const poseDec={left:decDe('left',positions.left),right:decDe('right',positions.right)};
+   if(!poseDec.left||!poseDec.right)return {muet:'pose'};
+   const vs=[];const vus=new Set();
+   for(const v of voisins||[]){
+     const vc=v?.identity?.cut??v?.cut;
+     if(!Number.isInteger(vc)||vc===cut||Math.abs(vc-cut)>fenetre||vus.has(vc)||!v?.positions?.left||!v?.positions?.right)continue;
+     const dl=decDe('left',v.positions.left),dr=decDe('right',v.positions.right);
+     if(!dl||!dr)continue;
+     vus.add(vc);vs.push({cut:vc,left:dl,right:dr});
+   }
+   if(vs.length<minVois)return {muet:'voisins'};
+   /* Courbure cinématique dθ/ds (rad/m) au cut si le modèle est disponible : */
+   let kappa=0;const Mo=E?.modele;
+   if(Mo?.ok&&Number.isInteger(cut)&&cut>=0&&cut<Mo.Lg.n){
+     const k=Mo.Lg.pos[cut],k0=Math.max(0,k-2),k1=Math.min(Mo.m-1,k+2);
+     if(k>=0&&Mo.S.s[k1]-Mo.S.s[k0]>0.5)kappa=(Mo.S.th[k1]-Mo.S.th[k0])/(Mo.S.s[k1]-Mo.S.s[k0]);
+   }
+   const fit=(s,idx,corrCourbure=false)=>{
+     const P=vs.map(v=>[v[s][0],v[s][idx]-(corrCourbure?500*kappa*v[s][0]*v[s][0]:0)]);
+     const n=P.length,mx=P.reduce((a,q)=>a+q[0],0)/n,my=P.reduce((a,q)=>a+q[1],0)/n,sxx=P.reduce((a,q)=>a+(q[0]-mx)**2,0);
+     const b=sxx>1e-4?P.reduce((a,q)=>a+(q[0]-mx)*(q[1]-my),0)/sxx:0,a=my-b*mx;
+     const res=n>=3?Math.max(...P.map(q=>Math.abs(q[1]-(a+b*q[0])))):0;
+     return {pred:a,res};
+   };
+   const zL=fit('left',2,false),zR=fit('right',2,false),yL=fit('left',1,true),yR=fit('right',1,true);
+   if(Math.max(zL.res,zR.res)>15)return {muet:'voisins-incoherents'};
+   const flecheVertMm=Math.max(Math.abs(poseDec.left[2]-zL.pred),Math.abs(poseDec.right[2]-zR.pred));
+   const flecheLatMm=Math.max(Math.abs(poseDec.left[1]-yL.pred),Math.abs(poseDec.right[1]-yR.pred));
+   const gauchissementMm=Math.abs((poseDec.left[2]-poseDec.right[2])-(zL.pred-zR.pred));
+   const refus=flecheVertMm>maxVert||gauchissementMm>maxGauch;
+   return {refus,flecheVertMm:r1(flecheVertMm),flecheLatMm:r1(flecheLatMm),gauchissementMm:r1(gauchissementMm),voisins:vs.length};
+ }
  /* État complet d'un lot depuis la table décompactée de la liste (null sans table). */
  function etat(table,r){if(!table)return null;const E=creer(table,r);E.table=table;return E;}
- return {VERSION,REGLAGE,reglage,lignes,serie,grille,predire,preparer,axe,etat,noter,translation,ecartPose,juger,graineAxe,jugerConnu,fenetres};
+ return {VERSION,REGLAGE,reglage,lignes,serie,grille,predire,preparer,axe,etat,noter,translation,ecartPose,juger,graineAxe,jugerConnu,fenetres,jugerCourbure};
 });
