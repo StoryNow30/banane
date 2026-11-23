@@ -706,5 +706,23 @@
   /* D-320 (opérateur, 10/11) : le bouton « SKIP explicite » du panneau est MASQUÉ jusqu'à Ariane 6.0 (le SKIP y deviendra une règle à part entière). Audit du 10/11 : il existait
    * malgré la règle « Ariane n'envoie jamais SKIP », et sa frappe n'arrivait probablement pas dans ESV. Le chemin du moteur reste en place ; `bouton: true` le remontre. */
   const skipExplicite = Object.freeze({ bouton: false });
-  return Object.freeze({ skipExplicite, Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, eveil, relectureDefaut, relectureSignalEteint, relecturePause, validationSurPlace, ecrituresApresValidation, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, rust, derived, describe, vertsAControler, file, correctionEntreParties });
+  /* CH-159 (D-382, opérateur, 23/11/2026) — Cas particuliers de relecture : saut borné confirmé avec envoi d'un vrai SKIP à ESV (1C, M = 2, Kmax 4/5/4/6,
+   * verrou anti-vert-validé), pose de relecture sur la sous-nappe non déformée (2A), et seuil de 10 % d'échecs par portion d'au plus 10 000 ER avec
+   * passage à la partie suivante (`qualite-portion`). `actif: false` retrouve le comportement antérieur au bit près. */
+  const relectureCasParticuliers = Object.freeze({
+    actif: true,
+    envoiSkip: true,
+    poseSousNappe: true,
+    basculePartie10Pct: true,
+    voisinesSainesMin: 2,
+    kMax: Object.freeze({ 'lacune-coeur': 4, 'nappes-separees': 5, 'rail-invisible': 4, 'decalibration': 6 }),
+    seuils: Object.freeze({
+      topRowsFortMin: 15, faceCountFortMin: 6, residuMaxMm: 4, ecartementMaxMm: 8, flecheInterpMaxMm: 15,
+      epaisseurNappesMinMm: 14, separationNappesMinMm: 8, partModeMin: 0.2, pointsModeMin: 5,
+      pointsDessusInvisibleMax: 10, pointsDessusFaibleMax: 15, pointsFlancInvisibleMax: 3, diffRailsDecalMaxMm: 6,
+      pasRatioMin: 0.4, pasRatioMax: 2.2, accordEcartementSousNappeMaxMm: 6, accordVoisinesSousNappeMaxMm: 10, residuSousNappeMaxMm: 3.5,
+    }),
+    portions: Object.freeze({ portionMaxEr: 10000, seuilEchecMaxPct: 10, qualiteCiblePct: 95, actionDepassement: 'partie-suivante', motifDepassement: 'qualite-portion' }),
+  });
+  return Object.freeze({ skipExplicite, relectureCasParticuliers, Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, eveil, relectureDefaut, relectureSignalEteint, relecturePause, validationSurPlace, ecrituresApresValidation, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, rust, derived, describe, vertsAControler, file, correctionEntreParties });
 });

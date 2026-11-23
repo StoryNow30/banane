@@ -46,6 +46,7 @@
     'partie-changee-par-esv': { file: 'continue', texte: 'ESV a ouvert seul la partie suivante après la validation du dernier cut : retour sur la partie du lot' },
     'passe-arretee': { file: 'continue', texte: 'deuxième passe arrêtée sans écriture en suspens' },
     'relecture-arretee': { file: 'continue', texte: 'relecture arrêtée sans écriture en suspens' },
+    'qualite-portion': { file: 'continue', texte: 'seuil de 10 % d’échecs dépassé sur une portion : passage à la partie suivante' },
     'nombre-atteint': { file: 'fin', texte: 'nombre de parties atteint' },
     'operateur': { file: 'arret', texte: 'arrêtée par l’opérateur' },
     'ecriture-incertaine': { file: 'arret', alerte: true, texte: 'pose écrite non validée : contrôle le cut dans ESV' },
@@ -186,7 +187,8 @@
           e.partie.retourRelecture = { at, vers: e.partie.part }; e.partie.relecture = null; e.depuis = at;
           return { etat: e, actions: [{ type: 'retour-partie', vers: e.partie.part }] };
         }
-        if (ev.issue !== 'finie') noter(e, 'relecture-arretee', ev.detail || `relecture ${ev.issue}`);
+        if (ev.issue === 'qualite-portion') noter(e, 'qualite-portion', ev.detail || 'seuil de 10 % d’échecs dépassé sur une portion');
+        else if (ev.issue !== 'finie') noter(e, 'relecture-arretee', ev.detail || `relecture ${ev.issue}`);
         e.partie.fin = at; e.partie.alertes = alertes(e.partie, e.bilan); e.bilan.push(e.partie); e.partie = /** @type {CH075.PartieFile} */ (/** @type {unknown} */ (null));
         if (e.k + 1 >= e.plan.length) { arreter(e, 'nombre-atteint', at); return { etat: e, actions: [{ type: 'registre', rang: e.k }] }; }
         e.etat = 'changement'; e.changement = { vers: e.plan[e.k + 1], tentatives: 0, envoyeA: null }; e.depuis = at;

@@ -140,6 +140,10 @@
   const e=entree&&typeof entree==='object'?entree:{},j=e.jugement,non=(regle,raison)=>({corriger:false,regle,raison});
   if(!j||!j.poseCalculee||!j.ecartMm)return non('pose','aucune pose calculée');
   if(e.skipOmbre?.raison)return non('skip',`cut à SKIP en ombre (${e.skipOmbre.raison})`);
+  /* CH-159-SKIP-BORNE — Un motif de saut borné (décidé ou en attente) bloque toute correction comme skipOmbre. */
+  const motifSaut=e.skipBorne?.motif||(e.skipBorne?.action==='skip-borne'?e.skipBorne.raison||'skip-borne':e.skipBorne?.raison)||e.sautBorne?.motif||(e.sautBorne?.action==='skip-borne'?'skip-borne':null);
+  if(motifSaut)return non('skip',`cut en saut borné (${motifSaut})`);
+  /* FIN CH-159-SKIP-BORNE */
   const roles=Array.isArray(R.roles)?R.roles:DEFAUT.roles,jamais=Array.isArray(R.jamais)?R.jamais:DEFAUT.jamais;
   if(e.role==='differe'&&jamais.includes('cut différé par le lot'))return non('role','jamais un cut différé par le lot');
   if(e.role==='lot'&&jamais.includes('cut posé par le lot'))return non('role','jamais un cut posé par le lot');
