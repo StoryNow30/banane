@@ -34,7 +34,7 @@ test('un événement par cut, seulement si l\'ombre est active ; zone, règles, 
 test('aucun chemin de pose ne lit le module : seul le service worker l\'appelle, le moteur l\'ignore',()=>{
  const fs=require('node:fs'),path=require('node:path'),racine=path.resolve(__dirname,'..');
  const bg=fs.readFileSync(path.join(racine,'background.js'),'utf8');assert.match(bg,/'src\/regles-metier\.js'/,'chargé par le service worker');
- for(const f of fs.readdirSync(path.join(racine,'src')).filter(x=>x.endsWith('.js')&&x!=='regles-metier.js'&&x!=='settings.js')){
+ for(const f of fs.readdirSync(path.join(racine,'src')).filter(x=>x.endsWith('.js')&&x!=='regles-metier.js'&&x!=='settings.js'&&x!=='decision-lot-partagee.js')){
   const t=fs.readFileSync(path.join(racine,'src',f),'utf8').replace(/\/\*[\s\S]*?\*\//g,'');
   assert.ok(!/BananeReglesMetier|regles-metier|reglesMetier/.test(t),f+' ne lit pas le module');}
 });

@@ -29,7 +29,8 @@ test('levier coupé : la pose reçue, à l’identique, et le levier livré est 
 
 test('la fenêtre de lecture suit la pose : un rail posé à 210 mm de son départ est lu (le calage de convention, centré sur le départ, ne le voit pas)', () => {
   const pose = [0, 210, 0], cap = capture({ pose, dessus: 0, flanc: 6 });
-  assert.equal(Conv.calibrate(cap, 'left', pose.map(v => v / 1000)).reason, 'top-under-observed');
+  assert.equal(Conv.calibrate(cap, 'left', pose.map(v => v / 1000), { centrerFenetre: false }).reason, 'top-under-observed');
+  assert.equal(Conv.calibrate(cap, 'left', pose.map(v => v / 1000)).applied, true, 'CH-155 : centrage actif par défaut à 210 mm');
   const r = G.ajusterPoseFinale(cap, { left: pose, right: [0, 210, 0] }, R);
   assert.equal(r.ajuste, true);
   assert.ok(Math.abs(r.decal.left[1] - (210 + 6)) < 0.3, `latéral ${r.decal.left[1]}`);

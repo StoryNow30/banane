@@ -1879,6 +1879,7 @@ async function commandLot(proposal,lotObservation){
    obtenirEtatAncre:async()=>ancreAllumee()?await ancreEtat(id.part):null,
    validerVue:async({etape,decision,positions,command:cmd})=>etape==='gcv2'?await l1PlanVue(capture,positions,id):await deplacerVuePlanifier({lotObservation:decision,proposal,before,capture,command:cmd,reglage:reglageVueL1()}),
    appliquerReglesMetier:cmd=>reglesMetierCommande(cmd,lotObservation,proposal,before),
+   surPoseEnAttente:({rails,plan,dec,l1})=>{l1PoseEnAttente={batchId:engine.s.batch?.id??null,cutId:K.cutId(id),identity:K.clone(id),before:K.clone(engine.s.before),rails,plan,resume:{etat:dec.etat,motif:dec.motif??null,p:l1.p,hypothese:l1.hypothese,ecartDepartMm:l1.ecartDepartMm,zone:l1.zone,poseAvant:l1.poseAvant,poseEnvoyee:l1.poseEnvoyee}};},
    transporter:(cap,ident,pos)=>l1eTransporter(cap,ident,pos),
    suivreReste:(r,obs)=>{if(!suivre)return;const pose=!!(r&&(r.action==='lot'||r.action==='engine'&&['left','right'].every(s=>r.rails?.[s]?.status==='candidate')));
     if(pose||obs?.l1?.commande?.sansValider)l1ResteOter(id);

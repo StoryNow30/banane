@@ -259,7 +259,7 @@ function poolFenetre(M, capture, cote, dl, dv) {
   const candidats = pool.map((c, rang) => {
     const delta = [0, cadre.sign * c.u, c.z];
     let fin = delta, calage = null;
-    if (c.topRows >= 15) { const cal = Conv.calibrate(cap, ANGLAIS[cote], delta); if (cal.applied) { fin = cal.delta; calage = [arrondi((cal.delta[1] - delta[1]) * 1000, 2), arrondi((cal.delta[2] - delta[2]) * 1000, 2)]; } }
+    if (c.topRows >= 15) { const cal = Conv.calibrate(cap, ANGLAIS[cote], delta, { centrerFenetre: false }); if (cal.applied) { fin = cal.delta; calage = [arrondi((cal.delta[1] - delta[1]) * 1000, 2), arrondi((cal.delta[2] - delta[2]) * 1000, 2)]; } }
     return {
       la: arrondi(dl + cadre.sign * c.u * 1000, 2), ve: arrondi(dv + c.z * 1000, 2),
       fla: arrondi(dl + fin[1] * 1000, 2), fve: arrondi(dv + fin[2] * 1000, 2), calage,
