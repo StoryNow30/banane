@@ -292,7 +292,8 @@
      * la moitié de l'écart à la référence, sur les seules poses de la décision L1-e (jusqu'à `plafondMm`). CONSIGNÉ SEULEMENT : rien n'est posé ni différé, aucune
      * commande ne change. Passer la garde à la pause, ou le serrage à l'écriture, demande un nouvel accord écrit de l'opérateur (D-308). `actif:false` : rien n'est calculé. */
     gardeVoieOmbre: Object.freeze({ actif: true, seuilMm: 15, fenetre: 20, voisinesMin: 5 }),
-    serrageLotOmbre: Object.freeze({ actif: true, plafondMm: 20, fenetre: 20, voisinesMin: 5 }),
+    /* CH-153 (D-380 / D-381, bilan C0) : serrage du lot coupé par défaut (dégradait l'écartement sur les Échos des parties 28–33). */
+    serrageLotOmbre: Object.freeze({ actif: false, plafondMm: 20, fenetre: 20, voisinesMin: 5 }),
     /* CH-114 (D-347) — RÈGLE « VOIE DES CUTS SÛRS », EN OMBRE (src/voie-sure-ombre.js, mesure chantiers/CH-112/rapport.md). Un événement `voie-sure-ombre`
      * par cut posé par le lot en zone `adv: alerte` : décalage latéral des deux rails par rapport au dernier cut sûr du lot (au plus `ecartCuts` cuts en arrière),
      * « aurait différé » si les deux vont du même côté au-delà de `seuilMm + courbureMm·g²`. CONSIGNÉ SEULEMENT : rien n'est posé ni différé, aucune commande

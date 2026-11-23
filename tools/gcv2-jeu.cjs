@@ -77,19 +77,12 @@ const moins = (a, b) => a.map((x, i) => x - b[i]);
 const med = a => { const s = a.filter(fini).sort((x, y) => x - y); if (!s.length) return null; const m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
 
 /* ------------------------------------------------------------------ moteur avec réservoir */
-/* Copie en mémoire de src/gcv1-shadow.js où `scientificRail` rend aussi son réservoir (`_reservoir` : cellules du pool, perte minimale, signe du
- * profil). Une seule ancre est remplacée ; si elle n'est plus unique, le fichier a changé et l'outil refuse de continuer. */
-const ANCRE_RESERVOIR = 'return {ok:true,side,';
-const AJOUT_RESERVOIR = 'return {ok:true,side,_reservoir:{pool:reduced.pool,lmin,sign:frame.sign},';
+/* Façade vers `src/gcv1-shadow.js` dont `scientificProposeBoth` appelle `scientificProposeBothAvecReservoir` (`_reservoir` inclus). */
 let _moteur = null;
 function moteurAvecReservoir() {
   if (_moteur) return _moteur;
-  const chemin = path.join(__dirname, '..', 'src', 'gcv1-shadow.js'), src = fs.readFileSync(chemin, 'utf8');
-  if (src.split(ANCRE_RESERVOIR).length !== 2) throw Error('src/gcv1-shadow.js a changé : l\'ancre du réservoir n\'est plus unique, l\'outil ne la remplace pas.');
-  const m = new Module(chemin, module);
-  m.filename = chemin; m.paths = Module._nodeModulePaths(path.dirname(chemin));
-  m._compile(src.replace(ANCRE_RESERVOIR, AJOUT_RESERVOIR), chemin);
-  _moteur = m.exports;
+  const Sh = require('../src/gcv1-shadow.js');
+  _moteur = { ...Sh, scientificProposeBoth: c => Sh.scientificProposeBothAvecReservoir(c) };
   return _moteur;
 }
 

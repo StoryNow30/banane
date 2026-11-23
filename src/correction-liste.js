@@ -32,9 +32,10 @@
   const VERSION_PARCOURS = 'correction-parcours-1';
   const DEPART_VERT_S = 30, FIN_APRES_ARRET_S = 5;
   /* Ordre de force (le premier est le plus probablement faux). */
-  const SIGNAUX = ['passe-ecrite', 'apres-differe', 'sans-appui', 'garde-suivant', 'relecture', 'differe'];
+  const SIGNAUX = ['passe-ecrite', 'garde-voie', 'apres-differe', 'sans-appui', 'garde-suivant', 'relecture', 'differe'];
   const LIBELLE = {
-    'passe-ecrite': 'écrit par la deuxième passe', 'apres-differe': 'juste après un différé', 'sans-appui': 'posé sans appui',
+    'passe-ecrite': 'écrit par la deuxième passe', 'garde-voie': 'écartement suspect (garde de voie)',
+    'apres-differe': 'juste après un différé', 'sans-appui': 'posé sans appui',
     'garde-suivant': 'voisin d’un cut gardé', relecture: 'la relecture le corrigerait', differe: 'différé',
   };
   const fini = Number.isFinite;
@@ -100,6 +101,11 @@
       if (appuis === 0 && (r1.length || parLeLot)) ajoute(c, 'sans-appui', { commande: cmd.reason || null });
     }
     for (const e of ev) if (e.type === 'garde-apres-differe-suivant' && e.batchId === B && dePartie(e) && (poses.has(e.identity.cut))) ajoute(e.identity.cut, 'garde-suivant', { cutsGarde: Array.isArray(e.cutsGarde) ? e.cutsGarde.slice(0, 4) : [] });
+    /* CH-153 (C0, D-380) : alerte d'écartement de `garde-voie-ombre` sur une coupe posée par le lot (ou la passe). */
+    for (const e of ev) if (e.type === 'garde-voie-ombre' && (e.batchId === B || e.lotId === B) && dePartie(e) && e.auraitPause === true
+      && (poses.has(e.identity.cut) || passe.has(e.identity.cut))) {
+      ajoute(e.identity.cut, 'garde-voie', { ecartMm: arr1(e.ecartMm), referenceMm: arr1(e.referenceMm), ecartAuVoisinageMm: arr1(e.ecartAuVoisinageMm) });
+    }
     /* Relecture du lot : « je corrigerais » sans correction. Seuls les cuts du lot (cibles) : la relecture visite aussi des verts d'avant le lot,
      * qui ne sont pas des poses d'Ariane (option `relectureHorsLot` pour les garder, mesure seulement). */
     for (const e of ev) if (e.type === 'relecture-ombre' && (e.batchId === B || e.lotId === B) && dePartie(e) && e.verdict === 'je corrigerais' && e.action !== 'corrige'

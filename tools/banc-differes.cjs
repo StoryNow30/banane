@@ -271,7 +271,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
           deciderGcv2: transportActif => {
             let g = cache.get('g' + sig);
             if (!g || transportActif) {
-              g = L1.deciderDiffere({ capture, science, appuis: E.anchors.slice(), options: o2, voisins: E.valides, voisinsTransport: transportActif ? E.validesL1 : null, zone, plagesADV: plages.adv, modele, regle: regleDe(p), reference: referenceDe(c.cut), voieListe: liste ? L1.voieDeListe(liste, c.cut, capture, { ...L1.VOIE_LISTE, fenetre: leviers.voieListeFenetre }) : null });
+              g = L1.deciderDiffere({ capture, science, appuis: E.anchors.slice(), options: o2, voisins: E.valides, voisinsTransport: transportActif ? E.validesL1 : null, zone, plagesADV: plages.adv, modele, regle: regleDe(p), reference: referenceDe(c.cut), voieListe: liste ? L1.voieDeListe(liste, c.cut, capture, { ...L1.VOIE_LISTE, fenetre: leviers.voieListeFenetre }) : null, etatAncre: ancre && ancre.etat ? ancre.etat : null });
               if (!transportActif) cache.set('g' + sig, g);
             } else {
               const dd = L1.deciderL1e(g.cas, modele, referenceDe(c.cut), capture, g.decision.probas);

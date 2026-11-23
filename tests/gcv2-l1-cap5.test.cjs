@@ -6,18 +6,18 @@ const L1 = require('../src/gcv2-l1.js'), { base } = require('./fixtures.cjs');
 const zero = () => ({ left: [0, 0, 0], right: [0, 0, 0] });
 const vide = { ...base, pointsSceneRelative: [], visibleByClipBoxes: [] };
 
-test('leviers v4 (test 15) : la base ; test 16 = v4 + v5 ; leviers livrés (test 18) = v4 + v5 + v6 ; le banc les change pour une mesure et revient aux livrés', () => {
-  const V = L1.LEVIERS_LIVRES, V4 = L1.LEVIERS_V4, V5 = L1.LEVIERS_V5, V6 = L1.LEVIERS_V6, V7 = L1.LEVIERS_V7, V16 = { ...V4, ...V5 }, V18 = { ...V16, ...V6 };
-  assert.ok(Object.isFrozen(V) && Object.isFrozen(V4) && Object.isFrozen(V5) && Object.isFrozen(V6) && Object.isFrozen(V7));
+test('leviers v4 (test 15) : la base ; test 16 = v4 + v5 ; leviers livrés = v4 + v5 + v6 + v7 + v8 ; le banc les change pour une mesure et revient aux livrés', () => {
+  const V = L1.LEVIERS_LIVRES, V4 = L1.LEVIERS_V4, V5 = L1.LEVIERS_V5, V6 = L1.LEVIERS_V6, V7 = L1.LEVIERS_V7, V8 = L1.LEVIERS_V8, V16 = { ...V4, ...V5 }, V18 = { ...V16, ...V6 }, Vv18 = { ...V18, ...V7 };
+  assert.ok(Object.isFrozen(V) && Object.isFrozen(V4) && Object.isFrozen(V5) && Object.isFrozen(V6) && Object.isFrozen(V7) && Object.isFrozen(V8));
   /* Test 16 : les leviers v5 livrés sont la chaîne mesurée au banc « a3-bd3 sans deuxième passe » (a3-bd3s, a2486b1), diagnostics coupés. */
   assert.deepEqual({ ...V5 }, { rechercheADV: true, rechZones: ['adv', 'abords'], rechEcartMm: 15, rechVoieParCutMm: 40, rechHauteurMaxMm: 20,
     rechContraMinMm: 22, rechContraMaxMm: 45, rechContraRien: true, rechRemplace: true, rechRemplaceMm: 12, corrigeValideZones: ['adv'], rechEncadre: true,
     anomalieNonCorrigeePMin: 0.8, anomalieNonCorrigeeVoieMm: 35, rechPaireTopMin: 60, rechContraRatioMax: 1.5, rechArret: true, rechSauteProcheMm: 2.5,
     voisinsCoherents: true, branche: true, brancheDernier: true, brancheVertMm: 60, brancheExtrapCuts: 2 });
-  assert.deepEqual({ ...V }, { ...V4, ...V5, ...V6, ...V7 }, 'livrés = v4 + v5 + v6 + v7');
+  assert.deepEqual({ ...V }, { ...V4, ...V5, ...V6, ...V7, ...V8 }, 'livrés = v4 + v5 + v6 + v7 + v8');
   /* Vision 18 (CH-124, D-355) : le seul levier qui change entre la test 18 et la Vision 18 est le refus par l'ancre, allumé au réglage figé. */
   assert.deepEqual({ ...V7 }, { ancre: true });
-  assert.deepEqual(Object.keys(V).filter(k => JSON.stringify(V[k]) !== JSON.stringify(V18[k])).sort(), ['ancre']);
+  assert.deepEqual(Object.keys(Vv18).filter(k => JSON.stringify(Vv18[k]) !== JSON.stringify(V18[k])).sort(), ['ancre']);
   assert.equal(V4.ancre, null, 'coupé dans la v4'); assert.equal(V.ancre, true, 'livré allumé (D-355)');
   /* Test 18 : les leviers qui changent entre la test 16 et la test 18, ni plus ni moins. */
   assert.deepEqual({ ...V6 }, { rechHauteurMaxMm: 25, vetoVoieAbsMm: 100, voieIncoherenteMm: 40 });
@@ -51,7 +51,10 @@ test('leviers v4 (test 15) : la base ; test 16 = v4 + v5 ; leviers livrés (test
     /* CH-124 : refus d'ancre, coupé. */
     ancre: null,
     /* CH-121 : ajustement fin, coupé. */
-    ajustementFin: null });
+    ajustementFin: null,
+    /* CH-153 : C1 (gA + v4BS-sd + voieListe), coupé dans la v4. */
+    c1Actif: false, c1SeulementDifferes: false, c1SansRicochet: false, c1RechAxe: false, c1AxeMaxAbordsMm: 35, c1AxeMaxAdvMm: 12, c1AxeEcartMm: 10,
+    c1Balayage: false, c1BalayageMm: null, c1BalayageZones: null, c1SansPaire: false, c1MaxHyp: 6 });
   try {
     const l = L1.reglerLeviers({ transport: false, selectionRefMm: 8 });
     assert.equal(l.transport, false); assert.equal(l.selectionRefMm, 8); assert.equal(l.consensus, true, 'les autres leviers restent livrés');

@@ -337,7 +337,7 @@ test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la reca
  assert.equal(signalEteint.actif,false,'CH-062 : signal éteint pendant le lot, coupé par défaut');
  assert.deepEqual({...voieB1EcartOmbre},{actif:true,fenetreListe:5,fenetreMm:30,choixMm:15,accordMm:20,gRefDefautMm:1435,essaisMax:4},'CH-055 : règle b1-ecart en OMBRE (consignée seulement), allumée par défaut');
  /* CH-079 (D-308) : garde de voie et serrage du lot en OMBRE (consignés seulement), mesurés dans chantiers/CH-079/rapport.md. */
- assert.deepEqual({...gardeVoieOmbre},{actif:true,seuilMm:15,fenetre:20,voisinesMin:5},'CH-079 : garde de voie en ombre');assert.deepEqual({...serrageLotOmbre},{actif:true,plafondMm:20,fenetre:20,voisinesMin:5},'CH-079 : serrage du lot en ombre');
+ assert.deepEqual({...gardeVoieOmbre},{actif:true,seuilMm:15,fenetre:20,voisinesMin:5},'CH-079 : garde de voie en ombre');assert.deepEqual({...serrageLotOmbre},{actif:false,plafondMm:20,fenetre:20,voisinesMin:5},'CH-153 (D-380) : serrage du lot coupé par défaut');
  /* CH-114 (D-347) : la règle « voie des cuts sûrs » en OMBRE (consignée seulement), mesurée dans chantiers/CH-112/rapport.md. */
  assert.deepEqual(JSON.parse(JSON.stringify(voieSureOmbre)),{actif:true,seuilMm:100,courbureMm:2,ecartCuts:12,origine:{actif:true,methode:'profil2',abstenuSur:true,seuilMm:100,courbureMm:0,zones:['alerte','marge-avant','marge-apres']}},'CH-114 : voie des cuts sûrs en ombre, avec le verdict d’origine (partie 23 du 12/11)');
  assert.equal(serieCapturesVides.actif,true,'D-283 : la garde « série de captures vides » est ALLUMÉE par défaut (décision de l\'opérateur)');

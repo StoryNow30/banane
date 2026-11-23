@@ -552,6 +552,7 @@
  }
  /* 4.9.5.15 (test 15, fiches/L1_CAP5.md) — LEVIERS de la décision L1-e, valeurs v4 (test 15) : la base de tous les leviers. Le banc peut les
   * changer pour une mesure (`reglerLeviers`), jamais l'extension. */
+ const modAncre=()=>(typeof globalThis!=='undefined'&&globalThis.BananeAncreTrajectoire)||(typeof require==='function'?require('./ancre-trajectoire.js'):null);
  const LEVIERS_V4=Object.freeze({exact:true,autreRail:true,anomalieMinMm:10,anomalieMaxMm:45,sousTauCoherentMm:8,sousTauCorrige:false,voisins:true,transport:true,
    voisinsRaffineMm:8,voisinsEcartMaxMm:10,vetoVoieMm:45,raffineObligatoire:true,anomalieNonCorrigeeRien:true,
    consensus:true,consensusEcartMm:10,consensusVoieMm:15,consensusVoieProche:true,selectionRefMm:null,
@@ -571,7 +572,10 @@
     * poser, jamais par la décision de la GCV2. null : rien ne change. */
    ancre:null,
    /* CH-121 (D-352) : étage final `ajusterPoseFinale`, COUPÉ (null) ; une valeur = le réglage figé de l'étage (objet). */
-   ajustementFin:null});
+   ajustementFin:null,
+   /* CH-153 (Lot C1, D-360 / D-380 / D-381) : génération du pool et recherche recentrée autour de l'axe (« gA »), v4BS-sd et voieListe, coupés en v4. */
+   c1Actif:false,c1SeulementDifferes:false,c1SansRicochet:false,c1RechAxe:false,c1AxeMaxAbordsMm:35,c1AxeMaxAdvMm:12,c1AxeEcartMm:10,
+   c1Balayage:false,c1BalayageMm:null,c1BalayageZones:null,c1SansPaire:false,c1MaxHyp:6});
  /* 4.9.5.16 (test 16, fiches/PASSATION_CAP5_A3.md, fiches/PASSATION_CAP5_B.md) — LEVIERS v5 LIVRÉS : la chaîne mesurée au banc « a3-bd3 sans
   * deuxième passe » (a3-bd3s, mesurée sur a2486b1) : b-r7a de l'agent B (recherche recentrée, gardes de preuve, arrêt et saut de coût) avec, de
   * l'agent A, la recherche en ADV ET en abords, les voisins cohérents, l'écartement de la paire recentrée à 15 mm et la branche rail par rail en
@@ -593,7 +597,12 @@
   * posée : le cut est différé, sans ricochet sur les autres cuts. Sans liste, ou ancre muette, la décision est celle de la v6. Mesuré (chantiers/CH-124/rapport.md) :
   * lots d'octobre, 13 refus, 13 vraies corrections, 0 faute ; examens vierges, 3 refus, 3 vraies corrections, rien d'autre ne change. */
  const LEVIERS_V7=Object.freeze({ancre:true});
- const LEVIERS_LIVRES=Object.freeze({...LEVIERS_V4,...LEVIERS_V5,...LEVIERS_V6,...LEVIERS_V7});
+ /* Ariane 6 (CH-153, D-360 / D-380 / D-381) — LEVIERS v8 : pool et recherche recentrée autour de l'axe (« gA »), v4BS-sd et voieListe,
+  * strictement confinés aux cuts différés par v7 (`c1SeulementDifferes`) et sans ricochet de transport (`c1SansRicochet`). */
+ const LEVIERS_V8=Object.freeze({c1Actif:true,c1SeulementDifferes:true,c1SansRicochet:true,c1RechAxe:true,
+   c1Balayage:true,c1BalayageMm:Object.freeze([-240,-160,-80,80,160,240]),c1BalayageZones:Object.freeze(['abords','pn']),
+   c1SansPaire:true,rechListeResMm:4});
+ const LEVIERS_LIVRES=Object.freeze({...LEVIERS_V4,...LEVIERS_V5,...LEVIERS_V6,...LEVIERS_V7,...LEVIERS_V8});
  let LEVIERS=LEVIERS_LIVRES;
  function reglerLeviers(l){LEVIERS=l?Object.freeze({...LEVIERS_LIVRES,...l}):LEVIERS_LIVRES;return LEVIERS;}
  /* Écartement exact (mm) d'une paire de décalages depuis la pose de départ de la capture. */
@@ -1017,6 +1026,128 @@ function contreChaine(g,decalChaine,seuilMm){
    return {decal:ajuste?out:decal,ajuste,info};
  }
 
+ /* ------------------------------------------------------------------ CH-153 (Lot C1) : pool H8 (v4BS-sd + graine d'axe gA) et recherche recentrée sur l'axe */
+ function c1PaireAuPool(capture,hyp,gRef){
+   if(!fini(gRef))return true;
+   const Lh=hyp.rails.left.filter(h=>!h.hauteur),Rh=hyp.rails.right.filter(h=>!h.hauteur);
+   for(const a of Lh)for(const b of Rh){
+     if(a.origines.includes('H0')&&b.origines.includes('H0'))continue;
+     const g=ecartementDecal(capture,{left:a.decal,right:b.decal});
+     if(fini(g)&&Math.abs(g-gRef)<=LEVIERS.c1AxeEcartMm)return true;
+   }
+   return false;
+ }
+ function c1CellulesRelance(capture,graine){
+   const T=Shadow.reservoirOutils,rails={...capture.rails};
+   for(const s of SIDES){if(!graine[s])continue;const rail=capture.rails[s],pos=L.positionOf(rail,[0,graine[s][0]/1000,graine[s][1]/1000]);
+     rails[s]=O.translated(rail,pos.map((v,i)=>v-rail.positionSceneRelative[i]));}
+   const capT={...capture,rails};
+   let sci;try{sci=Shadow.scientificProposeBothAvecReservoir(capT);}catch{return {left:[],right:[]};}
+   const out={left:[],right:[]};
+   for(const s of SIDES){
+     const r=sci.rails[s],rs=r&&r.ok&&r._reservoir?r._reservoir:null;if(!rs)continue;
+     for(const c of rs.pool){
+       if(!(c.windowOk&&!c.slopeLimited&&(c.topRows??0)>=15))continue;
+       const ratio=T.lossRatio(c.loss,rs.lmin),brutD=[0,rs.sign*c.u,c.z],cal=Conv.calibrate(capT,s,brutD),fin=cal.applied?cal.delta:brutD;
+       const mm=decalage(capture.rails[s],L.positionOf(rails[s],fin));if(!mm)continue;
+       out[s].push({mm:[0,mm[1],mm[2]],calage:cal,cellule:{c,ratio,comp:T.inCompetitive(c,rs.lmin),strong:T.qualifyStrong(c),astar:false,publiee:false}});
+     }
+   }
+   return out;
+ }
+ function c1EnrichirHyp(capture,hyp,gRef,zone,axG,etatAncre,cut){
+   if(!(LEVIERS.c1BalayageZones||['abords','pn']).includes(zone))return null;
+   const A=modAncre(),C={left:[],right:[]},graines=[];
+   if(axG&&!axG.muet){
+     graines.push({left:axG.left,right:axG.right});
+     for(const d of [-55,55])graines.push({left:[axG.left[0]+d,axG.left[1]],right:[axG.right[0]+d,axG.right[1]]});
+   }else if((LEVIERS.c1BalayageZones||['abords','pn']).includes(zone)){
+     for(const d of LEVIERS.c1BalayageMm||[])graines.push({left:[d,0],right:[d,0]});
+   }
+   if(!graines.length)return null;
+   for(const gr of graines.slice(0,8)){
+     const r=c1CellulesRelance(capture,gr);
+     for(const s of SIDES)for(const it of r[s])if(!C[s].some(x=>norme(moins(x.mm,it.mm))<2))C[s].push(it);
+   }
+   const ajouts={left:[],right:[]};let totalAjoutes=0;
+   const dansAxe=(s,mm,mAutre)=>{
+     if(!etatAncre||!A?.ecartPose||!axG||axG.muet)return true;
+     const pos=positionsDe(capture,{[s]:{decal:mm},[s==='left'?'right':'left']:{decal:mAutre}});
+     const ep=A.ecartPose(etatAncre,cut,capture,pos);
+     return ep.muet?true:Math.abs(ep.ecartMm)<=etatAncre.modele.R.thetaMm;
+   };
+   for(const s of SIDES){
+     const o=s==='left'?'right':'left',baseS=hyp.rails[s].filter(h=>!h.hauteur).map(h=>h.decal),autres=C[o].map(x=>x.mm).concat(hyp.rails[o].filter(h=>!h.hauteur).map(h=>h.decal));
+     for(const it of C[s].sort((a,b)=>a.cellule.c.loss-b.cellule.c.loss)){
+       if(ajouts[s].filter(h=>!h.hauteur).length>=(LEVIERS.c1MaxHyp||6))break;
+       if(baseS.some(m=>norme(moins(m,it.mm))<DOUBLON_MM)||ajouts[s].some(h=>norme(moins(h.decal,it.mm))<DOUBLON_MM))continue;
+       const st=soutienRail(capture,s,it.mm);if(st.dessus<5)continue;
+       const okPaire=autres.some(m=>{const d={[s]:it.mm,[o]:m},g=ecartementDecal(capture,{left:d.left,right:d.right});return fini(g)&&Math.abs(g-gRef)<=LEVIERS.c1AxeEcartMm&&dansAxe(s,it.mm,m);});
+       if(!okPaire)continue;
+       const mPose=mesuresPose(capture,s,it.mm,it.calage),sig=mPose.sig,autreH0=capture.rails[o].positionSceneRelative,g0=gaugeMm(mPose.pos,autreH0);
+       const k=it.cellule,corr=mPose.cor&&mPose.cor.correctionMm?mPose.cor.correctionMm:null;
+       const hBase={rang:hyp.rails[s].length+ajouts[s].length,origine:'H8',sous:axG&&!axG.muet?'c1-axe':'c1-balayage',origines:['H8'],sousOrigines:[axG&&!axG.muet?'c1-axe':'c1-balayage'],
+         decal:it.mm.map(v=>arrondi(v,2)),hauteur:false,traits:{perte:sig4(k.c.loss),ratioPerte:arrondi(k.ratio,3),lignesSommet:k.c.topRows??null,faces:k.c.faceCount??null,
+           strong:k.strong,palier:k.c.tier??null,pente:!!k.c.slopeLimited,fenetre:!!k.c.windowOk,competitive:k.comp,astar:false,publiee:false,s1:false,
+           balises:(k.c.tags||[]).slice().sort(),distCelluleMm:0,ratioCelluleProche:arrondi(k.ratio,3),strongCelluleProche:k.strong,
+           pointsDessus:sig.pointsDessus,pointsFlanc:sig.pointsFlanc,epaisseurDessusMm:sig.epaisseurDessusMm,
+           dzConventionMm:it.calage?arrondi(it.calage.dzMm,2):null,duConventionMm:it.calage?arrondi(it.calage.duMm,2):null,
+           convention:it.calage?(it.calage.applied?'appliquee':(it.calage.reason||'refusee')):null,groupeHauteur:sig.groupe,
+           deplMm:arrondi(norme(it.mm),2),ecartVoieMm:null,ecartVoisinsMm:null,ecartementAutreH0Mm:arrondi(g0,1),ecartMedAutreH0Mm:fini(hyp.cut.gMedMm)?arrondi(g0-hyp.cut.gMedMm,1):null,
+           chaineEtage:null,hauteurMm:corr,hauteurAbstention:mPose.cor?mPose.cor.abstention:null,ecartPaireMedMm:null}};
+       ajouts[s].push(hBase);totalAjoutes++;
+       if(corr){
+         const mmH=[it.mm[0],it.mm[1],it.mm[2]+corr],posH=comptePositions(capture,s,mmH),g0H=gaugeMm(posH,autreH0);
+         ajouts[s].push({...hBase,hauteur:true,decal:mmH.map(v=>arrondi(v,2)),traits:{...hBase.traits,deplMm:arrondi(norme(mmH),2),ecartementAutreH0Mm:arrondi(g0H,1),ecartMedAutreH0Mm:fini(hyp.cut.gMedMm)?arrondi(g0H-hyp.cut.gMedMm,1):null}});
+       }
+     }
+   }
+   if(!totalAjoutes)return null;
+   const rails={left:hyp.rails.left.concat(ajouts.left),right:hyp.rails.right.concat(ajouts.right)};
+   if(fini(hyp.cut.gMedMm)){
+     const posDe=(s,h)=>comptePositions(capture,s,h.decal);
+     for(const s of SIDES){const o=s==='left'?'right':'left',po=rails[o].map(h=>posDe(o,h));
+       rails[s]=rails[s].map(h=>{const p=posDe(s,h);let mini=Infinity;for(const q of po)mini=Math.min(mini,Math.abs(gaugeMm(p,q)-hyp.cut.gMedMm));
+         return {...h,traits:{...h.traits,ecartPaireMedMm:Number.isFinite(mini)?arrondi(mini,1):null}};});}
+   }
+   return {...hyp,rails,cut:{...hyp.cut,nHyp:{left:rails.left.length,right:rails.right.length}}};
+ }
+ function c1RechercheAxe({capture,cut,zone,gRef,axG,etatAncre,voisinsAbs}){
+   const A=modAncre();
+   if(!axG||axG.muet||!fini(gRef))return null;
+   const vaAxe={left:{v:axG.left,proche:axG.left,distProche:1,n:{avant:2,apres:2},residuMm:0,encadre:null,axe:true},
+     right:{v:axG.right,proche:axG.right,distProche:1,n:{avant:2,apres:2},residuMm:0,encadre:null,axe:true}};
+   const filtre={minTop:LEVIERS.rechMinTop,minFace:LEVIERS.rechMinFace,ratioMax:LEVIERS.rechRatioMax};
+   const r=pairesRecentrees(capture,[{nom:'gA',left:axG.left,right:axG.right}],gRef,vaAxe,15,{filtre,dedupMm:LEVIERS.rechDedupMm});
+   if(!r||!r.paires.length)return null;
+   const maxAxe=zone==='adv'?(LEVIERS.c1AxeMaxAdvMm||12):(LEVIERS.c1AxeMaxAbordsMm||35);
+   const hMax=fini(LEVIERS.rechHauteurMaxMm)?LEVIERS.rechHauteurMaxMm:25;
+   const topMin=fini(LEVIERS.rechPaireTopMin)?LEVIERS.rechPaireTopMin:60;
+   const coherents=LEVIERS.voisinsCoherents?{parCutMm:LEVIERS.voisinsCoherentsParCutMm,baseMm:LEVIERS.voisinsCoherentsBaseMm}:null;
+   const vaVois=voieAbsolue(capture,cut,voisinsAbs,LEVIERS.voieAbsFenetre,3,coherents);
+   const admLarge=r.paires.filter(p=>p.top>=filtre.minTop&&p.face>=filtre.minFace&&p.ratio<=filtre.ratioMax&&Math.abs(p.dg)<=15&&p.depl<=LEVIERS.rechMaxDeplMm);
+   const admStrict=admLarge.filter(p=>{
+     if(!(p.fort&&p.top>=topMin&&Math.abs(p.dg)<=(LEVIERS.c1AxeEcartMm||10)))return false;
+     if(!SIDES.every(s=>Math.min(Math.abs(p.decal[s][2]-axG[s][1]),Math.abs(p.decal[s][2]))<=hMax))return false;
+     if(!SIDES.every(s=>Math.abs(p.decal[s][1]-axG[s][0])<=maxAxe+8))return false;
+     if(!SIDES.every(s=>{const m=soutienRail(capture,s,p.decal[s]);return m.dessus>=E.REGLAGE.soutienDessus&&m.flanc>=E.REGLAGE.soutienFlanc;}))return false;
+     if(etatAncre&&A?.ecartPose){
+       const pos=positionsDe(capture,{left:{decal:p.decal.left},right:{decal:p.decal.right}});
+       const ep=A.ecartPose(etatAncre,cut,capture,pos);
+       if(!ep.muet&&Math.abs(ep.ecartMm)>maxAxe)return false;
+     }
+     if(vaVois&&SIDES.every(s=>vaVois[s].distProche<=LEVIERS.rechProcheMaxCuts)){
+       const ev=Math.max(...SIDES.map(s=>Math.abs(p.decal[s][1]-vaVois[s].v[0])));
+       if((fini(LEVIERS.vetoVoieAbsMm)&&ev>LEVIERS.vetoVoieAbsMm)||(fini(LEVIERS.voieIncoherenteMm)&&Math.max(...SIDES.map(s=>vaVois[s].residuMm??0))>LEVIERS.voieIncoherenteMm))return false;
+     }
+     return true;
+   });
+   const best=admStrict[0]||null;if(!best)return null;
+   const ecart=(a,b)=>Math.max(...SIDES.map(s=>norme(moins(a.decal[s],b.decal[s]))));
+   if(admLarge.some(p=>p!==best&&ecart(p,best)>LEVIERS.rechUniqueMm))return null;
+   return best.decal;
+ }
+
  /* ------------------------------------------------------------------ un différé, de bout en bout */
  /* Entrées (tout ce que le lot connaît à l'instant de sa décision, rien de plus) :
   *   capture : { identity, rails, pointsSceneRelative, visibleByClipBoxes } ; science : moteur AVEC réservoir sur cette capture ;
@@ -1024,7 +1155,7 @@ function contreChaine(g,decalChaine,seuilMm){
   *   voisins : cuts validés par le lot avant ce cut, { identity, positions, rails (pose de départ de ce voisin) } ; zone : 'pn' | 'adv' | 'abords' ;
   *   plagesADV : plages ADV connues à l'instant ; modele : `modeleFige(...)` ; regle : REGLE ou REGLE_V.
   * Rend { decision (deciderL1), positions (scène) ou null, hyp (résumé), cas } ; lève une erreur seulement sur entrée illisible. */
- function deciderDiffere({capture,science,appuis=[],options=REGLE.lotOptions,voisins=[],zone='abords',plagesADV=[],modele,regle=REGLE,reference=null,voisinsTransport=null,voieListe=null}){
+ function deciderDiffereBase({capture,science,appuis=[],options=REGLE.lotOptions,voisins=[],zone='abords',plagesADV=[],modele,regle=REGLE,reference=null,voisinsTransport=null,voieListe=null}){
    if(!modele)throw Error('GCV2 L1 : modèle absent.');
    if(!SIDES.every(s=>science&&science.rails&&science.rails[s]))throw Error('GCV2 L1 : science incomplète.');
    const id=capture.identity,seul=variante(capture,science,[],options),chaine=variante(capture,science,appuis.slice(),options);
@@ -1054,6 +1185,67 @@ function contreChaine(g,decalChaine,seuilMm){
    const d=regle.variante==='L1-e'?deciderL1e(k,modele,reference,capture):deciderL1(k,modele,regle);
    const positions=d.paire&&d.etat!=='rien'?positionsDe(capture,d.paire):null;
    return {decision:d,positions,gMed,cas:k,hyp,chaine:{stage:chaine.decision.stage,reason:chaine.decision.reason??null,anchorsUsed:chaine.decision.anchorsUsed||[]}};
+ }
+ function deciderDiffere(args){
+   const {capture,zone='abords',modele,regle=REGLE,reference=null,voieListe=null,etatAncre=null}=args;
+   if(!LEVIERS.c1Actif||regle.variante!=='L1-e'){
+     const avant=LEVIERS;
+     if(!LEVIERS.c1Actif&&fini(LEVIERS.rechListeResMm)){
+       LEVIERS=Object.freeze({...avant,rechListeResMm:null});
+       try{return deciderDiffereBase(args);}finally{LEVIERS=avant;}
+     }
+     return deciderDiffereBase(args);
+   }
+   /* `c1SeulementDifferes` : on évalue d'abord exactement la décision v7 (sans `rechListeResMm` ni C1) ; toute pose déjà décidée reste intacte au bit près. */
+   let r0;
+   if(LEVIERS.c1SeulementDifferes){
+     const avant=LEVIERS;
+     LEVIERS=Object.freeze({...avant,c1Actif:false,rechListeResMm:null});
+     try{r0=deciderDiffereBase(args);}finally{LEVIERS=avant;}
+     if(r0.decision.etat!=='rien')return r0;
+   }else r0=deciderDiffereBase(args);
+   if(r0.decision.etat!=='rien'){
+     return LEVIERS.c1SansRicochet?{...r0,voisinLivre:{etat:'rien',positions:null}}:r0;
+   }
+   /* Cut laissé `rien` par v7 : réévaluation avec `rechListeResMm` éventuel, pool H8 (v4BS-sd + gA) et recherche recentrée sur l'axe `gA`. */
+   const id=capture.identity,gRef=reference&&fini(reference.mm)?reference.mm:fini(r0.gMed)?r0.gMed:null;
+   const A=modAncre(),axG=etatAncre&&A?.graineAxe&&Number.isInteger(id?.cut)?A.graineAxe(etatAncre,id.cut,capture,gRef||1437):null;
+   let r=r0;
+   if(fini(LEVIERS.rechListeResMm)&&voieListe){
+     const dL=deciderL1e(r0.cas,modele,reference,capture);
+     if(dL.etat==='valider'&&dL.paire){
+       const posL=positionsDe(capture,dL.paire);
+       const okAxe=!(etatAncre&&A?.juger&&Number.isInteger(id?.cut))||A.juger(etatAncre,id.cut,capture,posL).refus!==true;
+       if(okAxe)r={...r0,decision:dL,positions:posL};
+     }
+   }
+   if(r.decision.etat==='rien'&&LEVIERS.c1Balayage&&fini(gRef)&&(!LEVIERS.c1SansPaire||!c1PaireAuPool(capture,r0.hyp,gRef))){
+     const hyp2=c1EnrichirHyp(capture,r0.hyp,gRef,zone,axG,etatAncre,id?.cut);
+     if(hyp2){
+       const k2=casDuDiffere({cut:id.cut,zone,hyp:hyp2,gMed:r0.gMed,voieRef:r0.cas.voieRef});
+       if(r0.cas.voieListe)k2.voieListe=r0.cas.voieListe;
+       k2.voieGeo=r0.cas.voieGeo;k2.voisinsAbs=r0.cas.voisinsAbs;
+       if(r0.cas.voieTransport)k2.voieTransport=r0.cas.voieTransport;
+       if(r0.cas.voieProche)k2.voieProche=r0.cas.voieProche;
+       const d2=deciderL1e(k2,modele,reference,capture);
+       if(d2.etat==='valider'&&d2.motif===null&&d2.paire){
+         const pos2=positionsDe(capture,d2.paire);
+         const okAxe=!(etatAncre&&A?.juger&&Number.isInteger(id?.cut))||A.juger(etatAncre,id.cut,capture,pos2).refus!==true;
+         if(okAxe)r={...r0,hyp:hyp2,cas:k2,decision:d2,positions:pos2};
+       }
+     }
+   }
+   if(r.decision.etat==='rien'&&LEVIERS.c1RechAxe&&axG&&!axG.muet&&fini(gRef)&&r0.decision.motif!=='anomalie-non-corrigee'&&r0.decision.motif!=='recherche-adv-contredite-rien'){
+     const decalAxe=c1RechercheAxe({capture,cut:id.cut,zone,gRef,axG,etatAncre,voisinsAbs:r0.cas.voisinsAbs});
+     if(decalAxe){
+       const paire={left:{origines:['H8'],sousOrigines:['gA'],hauteur:false,decal:decalAxe.left},right:{origines:['H8'],sousOrigines:['gA'],hauteur:false,decal:decalAxe.right}};
+       const posA=positionsDe(capture,paire),ecart3d=Math.max(norme(paire.left.decal),norme(paire.right.decal));
+       const dA={...r0.decision,etat:'valider',motif:'recherche-axe',paire,hypothese:'H8',ecartDepartMm:arrondi(ecart3d,1)};
+       r={...r0,decision:dA,positions:posA};
+     }
+   }
+   if(r.decision.etat!=='rien'&&LEVIERS.c1SansRicochet)return {...r,voisinLivre:{etat:'rien',positions:null}};
+   return r;
  }
  /* Commande d'une pose de la GCV2, comme la branche « lot » de `commandRails` (src/lot-decision.js) : rails en décalages du repère profil de la
   * pose ESV courante, relus par `expectedPoses` (même position à 0,01 mm), écartement admissible, cible dans la vue de chaque rail. Une cible
@@ -1090,6 +1282,6 @@ function contreChaine(g,decalChaine,seuilMm){
      nHyp:r.hyp?r.hyp.cut.nHyp:null,...(d.variante==='L1-e'?{variante:'L1-e',correction:d.correction,test13:d.test13,...(d.diag?{diag:d.diag}:{})}:{})};
  }
  return {VERSION,REGLE,REGLE_V,REGLE_E,H6,NUM,CAT,MULTI,FORMAT_PARAMS,decalage,variante,decalageDepuisDepart,decalagesH6,hypothesesDuCut,avecRupture,transfo,accords,brut,coder,soutienRail,
-   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,ecartAVoie,contreChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,LEVIERS_V4,LEVIERS_V5,LEVIERS_V6,LEVIERS_V7,ajusterPoseFinale,AJ_DEFAUT,AJ_ESSAI,deciderDiffere,commander,resumer,
+   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,ecartAVoie,contreChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,LEVIERS_V4,LEVIERS_V5,LEVIERS_V6,LEVIERS_V7,LEVIERS_V8,ajusterPoseFinale,AJ_DEFAUT,AJ_ESSAI,deciderDiffere,commander,resumer,
    voieAbsolue,rechercheRecentree,pairesRecentrees,leviersActifs:()=>LEVIERS};
 });

@@ -185,6 +185,16 @@
     return { ajuste: true, positions: pos, decalAvant, decal: decalApres, info: a.info, commande: cg };
   }
 
+  /* Position transmise au transport des voisins L1-se (`voisinLivre` : sans ricochet lorsque C1 / H8 pose un différé). */
+  function voisinTransportDe(g, positions, runtimeRails, before, cameras, camerasLarges) {
+    if (!g || !g.voisinLivre) return positions;
+    if (g.voisinLivre.etat !== 'valider' || !g.voisinLivre.positions) return null;
+    const G = modL1(), K = modK();
+    if (!G || !K) return null;
+    const c = G.commander({ positions: g.voisinLivre.positions, runtimeRails, before, expectedPoses: K.expectedPoses, cameras, camerasLarges, valider: true });
+    return c.action === 'lot' ? g.voisinLivre.positions : null;
+  }
+
   /* CH-124 : jugement d'une pose par l'ancre de trajectoire (sans ricochet). */
   function jugerAncre({ etatAncre, cut, capture = null, before, positions = null, decal = null, source = 'lot', etage = null, appui = false, positionsDecision = null } = {}) {
     const ANC = modANC(), L = modL();
@@ -338,10 +348,11 @@
                 const vsG = voisins !== undefined ? voisins : (obtenirVoisins ? obtenirVoisins() : []);
                 const vtG = voisinsTransport !== undefined ? voisinsTransport : (obtenirVoisinsTransport ? obtenirVoisinsTransport() : undefined);
                 const modG = modele || (obtenirModele ? obtenirModele() : null);
+                const eaG = await resoudreAncre();
                 const g = G.deciderDiffere({
                   capture, science: sc, appuis: anchors, options: { ...G.REGLE.lotOptions },
                   voisins: vsG, zone: z.zone, plagesADV: z.adv, modele: modG,
-                  regle: G.REGLE_E, reference: refG, voieListe: vlG,
+                  regle: G.REGLE_E, reference: refG, voieListe: vlG, etatAncre: eaG,
                   ...(vtG !== undefined ? { voisinsTransport: vtG } : {}),
                 });
                 const dec = g.decision, l1 = { ...G.resumer(g), zoneSource: z.source, ms: Date.now() - t0 };
@@ -366,7 +377,8 @@
                         const c = appliquerReglesMetier ? appliquerReglesMetier(cmdG) : cmdG;
                         if (c.action !== 'lot') l1.commande.refus = 'regles-metier';
                         else {
-                          if (transporter) transporter(capture, identity, g.positions);
+                          const posTr = voisinTransportDe(g, g.positions, runtimeRails, before, cameras, camerasLarges);
+                          if (transporter && posTr) transporter(capture, identity, posTr);
                           command = { ...c, l1s: 'gcv2' };
                         }
                       } else {
@@ -499,7 +511,7 @@
           capture, science, appuis: (E ? E.anchors : anchors).slice(), options: { ...G.REGLE.lotOptions },
           voisins: listeVoisins, voisinsTransport: transportActif ? listeTransport : null,
           zone, plagesADV, modele, regle: G.REGLE_E,
-          reference: resoudreRef(), voieListe: resoudreVoieListe(),
+          reference: resoudreRef(), voieListe: resoudreVoieListe(), etatAncre: resoudreAncre(),
         });
         const dec = g.decision, l1 = G.resumer(g);
         if (dec.etat === 'rien') out = { ...base, etat: 'differe', l1 };
@@ -514,7 +526,8 @@
             if (rl && rl.out && rl.out.etat === 'differe') out = { ...base, ...rl.out, l1 };
             else {
               const positionsG = rl && rl.out ? rl.positions : g.positions;
-              if (leviers.transport && E) (E.validesL1 = E.validesL1 || []).push({ identity, positions: positionsG, rails: before });
+              const posTr = rl && rl.out ? positionsG : voisinTransportDe(g, positionsG, runtimeRails, before, cameras, camerasLarges);
+              if (leviers.transport && E && posTr) (E.validesL1 = E.validesL1 || []).push({ identity, positions: posTr, rails: before });
               out = rl && rl.out
                 ? { ...base, ...rl.out, vue: vueG, l1, aControler: dec.aControler === true }
                 : { ...base, etat: 'pose', vue: vueG, decal: decalPose(before, g.positions), l1, aControler: dec.aControler === true, ...(rl ? { rechercheLarge: rl.garde } : {}) };
@@ -592,29 +605,31 @@
       surErreurRechercheLarge = null,
     } = args;
 
-    const cut = capture?.identity?.cut ?? null;
-    const vs0 = typeof voisins === 'function' ? voisins() : voisins;
-    const avant = leviersPasse ? G.leviersActifs() : null;
-    if (leviersPasse) G.reglerLeviers({ ...avant, ...leviersPasse });
-    let g;
-    try {
-      g = G.deciderDiffere({
-        capture,
-        science,
-        appuis: Array.isArray(appuis) ? appuis.slice() : [],
-        options: { ...G.REGLE.lotOptions },
-        voisins: vs0,
-        voisinsTransport,
-        zone,
-        plagesADV,
-        modele,
-        regle: G.REGLE_E,
-        reference,
-        voieListe,
-      });
-    } finally {
-      if (leviersPasse) G.reglerLeviers(avant);
-    }
+    const executerAvecAncre = Ea => {
+      const cut = capture?.identity?.cut ?? null;
+      const vs0 = typeof voisins === 'function' ? voisins() : voisins;
+      const avant = leviersPasse ? G.leviersActifs() : null;
+      if (leviersPasse) G.reglerLeviers({ ...avant, ...leviersPasse });
+      let g;
+      try {
+        g = G.deciderDiffere({
+          capture,
+          science,
+          appuis: Array.isArray(appuis) ? appuis.slice() : [],
+          options: { ...G.REGLE.lotOptions },
+          voisins: vs0,
+          voisinsTransport,
+          zone,
+          plagesADV,
+          modele,
+          regle: G.REGLE_E,
+          reference,
+          voieListe,
+          etatAncre: Ea,
+        });
+      } finally {
+        if (leviersPasse) G.reglerLeviers(avant);
+      }
 
     const l1 = G.resumer(g);
     if (g.decision.etat !== 'valider') {
@@ -700,7 +715,9 @@
 
     const finaliserPose = Ea => {
       const idT = { part: capture.identity?.part ?? null, cut, frameId: capture.identity?.frameId ?? null };
-      const entreeTransport = transporter ? { identity: idT, positions: g.positions, rails: before } : null;
+      const posTr = voisinTransportDe(g, g.positions, runtimeRails, before, cameras, camerasLarges);
+      const entreeTransport = transporter && posTr ? { identity: idT, positions: posTr, rails: before } : null;
+      const voisin = posTr === g.positions ? undefined : posTr;
       const vue = cg.vue === 'deplacer' ? 'deplacee' : null;
       const passe2Pose = { passe, garde, ...(rlRetenu ? { rechercheLarge: rlRetenu } : {}) };
 
@@ -773,12 +790,16 @@
         g,
         l1,
         entreeTransport,
+        ...(voisin !== undefined ? { voisin } : {}),
         outBanc,
       };
     };
 
-    const Ea = etatAncre !== undefined ? etatAncre : (obtenirEtatAncre ? obtenirEtatAncre() : null);
-    return suivre(Ea, finaliserPose);
+    return finaliserPose(Ea);
+    };
+
+    const Ea0 = etatAncre !== undefined ? etatAncre : (obtenirEtatAncre ? obtenirEtatAncre() : null);
+    return suivre(Ea0, executerAvecAncre);
   }
 
   return {
