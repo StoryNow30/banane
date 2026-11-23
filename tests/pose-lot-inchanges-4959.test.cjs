@@ -277,7 +277,7 @@ test('la pose et le lot lisent la test 8 : octets identiques, ou AST identique p
  const deplaces=[];
  for(const [f,empreinte] of Object.entries(REF.fichiers)){
   if(ECHO[f]||L1[f]||STOCKAGE[f])continue;
-  const texte=f==='src/relecture-ombre.js'?sansD284(sansCH152(f,lire(f))):PANNEAU[f]?PANNEAU[f](lire(f)):VERSION_SEULE.includes(f)?sansChangerPartiePont(sansCH096(f,sansD344(f,lire(f)))).split("VERSION='5',VERSION_NAME='5'").join("VERSION='4.9.5.8',VERSION_NAME='4.9.5 test 8'").split('Ariane 5 · ouvrir').join('Ariane 4.9.5 test 8 · ouvrir'):sansCH152(f,sansCH086(f,sansCH065(f,lire(f))));
+  const texte=f==='src/relecture-ombre.js'?sansD284(sansCH152(f,lire(f))):PANNEAU[f]?PANNEAU[f](lire(f)):VERSION_SEULE.includes(f)?sansChangerPartiePont(sansCH096(f,sansD344(f,lire(f)))).split("VERSION='6.0.0',VERSION_NAME='6.0.0'").join("VERSION='4.9.5.8',VERSION_NAME='4.9.5 test 8'").split('Ariane 6.0.0 · ouvrir').join('Ariane 4.9.5 test 8 · ouvrir'):sansCH152(f,sansCH086(f,sansCH065(f,lire(f))));
   if(f==='src/appuis-liste.js'){
    /* CH-075 : annotations seules ; --origine rattache la preuve AST au SHA historique sans imposer Git aux archives. */
    const T=require('../tools/typage-ch075.cjs');assert.equal(empreinte,T.ORIGINE);T.identite();

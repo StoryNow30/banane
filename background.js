@@ -45,7 +45,7 @@ function viderCacheUi(){cacheUi.histCle=null;cacheUi.histRefH=null;cacheUi.histD
  cacheUi.fileCle=null;cacheUi.fileRefFP=null;cacheUi.fileVal=null;cacheUi.etatsRev.clear();}
 /* Lecture par types : par l'index si le store en a un, sinon tout le magasin (l'appelant filtre toujours). */
 const lireTypes=types=>typeof store.lireParType==='function'?store.lireParType(types):store.all('events');let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'5',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'5';
+const VERSION=globalThis.BananeCore3?.VERSION||'6.0.0',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'6.0.0';
 /* D-282 : identifiant du commit d'où vient le paquet (fichier BUILD écrit par tools/package.py), lu une fois ; « inconnu » hors paquet. Écrit dans le journal (`build`) pour que les exports disent quel paquet a tourné. */
 let BUILD='inconnu';const BUILD_PRET=(async()=>{try{if(typeof fetch!=='function'||!chrome?.runtime?.getURL)return;const r=await fetch(chrome.runtime.getURL('BUILD'));const t=r.ok?String(await r.text()).trim():'';if(/^[0-9a-f]{4,40}(\+modifie)?$/.test(t))BUILD=t;}catch{/* sans fichier BUILD */}})();
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout

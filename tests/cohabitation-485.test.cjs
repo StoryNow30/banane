@@ -23,13 +23,12 @@ test('numérotation stable/test : format MV3, nom exact et identités courantes 
   for(const m of [{version:'4.9.0.17'},{version:'4.9.0.17',version_name:'4.9.0 test 3'},
     {version:'4.9.0',version_name:'4.9.0 test 1'},{version:'4.9.0.17',version_name:'4.8.6 test 1'},
     {version:'4.9.x.1',version_name:'4.9.0 test 1'},{version:'4.9.0.95536',version_name:'4.9.0 test 95536'},{version:'4.9.0.17',version_name:'4.9.0 test 17 (avec espace)'},{version:'4.9.0.17',version_name:'4.9.0 test 171'}])assert.throws(()=>versionAffichee(m));
-  const nom=versionAffichee(manifest);assert.equal(manifest.name,'Vision'); /* D-298 : le paquet porte le nom « Vision » dans Chrome. */
+  const nom=versionAffichee(manifest);assert.equal(manifest.name,'Ariane 6 bêta');
   assert.equal(K.VERSION,manifest.version);assert.equal(K.VERSION_NAME,nom);
-  const titre=`Ouvrir Vision`;assert.ok(manifest.action.default_title===titre||manifest.action.default_title.startsWith(titre+' — '));
+  const titre=`Ouvrir Ariane 6 bêta`;assert.ok(manifest.action.default_title===titre||manifest.action.default_title.startsWith(titre+' — '));
   const html=fs.readFileSync(path.join(root,'panel.html'),'utf8');
-  /* D-276 : la stable se nomme « Ariane 5 » (titre et pied) ; le numéro reste lisible dans l'en-tête (`<span>`). */
-  const marque=`Ariane ${nom}`;
-  for(const text of [`<title>${marque}</title>`,`<span>${nom}</span>`,`<footer>${marque} ·`])assert.ok(html.includes(text),text);
+  /* La bêta porte son nom complet au titre et au pied ; le numéro reste lisible dans l'en-tête (`<span>`). */
+  for(const text of [`<title>${manifest.name}</title>`,`<span>${nom}</span>`,`<footer>${manifest.name} ·`])assert.ok(html.includes(text),text);
   assert.ok(fs.readFileSync(path.join(root,'panel.js'),'utf8').includes(`home:'${nom}'`));
   assert.ok(fs.readFileSync(path.join(root,'src/bridge.js'),'utf8').includes(`'Ariane ${nom} · ouvrir'`));
   assert.ok(fs.readFileSync(path.join(root,'background.js'),'utf8').includes(`BananeCore3?.VERSION||'${manifest.version}',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'${nom}'`),'repli du service worker');

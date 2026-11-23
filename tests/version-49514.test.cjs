@@ -24,15 +24,15 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8'),manifest=require('../manifest.json'),K=require('../src/core.js');
-const VERSION='5',NOM='5';
-test('manifeste et core : 5 / « 5 »',()=>{
+const VERSION='6.0.0',NOM='6.0.0';
+test('manifeste et core : 6.0.0 / « 6.0.0 »',()=>{
  assert.deepEqual([manifest.version,manifest.version_name,K.VERSION,K.VERSION_NAME],[VERSION,undefined,VERSION,NOM]);
- assert.equal(manifest.name,'Vision');assert.equal(manifest.action.default_title,'Ouvrir Vision'); /* D-298 */
+ assert.equal(manifest.name,'Ariane 6 bêta');assert.equal(manifest.action.default_title,'Ouvrir Ariane 6 bêta');
 });
 test('service worker, pont, panneau : chaîne de version seulement',()=>{
  assert.ok(read('background.js').includes(`BananeCore3?.VERSION||'${VERSION}',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'${NOM}'`));
  assert.ok(read('src/bridge.js').includes(`'Ariane ${NOM} · ouvrir'`));assert.ok(read('panel.js').includes(`home:'${NOM}'`));
- const html=read('panel.html');for(const t of ['<title>Ariane 5</title>',`<span>${NOM}</span>`,'<footer>Ariane 5 ·','id="lancement"'])assert.ok(html.includes(t),t);
+ const html=read('panel.html');for(const t of ['<title>Ariane 6 bêta</title>',`<span>${NOM}</span>`,'<footer>Ariane 6 bêta ·','id="lancement"'])assert.ok(html.includes(t),t);
 });
 test('aucune trace d’une autre version de test dans les chaînes de version livrées',()=>{
  for(const f of ['manifest.json','src/core.js','src/bridge.js','panel.html'])
