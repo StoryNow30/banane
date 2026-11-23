@@ -1,5 +1,17 @@
 # Ariane — journal des versions
 
+## Ariane 6 bêta 3 (`6.0.0`) — 24/11 (CH-159) — saut borné vers ESV, pose de relecture sur sous-nappe saine, seuil de 10 % et lecteur couleur/source
+- **Identité du paquet** : même `name` « Ariane 6 bêta » et `version` `6.0.0` (identité verrouillée par les essais). Le fichier livré s'appelle `ariane-v6.0.0-beta3.zip` pour le distinguer des bêtas 1 et 2, sans écraser `ariane-v6.0.0.zip` ni `ariane-v6.0.0-beta2.zip`.
+- **CH-159 — relecture (D-382, révise D-241)** :
+  - Un vrai SKIP n'est envoyé à ESV que pour un saut borné confirmé (2 voisines saines de chaque côté, au plus 4 / 5 / 4 / 6 coupes selon le cas : lacune de cœur, nappes séparées, rail invisible, décalibration). Au-delà, reprise coupe par coupe. Jamais sur une coupe déjà validée dans ESV.
+  - Deux scanners ou rail poli : en relecture seulement, pose d'après la sous-nappe non déformée, par géométrie. Le placement conventionnel n'est pas modifié. Abstention si les nappes ne sont pas départageables.
+  - Seuil de 10 % d'échecs par portion fixe d'au plus 10 000 coupes (1 ER = 1 coupe, taux sur toutes les coupes). Un échec est un différé encore ouvert ou une correction refusée ou en erreur. Un saut borné confirmé et une abstention de critère ne comptent pas. Au-delà de 10 %, passage à la partie suivante.
+  - Le lecteur LiDAR enregistre désormais la couleur (`rgba`, `color`, `rgb`) et la source (`pointSourceID`, `source`, `chain`, `scannerId`, etc.), et continue de retirer les attributs vides.
+- **Installation (3 clics dans Edge / Chrome)** :
+  1. Décompresser `ariane-v6.0.0-beta3.zip` dans un dossier dédié à **Ariane 6 bêta** (ou dans le dossier existant pour mettre à jour sur place).
+  2. Ouvrir `edge://extensions` (ou `chrome://extensions`), activer le **Mode développeur**, puis cliquer sur **Charger l'extension non empaquetée** (ou **Recharger**).
+  3. Ouvrir ou recharger la page ESV (`F5`) : la carte affiche **Ariane 6 bêta** (`6.0.0`).
+
 ## Ariane 6 bêta 2 (`6.0.0`) — 23/11 (CH-158) — relecture : toute l'ADV conservée, trous de 1 à 3 rebouchés
 - **Identité du paquet** : même `name` « Ariane 6 bêta » et `version` `6.0.0` (identité verrouillée par les essais). Le fichier livré s'appelle `ariane-v6.0.0-beta2.zip` pour le distinguer de la bêta 1, sans écraser `ariane-v6.0.0.zip`.
 - **CH-158 — relecture** :
