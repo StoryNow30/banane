@@ -91,8 +91,11 @@ const NUM = Object.freeze([
   /* H6 « voie décalée » (D-207) : nuls hors H6 ; absents des jeux de G1-a, donc sans effet sur eux (colonnes constantes, écartées). */
   T('h6AmpleurMm', 'hyp', 'h6AmpleurMm', 'log'), T('h6DistCuts', 'hyp', 'h6DistCuts', 'log'), T('h6NVoisins', 'hyp', 'h6NVoisins'), T('h6DispersionMm', 'hyp', 'h6DispersionMm', 'log'),
   T('h6Perte', 'hyp', 'h6Perte', 'log10'), T('h6LignesSommet', 'hyp', 'h6LignesSommet', 'log'), T('h6DansReservoir', 'hyp', 'h6DansReservoir', 'bool'),
+  /* CH-157 (Lot C6) : traits d'accord à l'axe de trajectoire (absents des jeux anciens → colonnes constantes écartées, rétrocompatibles). */
+  T('ecartAxeMm', 'hyp', 'ecartAxeMm', 'abs'), T('paireMilieuAxeMm', 'hyp', 'paireMilieuAxeMm', 'abs'), T('ancrePresente', 'ctx', 'ancrePresente', 'bool'),
 ]);
 const TRAIT_H6 = nom => nom.startsWith('h6');
+const TRAIT_AXE = nom => nom === 'ecartAxeMm' || nom === 'paireMilieuAxeMm' || nom === 'ancrePresente';
 const CAT = Object.freeze([
   T('palier', 'hyp', 'palier'), T('convention', 'hyp', 'convention'), T('groupeHauteur', 'hyp', 'groupeHauteur'), T('chaineEtage', 'hyp', 'chaineEtage'),
   T('hauteurAbstention', 'hyp', 'hauteurAbstention'), T('statut', 'rail', 'statut'), T('motif', 'rail', 'motif'), T('etageChaine', 'ctx', 'etageChaine'),
@@ -232,7 +235,8 @@ function construireCas(jeu, usage = 'relecture', { gardeVoie = false } = {}) {
     const G0 = fini(contexte && contexte.ecartDepartMm) ? contexte.ecartDepartMm : null, v = (contexte && contexte.voisins) || {};
     const ctx = { zone: c.zone, role: c.role, etageChaine: contexte ? contexte.etageChaine : null, appuisChaine: contexte ? contexte.appuisChaine : null,
       voisinsN: v.n ?? null, voisinsHumains: v.humains ?? null, voisinsLot: v.lot ?? null, voisinsEncadre: v.encadre ?? null, voisinsCoupMin: v.coupMin ?? null,
-      ecartDepartMedMm: fini(G0) && fini(gMed) ? G0 - gMed : null };
+      ecartDepartMedMm: fini(G0) && fini(gMed) ? G0 - gMed : null,
+      ancrePresente: contexte && typeof contexte.ancrePresente === 'boolean' ? contexte.ancrePresente : null };
     const k = { partie: jeu.partie, cut: c.cut, zone: c.zone, role: c.role, gMed, G0, chaineDifferee: ctx.etageChaine === 'deferred', rails: {}, etiq: { micMaxMm: c.etiquette.micMaxMm, mic: c.etiquette.mic } };
     /* Garde-fou de voie (option) : un cut différé est gardé par la voie de référence de sa série (H6), celle de l'usage (lot : voisins du lot seuls). */
     if (gardeVoie && c.role === 'differe') { const v = c.contexte && c.contexte.voieH6; k.garde = 'voie'; k.voieRef = v ? (v[usage === 'lot' ? 'lot' : 'tous'] || null) : null; }
@@ -817,10 +821,11 @@ function resumeCoefficients(plis) {
 function exporter(parties, { usages = ['relecture', 'lot'], lambda = LAMBDA, accord = true, date, cible = CIBLE, journal = () => {}, gardeVoie = false, partiesLot = null } = {}) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date || ''))) throw Error('exporter : --date AAAA-MM-JJ attendue');
   const h6 = parties.some(j => j.entete && j.entete.h6);
+  const avecAxe = parties.some(j => j.cuts && j.cuts.some(c => c.cut?.contexte?.ancrePresente === true));
   const noms = parties.map(j => j.partie), out = { format: FORMAT_PARAMS, version: VERSION, date, graine: GRAINE, lambda, accord,
     note: 'Paramètres de la GCV2 appris sur les parties nommées. Aucune coordonnée, aucune ligne d\'exemple : des coefficients, des moyennes, des seuils et des empreintes.',
     parties: noms.map(n => ({ partie: n, sha256: parties.find(j => j.partie === n).sha256 })), garde: { ...GARDES, contratMm: [...GARDES.contratMm] },
-    cible: { ...CIBLE }, listeBlanche: listeBlancheExportable(accord, h6), interdits: [...INTERDITS], usages: {} };
+    cible: { ...CIBLE }, listeBlanche: listeBlancheExportable(accord, h6, avecAxe), interdits: [...INTERDITS], usages: {} };
   if (h6) out.h6 = { ...parties.find(j => j.entete && j.entete.h6).entete.h6 };
   /* Jeux « lot » générés sans appui humain (audit F3) : l'usage lot apprend sur eux. */
   if (partiesLot) out.partiesLot = partiesLot.map(j => ({ partie: j.partie, sha256: j.sha256 }));
@@ -843,9 +848,9 @@ function exporter(parties, { usages = ['relecture', 'lot'], lambda = LAMBDA, acc
   }
   return out;
 }
-function listeBlancheExportable(accord = true, h6 = false) {
+function listeBlancheExportable(accord = true, h6 = false, avecAxe = false) {
   const f = (t, type) => ({ nom: t.nom, source: t.src, chemin: t.chemin, transformation: t.tr, type });
-  return [...NUM.filter(t => (accord || !SANS_ACCORD(t.nom)) && (h6 || !TRAIT_H6(t.nom))).map(t => f(t, t.tr === 'bool' ? 'booleen' : 'numerique')), ...CAT.map(t => f(t, 'categorie')), ...MULTI.map(t => f(t, 'multiple'))];
+  return [...NUM.filter(t => (accord || !SANS_ACCORD(t.nom)) && (h6 || !TRAIT_H6(t.nom)) && (avecAxe || !TRAIT_AXE(t.nom))).map(t => f(t, t.tr === 'bool' ? 'booleen' : 'numerique')), ...CAT.map(t => f(t, 'categorie')), ...MULTI.map(t => f(t, 'multiple'))];
 }
 /* Sérialisation stable : mêmes entrées, mêmes octets. */
 const serialiser = o => JSON.stringify(o, null, 1) + '\n';
@@ -988,6 +993,6 @@ module.exports = {
   pairesPermises, paireValide, ecartementPaire, ajusterCodage, coder, matrice, ajusterLogistique, ajusterArbres, scoresArbres, platt, appliquerPlatt, exemples, poidsParPartie, entrainer, scorer, parCas,
   meilleurePaire, decider, choisirSeuils, apprendrePli, jugerPli, reglePrudente, reglesPrudentesDuDepot, poseChaineH, resultatH0, resultatDeDecision, bilanDe, synthese, hasardEnEsperance,
   fiabilite, porte, validationCroisee, exporter, serialiser, listeBlancheExportable, rapport,
-  FORMAT_VARIANTES, FICHIER_VARIANTES, FICHIER_VARIANTES_H6, lireVariantes, appliquerVariante, rapportVariantes, args, issueDePaire, TRAIT_H6,
+  FORMAT_VARIANTES, FICHIER_VARIANTES, FICHIER_VARIANTES_H6, lireVariantes, appliquerVariante, rapportVariantes, args, issueDePaire, TRAIT_H6, TRAIT_AXE, NUM, CAT, MULTI,
 };
 if (require.main === module) { try { main(process.argv.slice(2)); } catch (e) { process.stderr.write(`gcv2-apprendre : ${e.message}\n`); process.exit(1); } }

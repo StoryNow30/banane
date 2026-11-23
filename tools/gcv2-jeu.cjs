@@ -6,7 +6,7 @@
  * de l'opérateur expert). Étude HORS LIGNE : rien n'est changé à l'extension, aucune action dans ESV, aucun modèle appris ici.
  *
  *   node tools/gcv2-jeu.cjs construire --partie P:N --echo DOSSIER [--echo DOSSIER…] (--journal J.json [--journal …] | --sans-lot)
- *                                      --sortie JEU.jsonl [--juger-partie-reservee]
+ *                                      --sortie JEU.jsonl [--sortie-lot JEU-LOT.jsonl] [--liste LISTE.json] [--juger-partie-reservee]
  *   node tools/gcv2-jeu.cjs rappel     --jeu JEU.jsonl [--jeu …] [--json R.json]
  *   node tools/gcv2-jeu.cjs essai
  *
@@ -37,9 +37,10 @@
  * dans les traits. tests/gcv2-jeu.test.cjs le prouve (changer la référence ne change aucun trait ; une pose voisine validée APRÈS la première
  * visite ne change rien).
  *
- * Le moteur ne rend pas son réservoir de cellules (`reducePool` est interne à `src/gcv1-shadow.js`, qui ne doit pas changer). L'outil charge donc
- * une COPIE EN MÉMOIRE du module, avec une seule ancre remplacée (`return {ok:true,side,` reçoit en plus le champ `_reservoir`) : le fichier de
- * `src/` n'est pas touché, le calcul est celui du moteur livré, et l'essai compare le résultat de la copie à celui du module livré.
+ * Le réservoir de cellules est exposé par `scientificProposeBothAvecReservoir` dans `src/gcv1-shadow.js` ; la façade ci-dessous l'utilise sans
+ * modifier le moteur livré, et l'essai compare sa publication à celle du chemin habituel.
+ * CH-157 : `--liste` désigne l'instantané de la liste d'ESV au départ ; il active les traits `ecartAxeMm`, `paireMilieuAxeMm` et
+ * `ancrePresente`, calculés sans la pose finale de l'opérateur. Sans liste, ils restent nuls et le jeu est rétrocompatible.
  *
  * Sortie (JSON lignes, HORS DÉPÔT) : une ligne `entete`, puis par cut une ligne `cut` (zone, rôle, étiquette du cut, moteur), par rail une ligne
  * `rail` (traits du moteur pour ce rail) et par hypothèse une ligne `hyp` (origine, décalage [longitudinal, latéral, vertical] en mm dans le
@@ -57,6 +58,8 @@ const H = require('../src/hauteur-apprise.js');
 const Conv = require('../src/placement-convention.js');
 const V = require('../src/voie-recentree.js');
 const ShadowLivre = require('../src/gcv1-shadow.js');
+const ANC = require('../src/ancre-trajectoire.js');
+const LM = require('../src/liste-memoire.js');
 const RA = require('./relecture-autonome.cjs');
 const J = require('./jointure-echo-orbite.cjs');
 const Manifeste = require('./manifeste-parties.cjs');
@@ -219,7 +222,7 @@ function mesuresTranslatees(capture, side, mm, calage, etage = 'first-pass') {
  * `voisins` : appuis vérifiés avant la première visite ; `gMed` : médiane d'écartement de la partie (mm) ou null.
  * Rend { rails: { left: [hyp…], right: [hyp…] }, rail: { left: {...}, right: {...} }, cut: {...}, tronques: { left: [[l,a,v]…], right: … } }.
  */
-function hypothesesDuCut({ capture, science, seul, chaine = null, appuisAvant = [], voisins = [], gMed = null, voisinsLot = null, departEsv = null }) {
+function hypothesesDuCut({ capture, science, seul, chaine = null, appuisAvant = [], voisins = [], gMed = null, voisinsLot = null, departEsv = null, axeGraine = null }) {
   const T = (ShadowLivre._test), identity = capture.identity;
   const res = {};
   /* H6 : décalages des voisins sûrs (deux familles). `departEsv` : null quand la pose de départ du cut est celle d'ESV ; { left, right } (mm,
@@ -397,6 +400,23 @@ function hypothesesDuCut({ capture, science, seul, chaine = null, appuisAvant = 
       h.traits.ecartPaireMedMm = Number.isFinite(mini) ? arrondi(mini, 1) : null;
     }
   } else for (const s of SIDES) for (const h of hyps[s]) h.traits.ecartPaireMedMm = null;
+  const axeOk = !!(axeGraine && !axeGraine.muet && Array.isArray(axeGraine.left) && Array.isArray(axeGraine.right));
+  if (axeOk) {
+    for (const s of SIDES) {
+      const autre = SIDES.find(x => x !== s);
+      for (const h of hyps[s]) {
+        h.traits.ecartAxeMm = arrondi(Math.abs(h.decal[1] - axeGraine[s][0]), 2);
+        let miniMil = Infinity;
+        for (const o of hyps[autre]) {
+          const g = gaugeMm(h._pos, o._pos);
+          if (!((fini(gMed) && Math.abs(g - gMed) <= 15) || (g >= 1420 && g <= 1470))) continue;
+          const m = Math.abs(((h.decal[1] - axeGraine[s][0]) + (o.decal[1] - axeGraine[autre][0])) / 2);
+          if (m < miniMil) miniMil = m;
+        }
+        h.traits.paireMilieuAxeMm = Number.isFinite(miniMil) ? arrondi(miniMil, 2) : null;
+      }
+    }
+  } else for (const s of SIDES) for (const h of hyps[s]) { h.traits.ecartAxeMm = null; h.traits.paireMilieuAxeMm = null; }
   for (const s of SIDES) for (const h of hyps[s]) { delete h._pos; delete h._cor; }
   const ecartDepart = gaugeMm(capture.rails.left.positionSceneRelative, capture.rails.right.positionSceneRelative);
   const abstenu = !SIDES.every(s => science.rails[s] && science.rails[s].ok && science.rails[s].next.status === 'candidate') || !!(science.summary && science.summary.pairGaugeRejected);
@@ -424,6 +444,7 @@ function hypothesesDuCut({ capture, science, seul, chaine = null, appuisAvant = 
       etageChaine: chaine ? chaine.decision.stage : null, appuisChaine: chaine ? (chaine.decision.anchorsUsed || []).length : 0,
       voisins: infoVoisins, ecartDepartMm: arrondi(ecartDepart, 1), gMedMm: arrondi(gMed, 1),
       ecartementMm: science.pairGauge ? arrondi(science.pairGauge.predictedMm, 1) : null, ecartementRejete: !!(science.summary && science.summary.pairGaugeRejected),
+      ancrePresente: axeOk,
       nHyp: { left: hyps.left.length, right: hyps.right.length } } };
 }
 
@@ -441,8 +462,10 @@ function etiqueter(hypotheses, mic) {
 }
 
 /* ------------------------------------------------------------------ observateur d'`extraire` */
-function creerObservateur({ partie, lotValide = new Set(), deplacementsLot = new Map(), moteur = moteurAvecReservoir(), journal = () => {} }) {
+function creerObservateur({ partie, lotValide = new Set(), deplacementsLot = new Map(), moteur = moteurAvecReservoir(), etatAncre = null, graineAxe = null, journal = () => {} }) {
   const etat = { verifiees: [], gMed: null, cuts: [], erreurs: 0, ecartsMoteur: 0, calcules: 0 };
+  /* CH-157 : la graine est calculée sans la référence humaine, depuis la liste figée au départ et la capture du cut seule. */
+  const graine = graineAxe || (etatAncre ? (cut, capture, gMed) => ANC.graineAxe(etatAncre, cut, capture, gMed) : null);
   return {
     etat,
     debut({ parCut, ctx, referenceHumaine }) {
@@ -478,10 +501,11 @@ function creerObservateur({ partie, lotValide = new Set(), deplacementsLot = new
           const ini = esvDepuisDeplacement(brut.capture.rails, deplacementsLot.get(c.cut)), d = ini ? Object.fromEntries(SIDES.map(s => [s, RA.decalage(brut.capture.rails[s], ini[s])])) : null;
           departEsv = d && SIDES.every(s => d[s]) ? d : false;
         }
-        rec.hyp = hypothesesDuCut({ capture: brut.capture, science, seul: brut.seul, chaine: brut.chaine, appuisAvant: brut.appuisAvant, voisins, gMed: etat.gMed, voisinsLot, departEsv });
+        const axeGraine = graine ? graine(c.cut, brut.capture, etat.gMed) : null;
+        rec.hyp = hypothesesDuCut({ capture: brut.capture, science, seul: brut.seul, chaine: brut.chaine, appuisAvant: brut.appuisAvant, voisins, gMed: etat.gMed, voisinsLot, departEsv, axeGraine });
         /* Jeu « lot » (audit F3) : GÉNÉRÉ depuis des entrées sans aucun appui humain (H4 et H6 n'ont que les voisins du lot), avant déduplication,
          * plafond et traits ; il n'est pas obtenu en filtrant le jeu de relecture. */
-        rec.hypLot = hypothesesDuCut({ capture: brut.capture, science, seul: brut.seul, chaine: brut.chaine, appuisAvant: brut.appuisAvant, voisins: voisinsLot, gMed: etat.gMed, voisinsLot, departEsv });
+        rec.hypLot = hypothesesDuCut({ capture: brut.capture, science, seul: brut.seul, chaine: brut.chaine, appuisAvant: brut.appuisAvant, voisins: voisinsLot, gMed: etat.gMed, voisinsLot, departEsv, axeGraine });
         etat.calcules++;
       } catch (e) { rec.erreur = String(e && e.message || e).slice(0, 160); etat.erreurs++; journal(`cut ${c.cut} : ${rec.erreur}`); }
     },
@@ -514,7 +538,7 @@ function lignesDuJeu({ designation, jeu, observateur, cas, zones, usage = 'relec
     const ligneCut = { type: 'cut', partie: designation, cut: rec.cut, zone: z.zone, role: roleDe(z.genre), etat: o.ariane ? o.ariane.etat : null,
       reference: o.mic ? (o.mic.ref || null) : null, visites: o.visites, etiquette: { mic, micMaxMm: micMax, grosse: fini(micMax) ? micMax > SEUILS_MM.faux : null },
       moteur: rec.hyp ? { abstenu: rec.hyp.cut.abstenu, differe: rec.hyp.cut.differe, etage: rec.hyp.cut.etage, raison: rec.hyp.cut.raison, ecartementMm: rec.hyp.cut.ecartementMm, ecartementRejete: rec.hyp.cut.ecartementRejete } : null,
-      contexte: rec.hyp ? { etageChaine: rec.hyp.cut.etageChaine, appuisChaine: rec.hyp.cut.appuisChaine, voisins: rec.hyp.cut.voisins, ecartDepartMm: rec.hyp.cut.ecartDepartMm, voieH6: rec.hyp.voieH6 } : null,
+      contexte: rec.hyp ? { etageChaine: rec.hyp.cut.etageChaine, appuisChaine: rec.hyp.cut.appuisChaine, voisins: rec.hyp.cut.voisins, ecartDepartMm: rec.hyp.cut.ecartDepartMm, ancrePresente: rec.hyp.cut.ancrePresente === true, voieH6: rec.hyp.voieH6 } : null,
       nHyp: rec.hyp ? rec.hyp.cut.nHyp : null, tronques: rec.hyp ? { left: rec.hyp.tronques.left.length, right: rec.hyp.tronques.right.length } : null,
       tronquesPoses: rec.hyp && (rec.hyp.tronques.left.length || rec.hyp.tronques.right.length) ? rec.hyp.tronques : null, tronquesH6: rec.hyp ? rec.hyp.tronquesH6 : null, erreur: rec.erreur };
     out.push(ligneCut);
@@ -530,7 +554,16 @@ function lignesDuJeu({ designation, jeu, observateur, cas, zones, usage = 'relec
 }
 
 /* ------------------------------------------------------------------ construction d'une partie */
-function construire({ projet, partie, echo, journaux = [], sansLot = false, jeu = 'apprentissage', journal = () => {} }) {
+/* Instantané de liste au départ du lot → état de l'ancre. Aucune étiquette de l'Écho n'entre dans ce calcul. */
+function etatAncreDeListe(liste) {
+  if (!liste) return null;
+  const snap = typeof liste === 'string' ? JSON.parse(fs.readFileSync(liste, 'utf8')) : liste;
+  const table = snap && snap.format === LM.FORMAT ? LM.decompacter(snap) : snap;
+  if (!table || !Number.isInteger(table.n) || !Array.isArray(table.st) || !Array.isArray(table.ed)) return null;
+  const E = ANC.etat(table, {});
+  return E && E.modele && E.modele.ok ? E : null;
+}
+function construire({ projet, partie, echo, journaux = [], sansLot = false, liste = null, jeu = 'apprentissage', journal = () => {} }) {
   const designation = `${projet}:${partie}`;
   if (sansLot && journaux.length) throw Error('--sans-lot et --journal s\'excluent');
   if (!sansLot && !journaux.length) throw Error('--journal J.json (lot Orbite de la partie) ou --sans-lot (partie sans lot) attendu');
@@ -544,7 +577,7 @@ function construire({ projet, partie, echo, journaux = [], sansLot = false, jeu 
       if (p && p.initiale && p.finale && SIDES.every(s => Array.isArray(p.initiale[s]) && Array.isArray(p.finale[s]))) deplacementsLot.set(c, Object.fromEntries(SIDES.map(s => [s, p.finale[s].map((v, i) => v - p.initiale[s][i])])));
     }
   }
-  const observateur = creerObservateur({ partie, lotValide, deplacementsLot, journal });
+  const observateur = creerObservateur({ partie, lotValide, deplacementsLot, etatAncre: etatAncreDeListe(liste), journal });
   const cas = RA.extraire({ partie, projet, echo, observateur });
   const table = RA.construireTable({ projet, partie, echo, journaux: sansLot ? [] : journaux, cas, sansLot });
   const L2 = RA.lignes({ cas, table, designation });
@@ -797,7 +830,7 @@ function args(argv) {
     const k = argv[i], val = () => { const v = argv[++i]; if (v === undefined) throw Error('valeur manquante après ' + k); return v; };
     if (k === '--partie') { const [p, n] = val().split(':').map(Number); if (!Number.isInteger(p) || !Number.isInteger(n)) throw Error('--partie PROJET:PARTIE'); o.projet = p; o.partie = n; }
     else if (k === '--echo') o.echo.push(val()); else if (k === '--journal') o.journal.push(val()); else if (k === '--sans-lot') o.sansLot = true;
-    else if (k === '--sortie') o.sortie = val(); else if (k === '--sortie-lot') o.sortieLot = val(); else if (k === '--jeu') o.jeux.push(val()); else if (k === '--json') o.json = val();
+    else if (k === '--sortie') o.sortie = val(); else if (k === '--sortie-lot') o.sortieLot = val(); else if (k === '--liste') o.liste = val(); else if (k === '--jeu') o.jeux.push(val()); else if (k === '--json') o.json = val();
     else if (k === '--juger-partie-reservee') o.jugerReservee = true;
     else if (k === '--selection') { const v = val(), i = v.indexOf('='); if (i < 1) throw Error('--selection NOM=P:N:a-b,…'); o.selections[v.slice(0, i)] = lireSelection(v.slice(i + 1)); }
     else throw Error('argument inconnu : ' + k);
@@ -814,7 +847,7 @@ function controlerManifeste({ projet, partie, jugerReservee }) {
 }
 
 module.exports = { FORMAT, FORMAT_RAPPEL, MAX_HYP, DOUBLON_MM, SEUILS_MM, ORIGINES, ORIGINES_G1A, H6, VERSION_H6, moteurAvecReservoir, posesVerifiees, voisinsSursA, hypothesesDuCut, etiqueter, classeDe,
-  decalageDepuisEsv, esvDepuisDeplacement, avecRupture, voisinsH6, decalagesH6, mesuresTranslatees, creerObservateur, lignesDuJeu, construire, lireJeux, rappel, lireSelection, filtre, texte, controlerManifeste, args };
+  decalageDepuisEsv, esvDepuisDeplacement, avecRupture, voisinsH6, decalagesH6, mesuresTranslatees, creerObservateur, lignesDuJeu, etatAncreDeListe, construire, lireJeux, rappel, lireSelection, filtre, texte, controlerManifeste, args };
 
 if (require.main === module) {
   try {
@@ -823,7 +856,7 @@ if (require.main === module) {
       if (!a.partie || !a.echo.length || !a.sortie) throw Error('construire --partie P:N --echo DOSSIER [--echo …] (--journal J.json | --sans-lot) --sortie JEU.jsonl [--juger-partie-reservee]');
       const c = controlerManifeste(a);
       if (c.avis) console.error(c.avis);
-      const t0 = Date.now(), r = construire({ projet: a.projet, partie: a.partie, echo: a.echo, journaux: a.journal, sansLot: a.sansLot, jeu: c.jeu, journal: m => console.error(m) });
+      const t0 = Date.now(), r = construire({ projet: a.projet, partie: a.partie, echo: a.echo, journaux: a.journal, sansLot: a.sansLot, liste: a.liste || null, jeu: c.jeu, journal: m => console.error(m) });
       fs.mkdirSync(path.dirname(path.resolve(a.sortie)), { recursive: true });
       fs.writeFileSync(a.sortie, r.lignes.map(l => JSON.stringify(l)).join('\n') + '\n');
       if (a.sortieLot) fs.writeFileSync(a.sortieLot, r.lignesLot.map(l => JSON.stringify(l)).join('\n') + '\n');

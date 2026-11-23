@@ -255,10 +255,14 @@ test('manifeste : un jeu d\'apprentissage refuse les témoins et les parties ré
   assert.throws(() => G.controlerManifeste({ projet: 1, partie: 14, jugerReservee: true }), /en apprentissage/, 'pas de mélange des deux jeux');
 });
 
-test('chaîne de lecture : le moteur change, l\'outil refuse (ancre unique)', () => {
-  const fs = require('node:fs'), path = require('node:path');
-  const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'gcv1-shadow.js'), 'utf8');
-  assert.equal(src.split('return {ok:true,side,').length, 2, 'l\'ancre du réservoir est unique dans src/gcv1-shadow.js');
+test('chaîne de lecture : la façade du jeu délègue au réservoir public du moteur livré', () => {
+  const cap = F.capture({ cut: 5 });
+  const avec = moteur.scientificProposeBoth(cap), sans = Shadow.scientificProposeBoth(cap);
+  for (const s of SIDES) {
+    assert.ok(avec.rails[s]._reservoir, `réservoir présent sur ${s}`);
+    assert.equal(sans.rails[s]._reservoir, undefined, `le chemin publié historique reste sans réservoir sur ${s}`);
+    assert.deepEqual(avec.rails[s].next, sans.rails[s].next, `publication identique sur ${s}`);
+  }
   const { decideCut } = L; assert.equal(typeof decideCut, 'function');
 });
 
@@ -325,14 +329,14 @@ test('H6 : sûreté de la référence, pose de départ posée par le lot, pose d
   assert.deepEqual(b.voieH6.lot.left, [120, 11]); assert.equal(b.voieH6.departLot, true);
   const c = appel(false);
   assert.equal(c.rails.left.some(y => y.origines.includes('H6')), false, 'pose d\'ESV inconnue : pas de H6'); assert.equal(c.voieH6, null);
-  /* Mesures : un rail réel à 212 mm n'est pas vu par la bande de ±180 mm autour du départ ; il l'est sur la capture translatée. */
+  /* Mesures : depuis CH-155, la bande centrée sur la pose voit le rail réel à 212 mm, directement et sur la capture translatée. */
   const capLoin = F.capture({ cut: 5 }), rnd = F.alea(3), y0 = capLoin.rails.left.positionSceneRelative[1];
   const pts = []; for (let i = 0; i < 40; i++) pts.push([0, y0 + 0.212 + 0.015 + i * 0.035 / 39, -0.004 + (rnd() - 0.5) * 0.0008]);
   for (let i = 0; i < 11; i++) pts.push([0, y0 + 0.212 + (rnd() - 0.5) * 0.0008, -0.016 - i * 0.002]);
   const capT = { ...capLoin, pointsSceneRelative: pts, visibleByClipBoxes: pts.map(() => true) };
   const H = require('../src/hauteur-apprise.js'), direct = H.signalRail(capT, { rails: { left: { conventionCalibration: null } } }, 'left', L.positionOf(capT.rails.left, [0, 0.212, -0.004]));
   const tr = G.mesuresTranslatees(capT, 'left', [0, 212, -4], null);
-  assert.ok(!(direct.pointsDessus > 0), 'mesure directe : rien à 212 mm');
+  assert.ok(direct.pointsDessus >= 30 && direct.pointsFlanc >= 8, 'mesure directe centrée : le rail à 212 mm est vu');
   assert.ok(tr.sig.pointsDessus >= 30 && tr.sig.pointsFlanc >= 8, `capture translatée : ${tr.sig.pointsDessus} points du dessus, ${tr.sig.pointsFlanc} du flanc`);
   const pres = G.mesuresTranslatees(capT, 'left', [0, 3, -1], null), pres0 = H.signalRail(capT, { rails: { left: { conventionCalibration: null } } }, 'left', L.positionOf(capT.rails.left, [0, 0.003, -0.001]));
   assert.deepEqual([pres.sig.pointsDessus, pres.sig.pointsFlanc], [pres0.pointsDessus, pres0.pointsFlanc], 'près du départ, les deux mesures sont les mêmes');
