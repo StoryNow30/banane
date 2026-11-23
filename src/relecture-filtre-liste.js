@@ -7,7 +7,7 @@
   * Module pur : aucune capture, navigation, requête ou écriture. La table est celle de src/liste-memoire.js, décompactée : statut 0 = valid,
   * six bords monde par ligne, gauche X Y Z puis droit X Y Z, en dixièmes de millimètre. Seule une ligne valide, encadrée de lignes valides
   * et localement lisse peut être écartée des visites 3D. Toutes les gardes métier restent dans filtrerSelection : un doute laisse le cut à relire. */
- const DEFAULTS=Object.freeze({actif:true,flecheMaxMm:3.5,ecartementMaxMm:6.0,voisinsFenetre:4,voisinsMinParCote:1,margeDiffereCuts:2,zonesExclues:Object.freeze(['pn'])});
+ const DEFAULTS=Object.freeze({actif:true,flecheMaxMm:3.5,ecartementMaxMm:6.0,voisinsFenetre:4,voisinsMinParCote:1,margeDiffereCuts:2,zonesExclues:Object.freeze(['pn','adv'])});
  const r1=v=>Number.isFinite(v)?Math.round(v*10)/10+0:null;
  const entier=v=>Number.isInteger(v)&&v>=0;
  const tableau=v=>Array.isArray(v)||typeof ArrayBuffer!=='undefined'&&ArrayBuffer.isView(v);

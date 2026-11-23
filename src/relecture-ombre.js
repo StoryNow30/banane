@@ -169,7 +169,36 @@
    plafondParZone:Object.fromEntries(['adv','abords','vert-hors-zone','ecartement'].map(z=>[z,entier(parZoneBudget[z])?parZoneBudget[z]:null])),
    plages:gardees.map(p=>({debut:p.debut,fin:p.fin,motifs:p.motifs,zone:p.zone,libelle:p.libelle,relus:p.cuts.length,traverses:p.traverses})),
    cuts,horsPlafond};}
- /* CH-152-D1-SELECTION — La sélection historique est calculée à l'identique ; seule une table fournie active son filtrage géométrique. */
+ /* CH-152-D1-SELECTION / CH-158 — La sélection historique (sel0) est calculée à l'identique ; seule une table fournie active son filtrage géométrique,
+  * suivi du rebouchage D-284 (voisins d'isolés et trous de 1 à trouMaxCuts) limité aux seuls cuts présents dans sel0. */
+ function reboucherSelection(sel0,filtree,cfg){
+  if(!Array.isArray(filtree?.filtresListe)||!filtree.filtresListe.length)return filtree;
+  const parCut0=new Map(sel0.cuts.map(c=>[c.cut,c])),couverts=new Set(filtree.cuts.map(c=>c.cut));
+  const marge=entier(cfg.isole?.marge)?cfg.isole.marge:0,tmax=entier(cfg.trouMaxCuts)?cfg.trouMaxCuts:0;
+  /* 1. Ne pas laisser de cut isolé : voisin immédiat (isole.marge) de chaque cut conservé, s'il figurait dans sel0. */
+  if(marge>0)for(const c of filtree.cuts)for(let d=-marge;d<=marge;d++)if(d!==0&&parCut0.has(c.cut+d))couverts.add(c.cut+d);
+  /* 2. Reboucher tout trou de 1 à trouMaxCuts entre deux cuts encore couverts, uniquement avec des cuts de sel0 (motif « trou »). */
+  const motifsTrou=new Set();
+  if(tmax>0){const cs=[...couverts].sort((a,b)=>a-b);
+   for(let i=1;i<cs.length;i++){const g=cs[i]-cs[i-1]-1;
+    if(g>=1&&g<=tmax){for(let c=cs[i-1]+1;c<cs[i];c++)if(parCut0.has(c)){couverts.add(c);motifsTrou.add(c);}}}}
+  const gardes0=sel0.cuts.filter(c=>couverts.has(c.cut));
+  if(gardes0.length===filtree.cuts.length)return filtree;
+  /* Recalcul cohérent des plages, traversées, compteurs parZone, total et tempsEstimeS à partir des plages de sel0. */
+  const plages=[],cuts=[];
+  for(const p0 of sel0.plages||[]){
+   const pCuts=gardes0.filter(c=>c.cut>=p0.debut&&c.cut<=p0.fin);if(!pCuts.length)continue;
+   const aTrou=pCuts.some(c=>motifsTrou.has(c.cut)),motifs=aTrou&&!p0.motifs.includes('trou')?[...p0.motifs,'trou']:p0.motifs.slice();
+   const idx=plages.length;
+   plages.push({...p0,motifs,relus:pCuts.length});
+   for(const c of pCuts)cuts.push({...c,plage:idx});
+  }
+  const gardesSet=new Set(cuts.map(c=>c.cut)),filtresListe=filtree.filtresListe.filter(x=>!gardesSet.has(x.cut));
+  const traverses=plages.reduce((n,p)=>n+(Array.isArray(p.traverses)?p.traverses.length:0),0);
+  const noms=[...ORDRE_ZONES,...Object.keys(sel0.parZone||{})],parZone={};
+  for(const z of new Set(noms))parZone[z]=cuts.filter(c=>c.zone===z).length;
+  return {...filtree,total:cuts.length,traverses,parZone,tempsEstimeS:Math.round(cuts.length*cfg.tempsParCutS+traverses*cfg.tempsTraverseS),plages,cuts,horsPlafond:sel0.horsPlafond,filtresListe};
+ }
  function selection(entree,options){
   const sortie=selectionBase(entree,options),cfg=cfgDe(options),e=entree&&typeof entree==='object'?entree:{},brute=cfg.filtreListe,fl=brute&&typeof brute==='object'?brute:{};
   const table=e.tableListe||fl.table||fl.tableListe||null;
@@ -177,8 +206,9 @@
   const {table:_table,tableListe:_tableListe,...reglagesFiltre}=fl,differes=new Set();
   for(const x of Array.isArray(e.lot)?e.lot:[])if(x?.differe===true&&entier(x.cut))differes.add(x.cut);
   for(const c of sortie.cuts)if(c.role==='differe')differes.add(c.cut);
-  return F.filtrerSelection(sortie,{table,differes:[...differes],alertesGardeVoie:e.alertesGardeVoie||[],aControler:e.aControler||[],
+  const filtree=F.filtrerSelection(sortie,{table,differes:[...differes],alertesGardeVoie:e.alertesGardeVoie||[],aControler:e.aControler||[],
    options:{...reglagesFiltre,tempsParCutS:cfg.tempsParCutS,tempsTraverseS:cfg.tempsTraverseS}});
+  return reboucherSelection(sortie,filtree,cfg);
  }
  /* FIN CH-152-D1-SELECTION */
  /* Options de sélection depuis le bloc `selection` du fichier de réglages (marges de grappe, d'isolé, de différé) ; le reste : défaut.

@@ -29,7 +29,7 @@ function selection(cuts,{traverses=[]}={}){
 test('D1 — UMD navigateur et valeurs par défaut',()=>{
  const ctx={};vm.createContext(ctx);vm.runInContext(fs.readFileSync(path.join(__dirname,'../src/relecture-filtre-liste.js'),'utf8'),ctx);
  assert.ok(ctx.BananeRelectureFiltreListe);
- assert.deepEqual({...F.DEFAULTS},{actif:true,flecheMaxMm:3.5,ecartementMaxMm:6,voisinsFenetre:4,voisinsMinParCote:1,margeDiffereCuts:2,zonesExclues:['pn']});
+ assert.deepEqual({...F.DEFAULTS},{actif:true,flecheMaxMm:3.5,ecartementMaxMm:6,voisinsFenetre:4,voisinsMinParCote:1,margeDiffereCuts:2,zonesExclues:['pn','adv']});
  assert.ok(Object.isFrozen(F.DEFAULTS.zonesExclues));
 });
 
@@ -69,35 +69,35 @@ test('D1 — evaluerCut : écartement 3D contre la médiane locale ou la référ
  assert.equal(F.evaluerCut({table:u,cut:5,referenceEcartementMm:1442}).raison,'ecartement');
 });
 
-test('D1 — filtrerSelection : les gardes absolues priment, seuls les verts lisses d’ADV ou d’abords sont écartés',()=>{
+test('D1 — filtrerSelection : les gardes absolues priment, seuls les verts lisses d’abords sont écartés (les verts lisses d’ADV restent)',()=>{
  const t=table(40);bosse(t,22,5);
  const original=selection([
   {cut:2,role:'lot',zone:'adv'},
   {cut:4,role:'vert',zone:'pn'},
   {cut:6,role:'vert',zone:'adv'},
   {cut:8,role:'differe',zone:'abords'},
-  {cut:10,role:'vert',zone:'adv'},
-  {cut:12,role:'vert',zone:'adv'},
+  {cut:10,role:'vert',zone:'abords'},
+  {cut:12,role:'vert',zone:'abords'},
   {cut:14,role:'vert',zone:'ecartement'},
-  {cut:16,role:'vert',zone:'adv'},
+  {cut:16,role:'vert',zone:'abords'},
   {cut:18,role:'vert',zone:'abords'},
-  {cut:20,role:'vert',zone:'adv'},
+  {cut:20,role:'vert',zone:'abords'},
   {cut:22,role:'vert',zone:'abords'},
   {cut:24,role:'vert',zone:'vert-hors-zone'},
   {cut:26,role:'vert',zone:'adv'}
  ]),avant=JSON.stringify(original);
  const out=F.filtrerSelection(original,{table:t,differes:[8,30],alertesGardeVoie:[{identity:{cut:18}}],aControler:[12]});
  assert.equal(JSON.stringify(original),avant,'entrée non mutée');
- assert.deepEqual(out.filtresListe.map(x=>x.cut),[16,20,26]);
- assert.deepEqual(out.filtresListe[0],{cut:16,zone:'adv',flecheMm:0,ecartRefMm:0,voisins:[15,17]});
- assert.deepEqual(cutsDe(out),[2,4,6,8,10,12,14,18,22,24]);
- assert.equal(zonesDe(out)[22],'abords','la bosse reste à relire');assert.equal(out.total,10);assert.equal(out.tempsEstimeS,30);
- assert.equal(out.parZone.adv,4);assert.equal(out.parZone.abords,3);assert.equal(out.parZone.ecartement,1);
- assert.equal(out.plages[0].relus,10);
+ assert.deepEqual(out.filtresListe.map(x=>x.cut),[16,20]);
+ assert.deepEqual(out.filtresListe[0],{cut:16,zone:'abords',flecheMm:0,ecartRefMm:0,voisins:[15,17]});
+ assert.deepEqual(cutsDe(out),[2,4,6,8,10,12,14,18,22,24,26]);
+ assert.equal(zonesDe(out)[22],'abords','la bosse reste à relire');assert.equal(out.total,11);assert.equal(out.tempsEstimeS,33);
+ assert.equal(out.parZone.adv,3);assert.equal(out.parZone.abords,5);assert.equal(out.parZone.ecartement,1);
+ assert.equal(out.plages[0].relus,11);
 });
 
 test('D1 — filtrerSelection : plages vidées, compteurs de traversées et temps recalculés ; sans table ou coupé, identité stricte',()=>{
- const t=table(30),s=selection([{cut:10,role:'vert',zone:'adv'},{cut:11,role:'vert',zone:'adv'}],{traverses:[9]});
+ const t=table(30),s=selection([{cut:10,role:'vert',zone:'abords'},{cut:11,role:'vert',zone:'abords'}],{traverses:[9]});
  const out=F.filtrerSelection(s,{table:t});
  assert.deepEqual(cutsDe(out),[]);assert.deepEqual(out.plages,[]);assert.equal(out.traverses,0);assert.equal(out.tempsEstimeS,0);assert.equal(out.filtresListe.length,2);
  const avant=JSON.stringify(s);
@@ -107,16 +107,16 @@ test('D1 — filtrerSelection : plages vidées, compteurs de traversées et temp
  assert.equal(JSON.stringify(s),avant);
 });
 
-test('D1 — selection : sans table ou filtre coupé, sortie strictement identique ; avec table, filtresListe exposé',()=>{
+test('D1 — selection : sans table ou filtre coupé, sortie strictement identique ; avec table, l’ADV reste entière et filtresListe exposé',()=>{
  const t=table(30),entree={partie:1,total:30,zonesADV:[[5,12]]};
  const sans=O.selection(entree),sansNull=O.selection({...entree,tableListe:null});
  assert.equal(JSON.stringify(sansNull),JSON.stringify(sans),'sans table : mêmes octets JSON');assert.equal('filtresListe' in sans,false);
  assert.deepEqual(O.selection({...entree,tableListe:t},{filtreListe:{actif:false}}),sans);
  const avec=O.selection({...entree,tableListe:t});
- assert.deepEqual(cutsDe(avec),[]);assert.deepEqual(avec.plages,[]);assert.equal(avec.total,0);assert.equal(avec.parZone.adv,0);assert.equal(avec.tempsEstimeS,0);
- assert.deepEqual(avec.filtresListe.map(x=>x.cut),[5,6,7,8,9,10,11,12]);
+ assert.deepEqual(cutsDe(avec),[5,6,7,8,9,10,11,12]);assert.equal(avec.plages.length,1);assert.equal(avec.total,8);assert.equal(avec.parZone.adv,8);assert.equal(avec.tempsEstimeS,24);
+ assert.deepEqual(avec.filtresListe,[]);
  const parOption=O.selection(entree,{filtreListe:{table:t}});
- assert.deepEqual(cutsDe(parOption),[]);assert.deepEqual(parOption.filtresListe,avec.filtresListe);
+ assert.deepEqual(cutsDe(parOption),[5,6,7,8,9,10,11,12]);assert.deepEqual(parOption.filtresListe,[]);
 });
 
 const scienceS1=(next={status:'candidate',topRows:15,faceCount:6,slopeLimited:false})=>({rails:{
