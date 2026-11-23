@@ -1,5 +1,17 @@
 # Ariane — journal des versions
 
+## Ariane 6 bêta 2 (`6.0.0`) — 23/11 (CH-158) — relecture : toute l'ADV conservée, trous de 1 à 3 rebouchés
+- **Identité du paquet** : même `name` « Ariane 6 bêta » et `version` `6.0.0` (identité verrouillée par les essais). Le fichier livré s'appelle `ariane-v6.0.0-beta2.zip` pour le distinguer de la bêta 1, sans écraser `ariane-v6.0.0.zip`.
+- **CH-158 — relecture** :
+  - Le pré-filtre ne retire plus les verts lisses d'ADV : `zonesExclues` vaut par défaut `['pn', 'adv']`.
+  - Après le filtre, `reboucherSelection` réapplique D-284 uniquement avec des cuts déjà présents dans la sélection d'origine : voisins d'un cut isolé (`isole.marge` 1), puis trous de 1 à 3 cuts (`trouMaxCuts` 3).
+- **Essais** : les essais D6 de CH-150 sont répartis en plusieurs fichiers pour tenir le délai de 60 s par fichier ; l'essai « voisin » de CH-094 est rendu déterministe.
+- **CI** : le checkout de l'action Chantier récupère tout l'historique (`fetch-depth: 0`) pour le typage CH-075.
+- **Installation (3 clics dans Edge / Chrome)** :
+  1. Décompresser `ariane-v6.0.0-beta2.zip` dans un dossier dédié à **Ariane 6 bêta** (ou dans le dossier existant pour mettre à jour sur place).
+  2. Ouvrir `edge://extensions` (ou `chrome://extensions`), activer le **Mode développeur**, puis cliquer sur **Charger l'extension non empaquetée** (ou **Recharger**).
+  3. Ouvrir ou recharger la page ESV (`F5`) : la carte affiche **Ariane 6 bêta** (`6.0.0`).
+
 ## Ariane 6 bêta (`6.0.0`) — 23/11 (D-378 à D-381 ; CH-146 à CH-157) — code de décision unique, vitesse géométrique au bit près, allègement IPC, réinitialisation, fluidité de la relecture et de la passe, et l’axe de trajectoire au cœur du calcul
 - **Identité du paquet** : `name` « Ariane 6 bêta », `version` `6.0.0`, clairement distinguée d'Ariane 5.x dans `edge://extensions`, dans la fenêtre et sur le lanceur de la page (`tests/ariane6-beta.test.cjs`).
 - **Lot B — 0 décision changée, 0 bit géométrique changé** :
