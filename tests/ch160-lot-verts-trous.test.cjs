@@ -92,24 +92,7 @@ test('3. Paire (2 cuts du lot) et isolé (1 cut du lot) : aucun vert absorbé', 
   const res = LVT.vertsTrousGrappe([50, 100, 102, 200, 203, 300, 304, 400, 401]);
   assert.deepEqual(res, { grappes: [], trous: [], cuts: [] });
 
-  // Statut ESV 3 (« autre ») dans une table ou une liste de lignes : ne doit JAMAIS être traité comme un rouge du lot
-  const tableAvecStatut3 = {
-    n: 20,
-    st: [0, 0, 1, 0, 1, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // seuls 2 et 4 sont invalid (1) -> paire ; 6 est statut 3 (autre)
-    fl: new Array(20).fill(0),
-    debut: true,
-    rompue: false,
-    tronquee: false,
-  };
-  assert.deepEqual(LVT.extraireCutsLot(tableAvecStatut3), [2, 4], 'le statut 3 (autre) n’est pas un cut invalid du lot');
-  assert.deepEqual(LVT.vertsTrousGrappe(tableAvecStatut3), { grappes: [], trous: [], cuts: [] }, 'paire [2, 4] + statut 3 en 6 ne forme pas une grappe');
-  const lignesAvecAutre = [
-    { i: 10, statut: 'invalid' },
-    { i: 12, statut: 'invalid' },
-    { i: 14, statut: 'autre' },
-  ];
-  assert.deepEqual(LVT.extraireCutsLot(lignesAvecAutre), [10, 12]);
-  assert.deepEqual(LVT.vertsTrousGrappe(lignesAvecAutre), { grappes: [], trous: [], cuts: [] });
+  // Le statut ESV 3 (« autre ») est traité comme un rouge, comme rougeListe : voir l'essai 11.
 });
 
 test('4. Réglage src/settings.js (lot.absorberVertsTrous) et option actif: false', () => {
