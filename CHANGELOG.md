@@ -1,5 +1,16 @@
 # Ariane — journal des versions
 
+## Ariane 6 bêta 4 (`6.0.0`) — 24/11 (CH-160) — validation sur place des verts des trous de grappe pendant le lot
+- **Identité du paquet** : même `name` « Ariane 6 bêta » et `version` `6.0.0` (identité verrouillée par les essais). Le fichier livré s'appelle `ariane-v6.0.0-beta4.zip` pour le distinguer des bêtas 1, 2 et 3, sans écraser `ariane-v6.0.0.zip` ni `ariane-v6.0.0-beta2.zip` ni `ariane-v6.0.0-beta3.zip`.
+- **CH-160 — lot (D-383)** :
+  - Pendant un lot Orbite, les cuts déjà validés dans ESV, non traités et hors du lot, qui occupent un trou de 1 à 3 cuts au milieu d'une grappe, sont visités (`goToCut`) et validés sur place (Maj+Espace). La grappe suit la même règle que la relecture (écart d'au plus 5 cuts, au moins 3 cuts du lot). Les trous de 4 ou 5 cuts restent inchangés. Les isolés et les paires n'absorbent aucun vert.
+  - Si la liste ESV est absente ou non concordante, Ariane s'abstient et le lot continue comme avant. Un échec de navigation ou de validation est journalisé, sans différer le cut (déjà valide) ni bloquer le lot.
+  - Le mode Écho n'est pas concerné. Le réglage `lot.absorberVertsTrous` est allumé par défaut ; `actif: false` retrouve le comportement antérieur.
+- **Installation (3 clics dans Edge / Chrome)** :
+  1. Décompresser `ariane-v6.0.0-beta4.zip` dans un dossier dédié à **Ariane 6 bêta** (ou dans le dossier existant pour mettre à jour sur place).
+  2. Ouvrir `edge://extensions` (ou `chrome://extensions`), activer le **Mode développeur**, puis cliquer sur **Charger l'extension non empaquetée** (ou **Recharger**).
+  3. Ouvrir ou recharger la page ESV (`F5`) : la carte affiche **Ariane 6 bêta** (`6.0.0`).
+
 ## Ariane 6 bêta 3 (`6.0.0`) — 24/11 (CH-159) — saut borné vers ESV, pose de relecture sur sous-nappe saine, seuil de 10 % et lecteur couleur/source
 - **Identité du paquet** : même `name` « Ariane 6 bêta » et `version` `6.0.0` (identité verrouillée par les essais). Le fichier livré s'appelle `ariane-v6.0.0-beta3.zip` pour le distinguer des bêtas 1 et 2, sans écraser `ariane-v6.0.0.zip` ni `ariane-v6.0.0-beta2.zip`.
 - **CH-159 — relecture (D-382, révise D-241)** :
