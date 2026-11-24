@@ -12,7 +12,7 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/etat-morceaux.js','src/storage.js','src/journal-index.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-filtre-liste.js','src/relecture-ombre.js','src/relecture-critere.js','src/relecture-cas-particuliers.js','src/relecture-signal.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/recherche-large.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/ancre-trajectoire.js','src/decision-lot-partagee.js','src/gestes-vue.js','src/deplacement-vue.js','src/serie-captures-vides.js','src/voie-b1-ecart.js','src/garde-voie-ombre.js','src/serrage-lot-ombre.js','src/voie-sure-ombre.js','src/telecommande.js','src/reinitialisation.js');
+ 'src/gcv1-export.js','src/engine.js','src/etat-morceaux.js','src/storage.js','src/journal-index.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/lot-verts-trous.js','src/relecture-filtre-liste.js','src/relecture-ombre.js','src/relecture-critere.js','src/relecture-cas-particuliers.js','src/relecture-signal.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/recherche-large.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/ancre-trajectoire.js','src/decision-lot-partagee.js','src/gestes-vue.js','src/deplacement-vue.js','src/serie-captures-vides.js','src/voie-b1-ecart.js','src/garde-voie-ombre.js','src/serrage-lot-ombre.js','src/voie-sure-ombre.js','src/telecommande.js','src/reinitialisation.js');
 /* CH-058 : le store est équipé de l'index du journal en mémoire (src/journal-index.js) : les étapes qui relisaient TOUT
  * IndexedDB lisent seulement les objets utiles. Aucune écriture d'index en base, aucune montée de version. */
 /* Types d'événements indexés : ceux que lisent les étapes bornées ci-dessous et src/correction-liste.js (parité sur les journaux
@@ -1378,6 +1378,119 @@ async function tableDeLaPartie(total){if(selectedTab===null)return null;let time
   const l=rep.tables.filter(t=>t&&Array.isArray(t.st)&&t.debut===true&&t.rompue!==true&&t.tronquee!==true&&t.st.length===total);
   return l.length===1?l[0].st.map(v=>Number.isInteger(v)&&v>=0&&v<=3?v:3):null;}
  catch{return null;}finally{clearTimeout(timer);}}
+/* CH-160 (D-383, opérateur, 24/11/2026, piste 1) — VALIDER SUR PLACE LES VERTS DES TROUS DE GRAPPE PENDANT LE LOT (src/lot-verts-trous.js).
+ * À partir de la table de la partie (`liste-instantane` de la page, ou à défaut l'instantané décompacté de `src/liste-memoire.js`), précalcule
+ * au départ du lot les trous de 1 à 3 cuts strictement encadrés par deux cuts du lot d'une même grappe (`trouCuts = 5`, `min = 3`). Après la
+ * clôture d'un cut gauche (`validation-accepted` ou `defer-finalized`), visite dans l'ordre les candidats du trou (`goToCut` puis `validerMajEspace`)
+ * après contrôle du statut live (`valid`, non traité `TreatedByOperator` faux, hors du lot, hors dernier cut de la partie), journalise un événement
+ * `lot-vert-trou` par candidat (ou une abstention unique si la liste est absente ou non concordante), met à jour `batch.vertsTrous`, puis ramène
+ * ESV sur le cut droit du lot. Aucun effet en Écho ; `actif: false` retrouve le comportement antérieur au bit près. */
+let lotVertsTrous={lotId:null,prepare:false,ignoreBanc:false,ok:false,abstention:null,table:null,total:null,setLot:new Set(),parGauche:new Map(),trousFait:new Set(),enCours:false};
+function lotVertsTrousReset(){lotVertsTrous={lotId:null,prepare:false,ignoreBanc:false,ok:false,abstention:null,table:null,total:null,setLot:new Set(),parGauche:new Map(),trousFait:new Set(),enCours:false};}
+function lotVertsTrousReglage(){const LVT=globalThis.BananeLotVertsTrous;if(!LVT)return {actif:false};
+ return LVT.reglage(globalThis.BananeSettings?.lot?.absorberVertsTrous);}
+async function lotVertsTrousJournal(b,ev){try{const K=globalThis.BananeCore3;
+ await store.putEvent({eventId:K.uid(),timestamp:new Date().toISOString(),type:'lot-vert-trou',schema:1,sessionId:engine?.s?.sessionId??null,batchId:b?.id??null,...ev});}catch{/* le journal n'est pas critique */}}
+async function lotVertsTrousLireTablePage(total){if(selectedTab===null)return {table:null,bancSansTable:false};let timer;
+ try{const rep=await Promise.race([chrome.tabs.sendMessage(selectedTab,{kind:'liste-instantane'}),new Promise(r=>{timer=setTimeout(()=>r(null),LISTE_PAGE_MS);})]);
+  if(rep?.reason==='banc-sans-table')return {table:null,bancSansTable:true};
+  if(rep?.ok!==true||!Array.isArray(rep.tables))return {table:null,bancSansTable:false};
+  const l=rep.tables.filter(t=>t&&Array.isArray(t.st)&&t.debut===true&&t.rompue!==true&&t.tronquee!==true&&(!Number.isInteger(total)||t.st.length===total));
+  if(l.length!==1)return {table:null,bancSansTable:false};
+  const t=l[0],n=t.st.length;
+  return {table:{n,st:t.st.map(v=>Number.isInteger(v)&&v>=0&&v<=3?v:3),fl:Array.isArray(t.fl)?t.fl.map(v=>Number.isInteger(v)?v:0):new Array(n).fill(0),debut:true,rompue:false,tronquee:false},bancSansTable:false};}
+ catch{return {table:null,bancSansTable:false};}finally{clearTimeout(timer);}}
+/* Repli lecture seule : ne remplit pas `l1eTable` (D-383, garde CH-124). */
+async function lotVertsTrousLireMemoire(part){try{const LM=globalThis.BananeListeMemoire;if(!LM||globalThis.BananeSettings?.listeMemoire?.actif===false)return null;
+ const k=LM.PRE_INST+part,r=await chrome.storage.local.get(k),dec=LM.decompacter(r?.[k]);
+ return dec&&Array.isArray(dec.st)?{n:dec.n,st:dec.st.slice(),fl:Array.isArray(dec.fl)?dec.fl.slice():new Array(dec.n).fill(0),debut:true,rompue:false,tronquee:false}:null;}catch{return null;}}
+async function lotVertsTrousStatutLive(part,cut,etat,tableFallback){const LVT=globalThis.BananeLotVertsTrous;
+ const page=await lotVertsTrousLireTablePage(null);
+ if(page.table){const l=LVT.ligneDeTable(page.table,cut);if(l)return l;}
+ if(etat?.rails){try{const l=await relectureLigneListe(cut,etat);if(l)return l;}catch{/* repli table */}}
+ return tableFallback?LVT.ligneDeTable(tableFallback,cut):null;}
+async function lotVertsTrousPreparer(b,cutCourant=null){
+ const LVT=globalThis.BananeLotVertsTrous,cfg=lotVertsTrousReglage();
+ if(!LVT||!cfg.actif||!b?.id||b.state!=='RUNNING'||b.scope?.geometryEngine!==GCV1_ENGINE||engine?.s?.mode!=='automatic-test'||native?.active?.()||manual?.active?.())return null;
+ if(lotVertsTrous.lotId!==b.id){lotVertsTrousReset();lotVertsTrous.lotId=b.id;}
+ if(lotVertsTrous.prepare||lotVertsTrous.ignoreBanc)return lotVertsTrous;
+ const part=b.scope.part,total=b.totalReleve?.part===part&&Number.isInteger(b.totalReleve?.total)?b.totalReleve.total:null;
+ const page=await lotVertsTrousLireTablePage(total);
+ let table=page.table;if(!table)table=await lotVertsTrousLireMemoire(part);
+ if(!table&&page.bancSansTable){lotVertsTrous.ignoreBanc=true;return lotVertsTrous;}
+ const prep=LVT.preparerDepuisTable({table,scope:{start:b.scope.start,end:b.scope.end,endMode:b.scope.endMode,total},traitesLot:[...cutsTraites(b)],cutCourant},cfg);
+ lotVertsTrous.prepare=true;lotVertsTrous.table=table;
+ if(!prep.ok){
+  lotVertsTrous.ok=false;lotVertsTrous.abstention=prep.abstention;b.vertsTrous=LVT.creerBilan(0);
+  await lotVertsTrousJournal(b,LVT.construireEvenement({cut:null,part,lotId:b.id,resultat:'abstention',motif:prep.abstention}));
+  return lotVertsTrous;}
+ lotVertsTrous.ok=true;lotVertsTrous.total=prep.total;lotVertsTrous.setLot=prep.setLot;lotVertsTrous.parGauche=prep.parGauche;
+ b.vertsTrous=LVT.creerBilan(prep.cuts.length);
+ return lotVertsTrous;}
+async function lotVertsTrousApresCloture(type,detail){
+ const LVT=globalThis.BananeLotVertsTrous,cfg=lotVertsTrousReglage(),b=engine?.s?.batch;
+ if(!LVT||!cfg.actif||!b?.id||b.state!=='RUNNING'||b.stoppedAtEnd||b.scope?.geometryEngine!==GCV1_ENGINE||engine?.s?.mode!=='automatic-test'||native?.active?.()||manual?.active?.()||lotVertsTrous.enCours)return;
+ const cutGauche=detail?.identity?.cut;if(!Number.isInteger(cutGauche))return;
+ const etatLot=await lotVertsTrousPreparer(b,cutGauche);
+ if(!etatLot?.ok||etatLot.trousFait.has(cutGauche))return;
+ const trou=etatLot.parGauche.get(cutGauche);if(!trou||!Array.isArray(trou.cuts)||!trou.cuts.length)return;
+ etatLot.trousFait.add(cutGauche);etatLot.enCours=true;
+ try{
+  const K=globalThis.BananeCore3,part=b.scope.part,S_retour=globalThis.BananeSettings?.retourCut||{};
+  let total=b.totalReleve?.part===part&&Number.isInteger(b.totalReleve?.total)?b.totalReleve.total:Number.isInteger(etatLot.total)?etatLot.total:null,aNavigue=false;
+  for(const cut of trou.cuts){
+   if(engine?.s?.batch!==b||b.state!=='RUNNING'||b.stoppedAtEnd||native?.active?.()||manual?.active?.())break;
+   const setLot=new Set([...etatLot.setLot,...cutsTraites(b),cutGauche]);
+   const ligne=await lotVertsTrousStatutLive(part,cut,null,etatLot.table);
+   const q=LVT.qualifierCandidatLive({cut,ligne,setLot,total});
+   if(!q.visiter){
+    LVT.noterResultatBilan(b.vertsTrous,q.resultat);
+    await lotVertsTrousJournal(b,LVT.construireEvenement({cut,part,lotId:b.id,resultat:q.resultat,motif:q.motif,trou,grappe:trou.grappe}));
+    continue;}
+   const borne=Math.max(...[total!==null?total-1:null,trou.droite,borneConnue(part)].filter(Number.isInteger));
+   let nav=null,errNav=null;
+   try{nav=await call('goToCut',{part,cut},{chemin:S_retour.chemin||'auto',borneConnue:Number.isFinite(borne)?borne:null},K.uid());}
+   catch(e){errNav=String(e?.message||e).slice(0,160);}
+   aNavigue=true;
+   if(nav?.bornes?.source==='compteur'&&Number.isInteger(nav.bornes.total)&&nav.bornes.total>0){total=nav.bornes.total;etatLot.total=total;}
+   if(errNav||nav?.resultat!=='confirme'){
+    LVT.noterResultatBilan(b.vertsTrous,'echec');
+    await lotVertsTrousJournal(b,LVT.construireEvenement({cut,part,lotId:b.id,resultat:'echec',motif:'navigation',trou,grappe:trou.grappe,detail:{code:nav?.refusal?.code??null,raison:errNav||nav?.refusal?.message||nav?.resultat||null}}));
+    continue;}
+   let etat=null;try{etat=await readState();}catch{etat=null;}
+   if(!etat?.identity||etat.identity.part!==part||etat.identity.cut!==cut||(b.scope.pageId!=null&&etat.identity.pageId!=null&&etat.identity.pageId!==b.scope.pageId)){
+    LVT.noterResultatBilan(b.vertsTrous,'echec');
+    await lotVertsTrousJournal(b,LVT.construireEvenement({cut,part,lotId:b.id,resultat:'echec',motif:'identite-avant-maj-espace',trou,grappe:trou.grappe}));
+    continue;}
+   const ligne2=await lotVertsTrousStatutLive(part,cut,etat,etatLot.table);
+   const q2=LVT.qualifierCandidatLive({cut,ligne:ligne2||ligne,setLot,total});
+   if(!q2.visiter){
+    LVT.noterResultatBilan(b.vertsTrous,q2.resultat);
+    await lotVertsTrousJournal(b,LVT.construireEvenement({cut,part,lotId:b.id,resultat:q2.resultat,motif:q2.motif,trou,grappe:trou.grappe}));
+    continue;}
+   try{engine.writable(etat.identity);}catch{
+    LVT.noterResultatBilan(b.vertsTrous,'ignore');
+    await lotVertsTrousJournal(b,LVT.construireEvenement({cut,part,lotId:b.id,resultat:'ignore',motif:'cible-bloquee',trou,grappe:trou.grappe}));
+    continue;}
+   let ev=null,errMaj=null;
+   try{ev=await call('validerMajEspace',etat.identity,{part,pageId:b.scope.pageId??null});}
+   catch(e){errMaj=String(e?.message||e).slice(0,160);}
+   if(errMaj||ev?.commandSent!==true||ev?.refusal){
+    LVT.noterResultatBilan(b.vertsTrous,'echec');
+    await lotVertsTrousJournal(b,LVT.construireEvenement({cut,part,lotId:b.id,resultat:'echec',motif:'maj-espace',trou,grappe:trou.grappe,detail:{raison:errMaj||ev?.refusal?.message||'non-transmis'}}));
+    continue;}
+   if(etatLot.table&&Array.isArray(etatLot.table.fl)&&cut<etatLot.table.fl.length)etatLot.table.fl[cut]=(etatLot.table.fl[cut]|0)|1;
+   LVT.noterResultatBilan(b.vertsTrous,'valide');
+   await lotVertsTrousJournal(b,LVT.construireEvenement({cut,part,lotId:b.id,resultat:'valide',motif:'valide-sur-place',trou,grappe:trou.grappe}));
+  }
+  const nextCut=detail?.nextIdentity?.cut;
+  const cibleDroite=Number.isInteger(nextCut)&&nextCut>=trou.droite?nextCut:trou.droite;
+  if(aNavigue&&engine?.s?.batch===b&&b.state==='RUNNING'&&!b.stoppedAtEnd){
+   let lu=null;try{lu=await readState();}catch{lu=null;}
+   if(lu?.identity?.cut!==cibleDroite||lu?.identity?.part!==part){
+    const borne=Math.max(...[total!==null?total-1:null,cibleDroite,borneConnue(part)].filter(Number.isInteger));
+    try{await call('goToCut',{part,cut:cibleDroite},{chemin:S_retour.chemin||'auto',borneConnue:Number.isFinite(borne)?borne:null},K.uid());}catch{/* le tour suivant constatera l'état */}}}
+ }finally{etatLot.enCours=false;}}
 async function departSurVert(){try{const b=engine?.s?.batch,sc=b?.scope,avant=engine?.s?.before,cut=avant?.identity?.cut,t=b?.totalReleve;
   if(b?.state!=='RUNNING'||sc?.geometryEngine!==GCV1_ENGINE||!Number.isInteger(cut)||avant.identity.part!==sc.part)return null;
   if(cutsTraites(b).size>0||(b.sequence?.length??0)!==1)return null;
@@ -1657,6 +1770,8 @@ const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storag
    const r=await evenement(type,...rest);
    /* CH-114 (D-347) : la voie des cuts sûrs, EN OMBRE, relève la pose vérifiée puis la validation du cut (après leur écriture au journal) ; elle ne rend rien. */
    if(type==='applied-verified'||type==='validation-accepted')voieSureEvenement(type,rest[0]);
+   /* CH-160 (D-383) : après la clôture d'un cut du lot (validation acceptée ou différé finalisé), visiter et valider sur place les verts d'un trou de grappe. */
+   if(type==='validation-accepted'&&!rest[0]?.passeDifferes||type==='defer-finalized'&&!rest[0]?.recovered)await lotVertsTrousApresCloture(type,rest[0]);
    /* 5.0 (D-171) : fin naturelle d'un lot créé avec la relecture : la passe est planifiée (rien si elle est coupée). */
    if(type==='batch-state'||type==='batch-stopped-at-end'){relecturePlanifier();passeDiffPlanifier();}
    if(type==='defer-navigation-uncertain')await coordinateurLot.transition('differe',()=>departApresDiffere(rest[0]));
@@ -1735,6 +1850,9 @@ const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storag
        engine.s.notice=`Cut ${d.cut} déjà validé : Ariane n’y écrit rien et passe au premier cut rouge (${d.devant}) par « cut non validé suivant ».`;
        await engine.event('depart-sur-vert',{identity:null,phase:'decision',part:d.part,cut:d.cut,statut:d.statut,cible:d.devant,total:d.total,traites:d.traites,restants:d.restants});
        const tache=engine.task;void Promise.resolve(tache).catch(()=>{}).then(()=>passerAuRouge(b,d));return proposal;}}
+   /* CH-160 (D-383) : précalculer les trous de verts de grappe dès le départ du lot (avant la validation du premier cut). */
+   if(pilotScope&&proposal&&shadow?.selection?.selectedEngine===GCV1_ENGINE&&engine.s.batch?.state==='RUNNING')
+     await lotVertsTrousPreparer(engine.s.batch,engine.s.before?.identity?.cut??null);
    /* 4.7.19 — dernier cut du lot non résolu : laissé sans commande ni navigation. */
    if(pilotScope&&proposal&&stopAtLotEnd(proposal))await coordinateurLot.transition('fin-de-lot',()=>engine.event('batch-stopped-at-end',{identity:engine.s.before?.identity??null,applied:false}));
    if(pilotScope&&shadow?.selection?.selectedEngine!==GCV1_ENGINE){
@@ -4714,7 +4832,7 @@ async function fileSuspens(portee='tout'){const s=engine?.s;
  const l=(await relectureIntentions()).filter(x=>portee!=='passe'||x.origine==='passe');if(l.length)return `correction ${l[0].origine==='passe'?'de la deuxième passe':'de la relecture'} interrompue au cut ${l[0].cut}`;
  if(passeDiff.ecriture?.attente||passeDiff.etat?.ecriture?.enVol)return 'écriture de la deuxième passe en vol';
  return null;}
-function fileResume(b){return {traites:cutsTraites(b).size,poses:(b.processed||[]).length,differes:(b.deferred||[]).length,main:(b.manuallyCompleted||[]).length};}
+function fileResume(b){return {traites:cutsTraites(b).size,poses:(b.processed||[]).length,differes:(b.deferred||[]).length,main:(b.manuallyCompleted||[]).length,...(b?.vertsTrous?{vertsTrous:{...b.vertsTrous}}:{})};}
 async function fileDemarrerLot({part,rang}){const e=fileP.etat;if(!e||e.etat!=='lot'||e.k!==rang||e.partie?.lotId)return;
  const s=await fileSuspens();if(s)return fileEvenement({type:'suspens',detail:s});
  let now=null;try{now=await readState();}catch(x){return fileEvenement({type:'lot-refuse',detail:`ESV ne répond pas (${String(x?.message||x).slice(0,160)})`});}
@@ -5069,7 +5187,7 @@ async function reinitialiserMemoireNeuve(){await store.getState(); /* réinitial
  relecture.planifie.clear();relecture.passe=null;relecture.attente=null;relecture.tache=null;relecture.gen=0;ajEssai=null;
  bandeau.on=false;bandeau.text='';bandeau.ton='';b1.repere=null;b1Depart.repere=null;b1.sansPaire=0;clearTimeout(b1Minuterie);b1Minuterie=null;b1File.length=0;
  gsOmbre.batchId=null;gsOmbre.ecartements.clear();voieSure.mem=null;voieSure.premier=true;voieSure.zones.clear();voieSure.poses.clear();
- l1Restes={cle:null,m:new Map()};l1eTransport={cle:null,poses:[]};
+ l1Restes={cle:null,m:new Map()};l1eTransport={cle:null,poses:[]};lotVertsTrousReset();
  cacheStockageCle.clear();viderCacheUi();cacheCaptureCourante.intercepter=false;cacheCaptureCourante.id=null;cacheCaptureCourante.capture=null;}
 async function reinitialiserExtension(){const R=globalThis.ArianeReinitialisation;if(!R)throw Error('Réinitialisation indisponible (module absent).');
  await R.executer({store,storageLocal:chrome.storage.local,storageSession:chrome.storage.session,
