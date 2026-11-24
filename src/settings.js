@@ -318,6 +318,12 @@
      * `grainesMode` ('grille' = graines régulières, la règle examinée ; 'pics' = une graine par amas de points à la hauteur du rail, JOURNAL § 2.11 : moins de relances).
      * Coût : 14 relances du moteur par cut posé (1 à 3 s). `actif:false` (ou `false`) : le lot d'avant, à l'identique ; un réglage illisible l'éteint. */
     rechercheLarge: Object.freeze({ actif: false, mode: 'differer', porteeMm: 400, pasMm: 120, loinMm: 50, rapport: 1.5, presMm: 15, cellulesMax: 12, zones: null, passe: true, sansPaireLoin: true, soutienTop: 60, soutienFace: 0, grainesMode: 'grille' }),
+    /* CH-160 (D-383, opérateur, 24/11/2026, piste 1) — VALIDER SUR PLACE LES VERTS DES TROUS DE GRAPPE PENDANT LE LOT (src/lot-verts-trous.js).
+     * Pendant un lot Orbite, les cuts du lot forment des grappes avec la même règle que la relecture (`trouCuts: 5`, `min: 3`). Tout trou de
+     * 1 à `trouMaxCuts` (3) cuts strictement encadré par deux cuts du lot de la même grappe est visité (`goToCut`) et validé sur place
+     * (`validerMajEspace`) si le cut est `valid` dans ESV, non traité (`TreatedByOperator` faux) et hors du lot. `actif: false` retrouve le
+     * comportement antérieur au bit près (aucun candidat, aucun événement, aucun compteur). */
+    absorberVertsTrous: Object.freeze({ actif: true, trouCuts: 5, min: 3, trouMaxCuts: 3 }),
   });
 
   const exportSettings = Object.freeze({

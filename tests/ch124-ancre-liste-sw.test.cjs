@@ -42,5 +42,8 @@ test('instantané présent au départ : la GCV2 a sa référence, l’ancre a so
 test('instantané écrit juste après le premier cut, levier coupé : le livré (la GCV2 lit la liste à sa première décision)', async () => {
   const x = await lot({ quand: 'apres-le-premier-cut', ancre: false });
   assert.equal(x.reference.mm, 1435, 'référence d’écartement du livré');
-  assert.deepEqual(x.lectures, [true], 'une seule lecture de la liste, par la décision L1-e, après son écriture');
+  /* CH-160 (D-383) relit l'instantané en repli (`liste-memoire`) pour précalculer les verts des trous, sans remplir `l1eTable`.
+   * La décision L1-e reste la source de la référence GCV2. On exige que toute lecture arrive après l'écriture (pas de `false`
+   * intercalé) et qu'il y en ait au moins une — plus seulement une unique lecture. */
+  assert.ok(x.lectures.length >= 1 && x.lectures.every(v => v === true), 'la liste n’est lue qu’après son écriture (L1-e, et éventuellement le précalcul CH-160)');
 });

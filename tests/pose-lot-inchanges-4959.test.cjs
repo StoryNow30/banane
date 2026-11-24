@@ -178,8 +178,9 @@ const JOURNAL_INDEX=['journal-index.js'];
  * lot) ; elle ne lit ni ne commande la pose. Son réglage `relectureSignalEteint` est ALLUMÉ depuis D-290 (vérifié plus bas). */
 const SIGNAL_RELECTURE=['relecture-signal.js'];
 /* CH-152 : filtre pur de la relecture sur la liste d'ESV ; il ne lit ni ne commande la pose du lot.
- * CH-159 : cas particuliers de relecture (saut borné, sous-nappe non déformée en relecture, bilan par portion de 10 000 ER) ; ni pose ni décision du lot. */
-const FILTRE_RELECTURE=['relecture-filtre-liste.js','relecture-cas-particuliers.js'];
+ * CH-159 : cas particuliers de relecture (saut borné, sous-nappe non déformée en relecture, bilan par portion de 10 000 ER) ; ni pose ni décision du lot.
+ * CH-160 (D-383) : module pur de détection des verts dans les trous de 1 à 3 cuts d'une grappe du lot ; ne calcule aucune pose. */
+const FILTRE_RELECTURE=['relecture-filtre-liste.js','relecture-cas-particuliers.js','lot-verts-trous.js'];
 
 /* D-284 (ordre de l'opérateur du 05/11) : la sélection de la relecture relit les voisins d'un cut « À contrôler » et bouche les trous de 3 cuts au
  * plus ; sans ces lignes, src/relecture-ombre.js est celui de la test 8. Toute autre modification du fichier reste détectée. */
@@ -319,8 +320,9 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
 });
 test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la recapture des captures vides (coupée)',()=>{
  const S=require('../src/settings.js'),canon=v=>JSON.stringify(v,(k,x)=>typeof x==='function'?'<fn>':x);
- const {skipExplicite,relectureCasParticuliers,echo,passeDifferesDefaut,file,relectureDefaut,relectureSignalEteint,relecturePause,validationSurPlace,ecrituresApresValidation,eveil,correctionEntreParties,rust,...reste000}=S,{repliCourt,imagesMin,...piloteSans}=reste000.pilote,reste00={...reste000,pilote:piloteSans},deplacerVueSans=Object.fromEntries(Object.keys(reste00.deplacerVue).filter(k=>k!=='deplacement').map(k=>[k,k==='actif'?false:k==='preVol'?true:reste00.deplacerVue[k]])),reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,voieB1EcartOmbre,gardeVoieOmbre,serrageLotOmbre,signalEteint,chargement,reparationPotree,voieSureOmbre,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
+ const {skipExplicite,relectureCasParticuliers,echo,passeDifferesDefaut,file,relectureDefaut,relectureSignalEteint,relecturePause,validationSurPlace,ecrituresApresValidation,eveil,correctionEntreParties,rust,...reste000}=S,{repliCourt,imagesMin,...piloteSans}=reste000.pilote,reste00={...reste000,pilote:piloteSans},deplacerVueSans=Object.fromEntries(Object.keys(reste00.deplacerVue).filter(k=>k!=='deplacement').map(k=>[k,k==='actif'?false:k==='preVol'?true:reste00.deplacerVue[k]])),reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,absorberVertsTrous,serieCapturesVides,voieB1EcartOmbre,gardeVoieOmbre,serrageLotOmbre,signalEteint,chargement,reparationPotree,voieSureOmbre,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
  assert.equal(relectureCasParticuliers.actif,true,'CH-159 (D-382) : cas particuliers de relecture actifs par défaut');
+ assert.deepEqual({...absorberVertsTrous},{actif:true,trouCuts:5,min:3,trouMaxCuts:3},'CH-160 (D-383) : absorption des verts des trous de grappe allumée par défaut');
  assert.equal(S.deplacerVue.preVol,false,'CH-150 : aller-retour preVol coupé par défaut');
  /* D-296 (CH-064) : clé ajoutée au premier niveau, la lecture LiDAR en Rust, ALLUMÉE par défaut (accord de l'opérateur), sortie identique au bit près. */
  assert.deepEqual({...rust},{lidar:true},'D-296 : lecture LiDAR en Rust, allumée par défaut');
@@ -332,7 +334,7 @@ test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la reca
  /* D-320 (opérateur, 10/11) : seul réglage ajouté, le bouton « SKIP explicite » du panneau, MASQUÉ ; il ne touche ni la pose ni le lot ; le reste est l'empreinte d'avant. */
  assert.deepEqual({...skipExplicite},{bouton:false},'D-320 : bouton SKIP explicite masqué');
  /* Test 16 (cap 5, 8cb7958) : seul réglage ajouté, la recapture d'une capture presque vide pendant un lot, COUPÉE par défaut ; le reste est l'empreinte d'avant. */
- assert.deepEqual(Object.keys(S.lot).filter(k=>!(k in lotSans)).sort(),['chargement','gardeApresDiffere','gardeVoieOmbre','passeDifferes','profil','recaptureVide','rechercheLarge','reparationPotree','serieCapturesVides','serrageLotOmbre','signalEteint','voieB1EcartOmbre','voieSureOmbre']);
+ assert.deepEqual(Object.keys(S.lot).filter(k=>!(k in lotSans)).sort(),['absorberVertsTrous','chargement','gardeApresDiffere','gardeVoieOmbre','passeDifferes','profil','recaptureVide','rechercheLarge','reparationPotree','serieCapturesVides','serrageLotOmbre','signalEteint','voieB1EcartOmbre','voieSureOmbre']);
  /* CH-110 (D-343, accord écrit de l'opérateur) : place de chargement rendue à Potree après un échec d'ESV, ALLUMÉE ; lue par la page seulement (patch). */
  assert.deepEqual({...reparationPotree},{actif:true,essaisParNoeud:2,attenteMs:1000},'CH-110 : réparation de Potree allumée');
  /* CH-077 : préchauffage du cache pour la coupe suivante, ÉTEINT par défaut (D-305 : accord écrit de l'opérateur au moment de livrer). */
